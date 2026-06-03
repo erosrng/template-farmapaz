@@ -1,0 +1,8 @@
+*.zip
+*.bak
+*.log
+.DS_Store
+cache-images/
+node_modules/
+.vscode/
+farmapaz-local/

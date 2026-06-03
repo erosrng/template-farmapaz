@@ -1,0 +1,15 @@
+{
+  "name": "farmapaz-theme",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build:tailwind": "tailwindcss -i ./assets/src/tailwind.css -o ./assets/css/app.css --minify",
+    "watch:tailwind": "tailwindcss -i ./assets/src/tailwind.css -o ./assets/css/app.css --watch",
+    "build": "npm run build:tailwind"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.0",
+    "autoprefixer": "^10.4.0",
+    "postcss": "^8.4.0"
+  }
+}

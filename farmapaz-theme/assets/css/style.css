@@ -1,0 +1,677 @@
+/*
+ * Farmapaz Custom Styles v2
+ */
+
+:root {
+    --brand-green: #5A7D43;
+    --brand-blue: #09146E;
+    --brand-yellow: #FEAB0D;
+    --brand-red: #FF1A27;
+    --brand-orange: #F97316;
+}
+
+/* Line clamp */
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Scrollbar hide for carousel */
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
+/* Smooth scroll */
+html {
+    scroll-behavior: smooth;
+}
+
+/* ====== ANIMATIONS ====== */
+
+/* Fade in up on scroll */
+.fade-in-up {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.fade-in-up.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Stagger items for grids */
+.stagger-item {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out, box-shadow 0.3s, border-color 0.3s;
+}
+.stagger-item.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Hero animations */
+.hero-slide {
+    opacity: 0;
+    transition: opacity 0.6s ease;
+}
+.hero-slide.active {
+    opacity: 1;
+}
+.hero-slide.active .hero-title {
+    animation: heroTitleIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.hero-slide.active .hero-desc {
+    animation: heroFadeIn 0.8s 0.15s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.hero-slide.active .hero-btn {
+    animation: heroFadeIn 0.8s 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.hero-slide.active .hero-badge {
+    animation: heroFadeIn 0.6s 0.1s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes heroTitleIn {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes heroFadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Float animation for hero graphic */
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-15px); }
+}
+.animate-float {
+    animation: float 6s ease-in-out infinite;
+}
+
+/* Slow pulse for background */
+@keyframes pulse-slow {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.05); }
+}
+.animate-pulse-slow {
+    animation: pulse-slow 8s ease-in-out infinite;
+}
+
+/* Hero float icons */
+.hero-float-icon {
+    animation: floatIcon 5s ease-in-out infinite;
+}
+@keyframes floatIcon {
+    0%, 100% { transform: translateY(0px) rotate(var(--tw-rotate, 12deg)); }
+    50% { transform: translateY(-8px) rotate(var(--tw-rotate, 12deg)); }
+}
+
+/* ====== APPLE-STYLE SCROLL ANIMATIONS ====== */
+
+/* Parallax elements - subtle movement on scroll */
+[data-speed] {
+    will-change: transform;
+}
+
+/* Reveal on scroll - cards scale + fade in */
+.reveal {
+    opacity: 0;
+    transform: scale(0.92) translateY(30px);
+    transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), 
+                transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal.visible {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+}
+
+/* Reveal from bottom - for product cards */
+.reveal-up {
+    opacity: 0;
+    transform: translateY(60px);
+    transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), 
+                transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal-up.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Reveal with clip - image reveal effect */
+.reveal-clip {
+    clip-path: inset(0 0 100% 0);
+    transition: clip-path 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal-clip.visible {
+    clip-path: inset(0 0 0 0);
+}
+
+/* Stagger children - each child animates with delay */
+.stagger-children > * {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), 
+                transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.stagger-children.visible > *:nth-child(1) { transition-delay: 0s; }
+.stagger-children.visible > *:nth-child(2) { transition-delay: 0.04s; }
+.stagger-children.visible > *:nth-child(3) { transition-delay: 0.08s; }
+.stagger-children.visible > *:nth-child(4) { transition-delay: 0.12s; }
+.stagger-children.visible > *:nth-child(5) { transition-delay: 0.16s; }
+.stagger-children.visible > *:nth-child(6) { transition-delay: 0.2s; }
+.stagger-children.visible > *:nth-child(7) { transition-delay: 0.24s; }
+.stagger-children.visible > *:nth-child(8) { transition-delay: 0.28s; }
+.stagger-children.visible > *:nth-child(9) { transition-delay: 0.32s; }
+.stagger-children.visible > *:nth-child(10) { transition-delay: 0.36s; }
+.stagger-children.visible > *:nth-child(11) { transition-delay: 0.4s; }
+.stagger-children.visible > *:nth-child(12) { transition-delay: 0.44s; }
+.stagger-children.visible > *:nth-child(13) { transition-delay: 0.48s; }
+.stagger-children.visible > *:nth-child(14) { transition-delay: 0.52s; }
+.stagger-children.visible > *:nth-child(15) { transition-delay: 0.56s; }
+
+.stagger-children.visible > * {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Card hover lift - subtle */
+.card-lift {
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.card-lift:hover {
+    transform: translateY(-6px);
+}
+
+/* Shimmer loading skeleton */
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* Smooth section divider wave */
+.section-wave {
+    position: relative;
+}
+.section-wave::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: inherit;
+    clip-path: ellipse(70% 100% at 50% 100%);
+}
+
+/* Image zoom on hover */
+.img-zoom {
+    overflow: hidden;
+}
+.img-zoom img {
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.img-zoom:hover img {
+    transform: scale(1.08);
+}
+
+/* Counter animation */
+@keyframes countUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.count-up {
+    animation: countUp 0.6s ease-out forwards;
+}
+
+/* Sale badge */
+.sale-badge {
+    background: linear-gradient(135deg, #FF1A27, #ff4d5a);
+    color: white;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 6px;
+    letter-spacing: -0.02em;
+    animation: salePulse 2s ease-in-out infinite;
+    box-shadow: 0 2px 8px rgba(255, 26, 39, 0.3);
+}
+
+@keyframes salePulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 2px 8px rgba(255, 26, 39, 0.3); }
+    50% { transform: scale(1.05); box-shadow: 0 4px 16px rgba(255, 26, 39, 0.5); }
+}
+
+/* Product card v2 */
+.product-card-v2 {
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.product-card-v2:hover {
+    transform: translateY(-4px);
+}
+
+/* Product card group - show quick add on hover */
+.product-card-group:hover .product-card-v2 .absolute {
+    transform: translateY(0);
+}
+
+/* WooCommerce pagination */
+.woocommerce-pagination {
+    margin-top: 2rem;
+}
+.woocommerce-pagination .page-numbers {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+.woocommerce-pagination .page-numbers li {
+    display: inline;
+}
+.woocommerce-pagination .page-numbers a,
+.woocommerce-pagination .page-numbers span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+.woocommerce-pagination .page-numbers a {
+    background: #f9fafb;
+    color: #374151;
+    border: 1px solid #e5e7eb;
+}
+.woocommerce-pagination .page-numbers a:hover {
+    background: #5A7D43;
+    color: white;
+    border-color: #5A7D43;
+}
+.woocommerce-pagination .page-numbers span.current {
+    background: #5A7D43;
+    color: white;
+    border: 1px solid #5A7D43;
+}
+
+/* WooCommerce ordering select */
+.woocommerce-ordering select {
+    padding: 0.5rem 2.5rem 0.5rem 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    background: white;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1rem;
+}
+
+/* WooCommerce notices */
+.woocommerce-message,
+.woocommerce-info {
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+}
+.woocommerce-message {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+}
+.woocommerce-info {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #1e40af;
+}
+.woocommerce-error {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+}
+
+/* WooCommerce result count */
+.woocommerce-result-count {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+/* Remove WooCommerce default styles */
+.woocommerce ul.products::before,
+.woocommerce ul.products::after {
+    display: none;
+}
+
+/* Focus styles for accessibility */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+    outline: 2px solid #5A7D43;
+    outline-offset: 2px;
+}
+
+/* Cart fragments update */
+.cart-contents {
+    transition: transform 0.2s;
+}
+.cart-contents.count-up {
+    animation: cartBounce 0.3s ease-out;
+}
+
+@keyframes cartBounce {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+}
+
+/* Toast notification */
+@keyframes toastIn {
+    from { transform: translateY(100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+@keyframes toastOut {
+    from { transform: translateY(0); opacity: 1; }
+    to { transform: translateY(100%); opacity: 0; }
+}
+
+/* Hero slider dots */
+.hero-dot {
+    background: rgba(255,255,255,0.4);
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: 0;
+}
+.hero-dot:hover {
+    background: rgba(255,255,255,0.7);
+}
+.hero-dot.active {
+    background: #5A7D43;
+    transform: scale(1.2);
+    width: 20px;
+    border-radius: 4px;
+}
+
+/* ====== FUTURISTIC / FRUTIGER AERO ====== */
+
+/* Glass card - frosted glass effect */
+.glass-card {
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(9, 20, 110, 0.08);
+    box-shadow: 0 4px 20px rgba(9, 20, 110, 0.06);
+}
+.glass-card:hover {
+    background: rgba(255, 255, 255, 0.92);
+    border-color: rgba(9, 20, 110, 0.15);
+    box-shadow: 0 12px 40px rgba(9, 20, 110, 0.12), 0 0 0 1px rgba(90, 125, 67, 0.15);
+    transform: translateY(-6px);
+}
+
+/* Glow effect for futuristic elements */
+@keyframes glow-pulse {
+    0%, 100% { box-shadow: 0 0 8px rgba(9, 20, 110, 0.08); }
+    50% { box-shadow: 0 0 20px rgba(9, 20, 110, 0.15); }
+}
+.glow-card {
+    animation: glow-pulse 4s ease-in-out infinite;
+}
+
+/* Futuristic shimmer overlay on card hover */
+.glass-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.6s ease;
+    pointer-events: none;
+}
+.glass-card:hover::after {
+    left: 100%;
+}
+
+/* Section futuristic gradient bg */
+.futuristic-section {
+    position: relative;
+    overflow: hidden;
+}
+.futuristic-section::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -30%;
+    width: 80%;
+    height: 200%;
+    background: radial-gradient(ellipse, rgba(9,20,110,0.04) 0%, transparent 70%);
+    pointer-events: none;
+}
+.futuristic-section::after {
+    content: '';
+    position: absolute;
+    bottom: -30%;
+    right: -20%;
+    width: 60%;
+    height: 150%;
+    background: radial-gradient(ellipse, rgba(90,125,67,0.04) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+/* Content-visibility for below-fold sections (render delay = perceived speed) */
+.section-offscreen {
+    content-visibility: auto;
+    contain-intrinsic-size: 400px;
+}
+@media (prefers-reduced-motion: reduce) {
+    .section-offscreen {
+        content-visibility: visible;
+    }
+}
+
+/* Dark brand blue futuristic variant */
+.futuristic-brand-blue::before {
+    background: radial-gradient(ellipse, rgba(255,255,255,0.06) 0%, transparent 70%);
+    width: 100%;
+    height: 200%;
+    top: -50%;
+    left: -20%;
+}
+.futuristic-brand-blue::after {
+    background: radial-gradient(ellipse, rgba(255,255,255,0.04) 0%, transparent 70%);
+    bottom: -40%;
+    right: -10%;
+    width: 80%;
+    height: 180%;
+}
+.futuristic-brand-blue .orb-1 {
+    background: radial-gradient(circle, rgba(255,255,255,0.15), transparent);
+    opacity: 0.6;
+    width: 350px;
+    height: 350px;
+}
+.futuristic-brand-blue .orb-2 {
+    background: radial-gradient(circle, rgba(160,180,255,0.1), transparent);
+    opacity: 0.5;
+    width: 300px;
+    height: 300px;
+}
+.futuristic-brand-blue .orb-3 {
+    background: radial-gradient(circle, rgba(200,215,255,0.08), transparent);
+    opacity: 0.4;
+}
+
+/* Full-width carousel track overflow */
+.product-carousel-track {
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Floating orb decorations */
+.orb {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    filter: blur(60px);
+    opacity: 0.5;
+}
+.orb-1 {
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(9,20,110,0.1), transparent);
+    top: -100px;
+    left: -100px;
+    animation: orbFloat 12s ease-in-out infinite;
+}
+.orb-2 {
+    width: 250px;
+    height: 250px;
+    background: radial-gradient(circle, rgba(90,125,67,0.08), transparent);
+    bottom: -80px;
+    right: -80px;
+    animation: orbFloat 15s ease-in-out infinite reverse;
+}
+.orb-3 {
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(254,171,13,0.06), transparent);
+    top: 50%;
+    left: 60%;
+    animation: orbFloat 10s ease-in-out infinite 2s;
+}
+@keyframes orbFloat {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    25% { transform: translate(30px, -20px) scale(1.1); }
+    50% { transform: translate(-10px, 30px) scale(0.95); }
+    75% { transform: translate(-30px, -10px) scale(1.05); }
+}
+
+/* Category badge frosted glass */
+.category-tag {
+    display: inline-block;
+    padding: 3px 10px;
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border-radius: 999px;
+    background: rgba(9, 20, 110, 0.06);
+    color: #09146E;
+}
+
+/* Futuristic price */
+.price-futuristic {
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+/* Card white variant for light sections */
+.card-white {
+    background: white;
+    border: 1px solid rgba(9, 20, 110, 0.06);
+    box-shadow: 0 2px 12px rgba(9, 20, 110, 0.04);
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.card-white:hover {
+    transform: translateY(-6px);
+    border-color: rgba(9, 20, 110, 0.18);
+    box-shadow: 0 12px 40px rgba(9, 20, 110, 0.12);
+}
+
+/* Glass card for dark futuristic sections (brand-blue bg) */
+.card-glass-dark {
+    background: rgba(255,255,255,0.07);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.card-glass-dark:hover {
+    transform: translateY(-8px) scale(1.02);
+    border-color: rgba(254,171,13,0.35);
+    box-shadow: 0 16px 48px rgba(9,20,110,0.3), 0 0 40px rgba(254,171,13,0.08);
+}
+
+/* Brand-colored arrows for dark sections */
+.carousel-arrow-brand {
+    background: #09146E !important;
+    color: #fff !important;
+    border: 1px solid rgba(255,255,255,0.12) !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.25) !important;
+}
+.carousel-arrow-brand:hover {
+    background: #FEAB0D !important;
+    color: #09146E !important;
+    border-color: #FEAB0D !important;
+    box-shadow: 0 8px 32px rgba(254,171,13,0.35) !important;
+    transform: translateY(-50%) scale(1.15) !important;
+}
+.carousel-arrow-brand svg {
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.carousel-arrow-brand:hover svg {
+    transform: scale(1.2);
+}
+
+/* Number counter entrance */
+@keyframes countIn {
+    from { opacity: 0; transform: translateY(8px) scale(0.8); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.count-in {
+    animation: countIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Carousel arrow glass style */
+.carousel-arrow-prev,
+.carousel-arrow-next {
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.carousel-arrow-prev:hover,
+.carousel-arrow-next:hover {
+    background: white !important;
+    box-shadow: 0 8px 28px rgba(9,20,110,0.2) !important;
+}
+
+/* Subtle bg shift on hover for banners */
+.banner-hover {
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.banner-hover:hover {
+    transform: scale(1.02);
+}
+
+/* Mobile menu animation */
+#mobile-menu > div:last-child {
+    animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes slideInRight {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+}
