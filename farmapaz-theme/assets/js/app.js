@@ -132,6 +132,40 @@
                 }
             }, { passive: true });
 
+            // Mouse drag
+            let isDragging = false;
+            let dragStartX = 0;
+            let dragScrollLeft = 0;
+
+            track.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                dragStartX = e.pageX;
+                dragScrollLeft = track.scrollLeft;
+                track.style.cursor = 'grabbing';
+                track.style.userSelect = 'none';
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                e.preventDefault();
+                const walked = (e.pageX - dragStartX) * 1.2;
+                track.scrollLeft = dragScrollLeft - walked;
+            });
+
+            window.addEventListener('mouseup', () => {
+                if (!isDragging) return;
+                isDragging = false;
+                track.style.cursor = '';
+                track.style.userSelect = '';
+            });
+
+            track.addEventListener('mouseleave', () => {
+                if (!isDragging) return;
+                isDragging = false;
+                track.style.cursor = '';
+                track.style.userSelect = '';
+            });
+
             // Auto-scroll
             let autoScrollTimer;
             function startAutoScroll() {

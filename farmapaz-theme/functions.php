@@ -192,7 +192,7 @@ function farmapaz_product_carousel($args = []) {
                 <?php if ($is_grid): ?>
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5 stagger-children">
                 <?php else: ?>
-                <div class="flex gap-4 sm:gap-5 lg:gap-6 overflow-x-auto pb-6 snap-x snap-mandatory scrollbar-hide scroll-smooth product-carousel-track"
+                <div class="flex gap-4 sm:gap-5 lg:gap-6 overflow-x-auto pb-6 snap-x snap-mandatory scrollbar-hide scroll-smooth cursor-grab product-carousel-track"
                      data-carousel="<?= $section_id; ?>"
                      style="padding-left: calc((100vw - min(100vw - 2rem, 1280px)) / 2 + 24px); padding-right: calc((100vw - min(100vw - 2rem, 1280px)) / 2 + 24px); margin-left: calc(-1 * (100vw - min(100vw - 2rem, 1280px)) / 2); margin-right: calc(-1 * (100vw - min(100vw - 2rem, 1280px)) / 2);">
                 <?php endif; ?>

@@ -29,7 +29,7 @@
 
         if (!empty($categories) && !is_wp_error($categories)):
         ?>
-        <div class="flex gap-5 sm:gap-6 overflow-x-auto pb-6 snap-x snap-mandatory scrollbar-hide scroll-smooth product-carousel-track stagger-children" data-carousel="categories">
+        <div class="flex gap-5 sm:gap-6 overflow-x-auto pb-6 snap-x snap-mandatory scrollbar-hide scroll-smooth cursor-grab product-carousel-track stagger-children" data-carousel="categories">
             <?php foreach ($categories as $cat):
                 $slug = $cat->slug;
             ?>
