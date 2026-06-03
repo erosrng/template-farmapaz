@@ -89,15 +89,15 @@
                         <form role="search" method="get" action="<?= esc_url(home_url('/')); ?>" class="search-form">
                             <div class="relative">
                                 <input type="text" name="s" placeholder="Buscar productos..."
-                                       class="farmapaz-search-input w-full pl-11 lg:pl-12 pr-10 py-2 lg:py-3 rounded-2xl text-xs sm:text-sm transition-all duration-300 ease-out"
+                                       class="farmapaz-search-input w-full pl-4 lg:pl-5 pr-12 lg:pr-14 py-2 lg:py-3 rounded-2xl text-xs sm:text-sm transition-all duration-300 ease-out"
                                        style="background: rgba(255,255,255,0.85); backdrop-filter: blur(12px); border: 1.5px solid rgba(9,20,110,0.1); box-shadow: 0 2px 8px rgba(9,20,110,0.04), inset 0 1px 0 rgba(255,255,255,0.8);"
                                        autocomplete="off"
                                        onfocus="this.style.borderColor='rgba(9,20,110,0.3)'; this.style.boxShadow='0 4px 20px rgba(9,20,110,0.08), 0 0 0 3px rgba(9,20,110,0.04), inset 0 1px 0 rgba(255,255,255,0.8)'"
                                        onblur="this.style.borderColor='rgba(9,20,110,0.1)'; this.style.boxShadow='0 2px 8px rgba(9,20,110,0.04), inset 0 1px 0 rgba(255,255,255,0.8)'">
-                                <span class="absolute left-3 lg:left-4 top-1/2 -translate-y-1/2 pointer-events-none transition-colors duration-300" style="color: rgba(9,20,110,0.25);">
+                                <span class="absolute right-3 lg:right-4 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none" style="color: rgba(9,20,110,0.25);">
+                                    <span class="farmapaz-spinner hidden"></span>
                                     <svg class="w-4 h-4 lg:w-[18px] lg:h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                                 </span>
-                                <span class="farmapaz-spinner absolute right-3 lg:right-4 top-1/2 hidden pointer-events-none"></span>
                             </div>
                             <input type="hidden" name="post_type" value="product">
                         </form>
