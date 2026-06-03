@@ -1,8 +1,5 @@
 <section class="relative overflow-hidden py-14 sm:py-20 lg:py-24 section-offscreen futuristic-brand-blue" style="background: linear-gradient(135deg, #09146E 0%, #0a1a7a 30%, #0c2090 60%, #09146E 100%);">
 
-    <!-- Grid overlay -->
-    <div class="absolute inset-0 pointer-events-none opacity-[0.03]" style="background-image: linear-gradient(rgba(255,255,255,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.3) 1px, transparent 1px); background-size: 60px 60px;"></div>
-
     <!-- Glowing orbs -->
     <div class="orb orb-1" style="background: radial-gradient(circle, rgba(254,171,13,0.25), transparent); width: 400px; height: 400px; top: -150px; right: -100px; left: auto; animation: orbFloat 14s ease-in-out infinite;"></div>
     <div class="orb orb-2" style="background: radial-gradient(circle, rgba(9,20,110,0.2), transparent); width: 350px; height: 350px; bottom: -120px; left: -120px; animation: orbFloat 18s ease-in-out infinite reverse;"></div>

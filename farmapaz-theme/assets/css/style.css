@@ -680,27 +680,31 @@ select:focus-visible {
 .farmapaz-suggestions {
     max-height: 360px;
     overflow-y: auto;
-    animation: fadeInDown 0.15s ease-out;
-}
-.farmapaz-suggestions a:last-child {
-    border-bottom: none;
-}
-@keyframes fadeInDown {
-    from { opacity: 0; transform: translateY(-4px); }
-    to { opacity: 1; transform: translateY(0); }
+    animation: farmapazFadeDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .farmapaz-suggestions::-webkit-scrollbar { width: 4px; }
-.farmapaz-suggestions::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
+.farmapaz-suggestions::-webkit-scrollbar-thumb { background: rgba(9,20,110,0.12); border-radius: 4px; }
+.farmapaz-suggestions::-webkit-scrollbar-track { background: transparent; }
+
+@keyframes farmapazFadeDown {
+    from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Search suggestions hover effect */
+.farmapaz-suggestions a:last-child {
+    border-bottom: none !important;
+}
 
 /* Search spinner */
 .farmapaz-spinner {
-    width: 16px;
-    height: 16px;
-    margin-top: -8px;
-    border: 2px solid rgba(9,20,110,0.12);
+    width: 14px;
+    height: 14px;
+    margin-top: -7px;
+    border: 1.5px solid rgba(9,20,110,0.08);
     border-top-color: #09146E;
     border-radius: 50%;
-    animation: farmapazSpin 0.5s linear infinite;
+    animation: farmapazSpin 0.6s linear infinite;
 }
 @keyframes farmapazSpin {
     to { transform: rotate(360deg); }

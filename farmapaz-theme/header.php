@@ -87,17 +87,21 @@
                 <div class="flex flex-1 max-w-lg mx-2 sm:mx-4 lg:mx-8">
                     <div class="relative w-full" data-search-container>
                         <form role="search" method="get" action="<?= esc_url(home_url('/')); ?>" class="search-form">
-                            <input type="text" name="s" placeholder="Buscar..."
-                                   class="farmapaz-search-input w-full pl-8 lg:pl-10 pr-8 py-1.5 lg:py-2.5 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-brand-green"
-                                   style="background: #fafcfa; border: 2px solid rgba(90,125,67,0.2);"
-                                   autocomplete="off">
-                            <span class="absolute left-2 lg:left-3 top-1/2 -translate-y-1/2 text-brand-green pointer-events-none">
-                                <svg class="w-4 h-4 lg:w-5 lg:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                            </span>
-                            <span class="farmapaz-spinner absolute right-2 lg:right-3 top-1/2 hidden pointer-events-none"></span>
+                            <div class="relative">
+                                <input type="text" name="s" placeholder="Buscar productos..."
+                                       class="farmapaz-search-input w-full pl-11 lg:pl-12 pr-10 py-2 lg:py-3 rounded-2xl text-xs sm:text-sm transition-all duration-300 ease-out"
+                                       style="background: rgba(255,255,255,0.85); backdrop-filter: blur(12px); border: 1.5px solid rgba(9,20,110,0.1); box-shadow: 0 2px 8px rgba(9,20,110,0.04), inset 0 1px 0 rgba(255,255,255,0.8);"
+                                       autocomplete="off"
+                                       onfocus="this.style.borderColor='rgba(9,20,110,0.3)'; this.style.boxShadow='0 4px 20px rgba(9,20,110,0.08), 0 0 0 3px rgba(9,20,110,0.04), inset 0 1px 0 rgba(255,255,255,0.8)'"
+                                       onblur="this.style.borderColor='rgba(9,20,110,0.1)'; this.style.boxShadow='0 2px 8px rgba(9,20,110,0.04), inset 0 1px 0 rgba(255,255,255,0.8)'">
+                                <span class="absolute left-3 lg:left-4 top-1/2 -translate-y-1/2 pointer-events-none transition-colors duration-300" style="color: rgba(9,20,110,0.25);">
+                                    <svg class="w-4 h-4 lg:w-[18px] lg:h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                                </span>
+                                <span class="farmapaz-spinner absolute right-3 lg:right-4 top-1/2 hidden pointer-events-none"></span>
+                            </div>
                             <input type="hidden" name="post_type" value="product">
                         </form>
-                        <div class="farmapaz-suggestions absolute top-full left-0 right-0 z-50 mt-1 bg-white rounded-xl shadow-xl border border-gray-100 hidden"></div>
+                        <div class="farmapaz-suggestions absolute top-full left-0 right-0 z-50 mt-2 rounded-2xl shadow-xl border hidden" style="background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); border-color: rgba(9,20,110,0.08); box-shadow: 0 20px 60px rgba(9,20,110,0.1), 0 0 0 1px rgba(9,20,110,0.04);"></div>
                     </div>
                 </div>
 
