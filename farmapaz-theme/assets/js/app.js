@@ -315,4 +315,70 @@
             catChevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
         });
     }
+
+    // ====== SEARCH SUGGESTIONS ======
+    document.querySelectorAll('.farmapaz-search-input').forEach(input => {
+        const container = input.closest('[data-search-container]');
+        const dropdown = container && container.querySelector('.farmapaz-suggestions');
+        const spinner = container && container.querySelector('.farmapaz-spinner');
+        if (!dropdown || !spinner) {
+            console.warn('Farmapaz search: container, dropdown or spinner not found');
+            return;
+        }
+        let debounceTimer;
+
+        input.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            const q = input.value.trim();
+            if (q.length < 2) { dropdown.classList.add('hidden'); return; }
+            debounceTimer = setTimeout(() => fetchSuggestions(q), 350);
+        });
+
+        input.addEventListener('focus', () => {
+            if (input.value.trim().length >= 2) dropdown.classList.remove('hidden');
+        });
+
+        input.addEventListener('blur', () => {
+            setTimeout(() => dropdown.classList.add('hidden'), 200);
+        });
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') dropdown.classList.add('hidden');
+        });
+
+        function fetchSuggestions(q) {
+            spinner.classList.remove('hidden');
+            dropdown.classList.add('hidden');
+            const apiUrl = (typeof farmapazData !== 'undefined' ? farmapazData.homeUrl : '') + '/wp-json/farmapaz/v1/suggest?s=' + encodeURIComponent(q);
+            fetch(apiUrl)
+                .then(r => r.json())
+                .then(data => {
+                    spinner.classList.add('hidden');
+                    if (!data.results || !data.results.length) {
+                        dropdown.classList.add('hidden');
+                        return;
+                    }
+                    dropdown.innerHTML = data.results.map(r => `
+                        <a href="${r.url}" class="flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0">
+                            ${r.type === 'category'
+                                ? '<span class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style="background: rgba(9,20,110,0.06); color: #09146E;"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg></span>'
+                                : '<img src="' + r.img + '" alt="" class="w-10 h-10 rounded-lg object-cover flex-shrink-0 bg-gray-50">'
+                            }
+                            <div class="min-w-0 flex-1">
+                                <span class="text-sm font-medium text-gray-800 line-clamp-1">${escapeHtml(r.name)}</span>
+                                <span class="text-xs font-semibold" style="color: ${r.type === 'category' ? 'rgba(9,20,110,0.5)' : '#09146E'};">${r.price}</span>
+                            </div>
+                        </a>
+                    `).join('');
+                    dropdown.classList.remove('hidden');
+                })
+                .catch(() => { spinner.classList.add('hidden'); });
+        }
+
+        function escapeHtml(str) {
+            const d = document.createElement('div');
+            d.textContent = str;
+            return d.innerHTML;
+        }
+    });
 })();

@@ -30,11 +30,10 @@
             <!-- Brand -->
             <div class="col-span-2 md:col-span-1 fade-in-up">
                 <div class="mb-4">
-                    <?php if (has_custom_logo()): ?>
-                        <?php the_custom_logo(); ?>
-                    <?php else: ?>
-                        <span class="text-xl sm:text-2xl font-bold text-white">Farmapaz</span>
-                    <?php endif; ?>
+                    <?php
+                        $logo_url = get_template_directory_uri() . '/assets/images/logo.png';
+                    ?>
+                        <img src="<?= $logo_url ?>" alt="Farmapaz" class="h-10 sm:h-12">
                 </div>
                 <p class="text-white text-opacity-60 text-xs sm:text-sm leading-relaxed mb-6">
                     Tu farmacia de confianza en Maturín, Edo Monagas, Venezuela. Comprometidos con tu salud y bienestar.

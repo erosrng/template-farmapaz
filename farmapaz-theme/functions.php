@@ -3,7 +3,7 @@
  * Farmapaz Theme Functions
  */
 
-define('FARMA_VERSION', '1.0.0');
+define('FARMA_VERSION', '1.0.1');
 
 // Include custom nav walker
 require_once get_template_directory() . '/inc/nav-walker.php';
@@ -390,4 +390,94 @@ function farmapaz_icon($name) {
         'shield' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>',
     ];
     return $icons[$name] ?? '';
+}
+
+// Search suggestions REST API
+add_action('rest_api_init', function () {
+    register_rest_route('farmapaz/v1', '/suggest', [
+        'methods'  => 'GET',
+        'callback' => 'farmapaz_search_suggest',
+        'args'     => ['s' => ['required' => true]],
+        'permission_callback' => '__return_true',
+    ]);
+});
+
+function farmapaz_search_suggest(WP_REST_Request $request) {
+    $s = trim(sanitize_text_field($request->get_param('s')));
+    if (strlen($s) < 2) return ['results' => []];
+
+    $results = [];
+
+    // Products — fetch more to account for Gemini image filtering
+    $product_query = new WP_Query([
+        'post_type'      => 'product',
+        's'              => $s,
+        'posts_per_page' => 20,
+        'post_status'    => 'publish',
+        'meta_query'     => [
+            ['key' => '_stock_status', 'value' => 'instock'],
+            ['key' => '_thumbnail_id', 'compare' => 'EXISTS'],
+        ],
+        'tax_query'      => [[
+            'taxonomy' => 'product_visibility',
+            'field'    => 'name',
+            'terms'    => ['exclude-from-search', 'exclude-from-catalog'],
+            'operator' => 'NOT IN',
+        ]],
+    ]);
+
+    foreach ($product_query->posts as $post) {
+        if (count($results) >= 5) break;
+        $product = wc_get_product($post->ID);
+        if (!$product) continue;
+        $img = wp_get_attachment_image_url($product->get_image_id(), 'thumbnail');
+        if (!$img || strpos($img, 'Gemini_Generated') !== false) continue;
+        $results[] = [
+            'name'   => $product->get_name(),
+            'url'    => $product->get_permalink(),
+            'img'    => $img,
+            'price'  => wp_strip_all_tags($product->get_price_html()),
+            'type'   => 'product',
+        ];
+    }
+
+    // Categories
+    $categories = get_terms([
+        'taxonomy'   => 'product_cat',
+        'hide_empty' => true,
+        'name__like' => $s,
+        'number'     => 3,
+    ]);
+    if (!is_wp_error($categories)) {
+        foreach ($categories as $cat) {
+            $results[] = [
+                'name'  => $cat->name,
+                'url'   => get_term_link($cat),
+                'img'   => '',
+                'price' => $cat->count . ' productos',
+                'type'  => 'category',
+            ];
+        }
+    }
+
+    // Brands (product tags used as brands)
+    $brands = get_terms([
+        'taxonomy'   => 'product_tag',
+        'hide_empty' => true,
+        'name__like' => $s,
+        'number'     => 3,
+    ]);
+    if (!is_wp_error($brands)) {
+        foreach ($brands as $brand) {
+            $results[] = [
+                'name'  => $brand->name,
+                'url'   => get_term_link($brand),
+                'img'   => '',
+                'price' => $brand->count . ' productos',
+                'type'  => 'brand',
+            ];
+        }
+    }
+
+    return ['results' => $results];
 }

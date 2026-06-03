@@ -25,7 +25,7 @@ get_header(); ?>
     'title'       => 'Belleza y Cuidado Personal',
     'subtitle'    => 'Dermocosmetica, maquillaje y cuidado diario',
     'category'    => 'cuidado-personal-y-dermocosmeticos',
-    'limit'       => 15,
+    'limit'       => 12,
     'orderby'     => 'rand',
     'layout'      => 'grid',
     'bg_tone'     => 'lighter',
@@ -64,9 +64,9 @@ get_header(); ?>
 
 <section class="section-offscreen">
 <?php farmapaz_product_carousel([
-    'title'       => 'Encarte',
-    'subtitle'    => 'Productos destacados de nuestro encarte semanal',
-    'badge'       => 'Encarte',
+    'title'       => 'Productos para el hogar',
+    'subtitle'    => 'Productos destacados para el hogar mascotas y otros',
+    'category'    => 'hogar-mascotas-y-otros',
     'limit'       => 15,
     'orderby'     => 'date',
     'order'       => 'DESC',
