@@ -178,11 +178,47 @@
                     </div>
                 </div>
 
+                <!-- Quick Links -->
+                <div class="flex items-center gap-1 ml-3">
+                    <a href="<?= esc_url(get_permalink(wc_get_page_id('shop'))); ?>"
+                       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-white transition-all duration-200 hover:scale-105"
+                       style="background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);"
+                       onmouseover="this.style.background='#FEAB0D'; this.style.borderColor='#FEAB0D'; this.style.color='#09146E'"
+                       onmouseout="this.style.background='rgba(255,255,255,0.12)'; this.style.borderColor='rgba(255,255,255,0.2)'; this.style.color='white'">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                        Tienda
+                    </a>
+                    <a href="<?= esc_url(get_permalink(296222)); ?>"
+                       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-white transition-all duration-200 hover:scale-105"
+                       style="background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);"
+                       onmouseover="this.style.background='#FEAB0D'; this.style.borderColor='#FEAB0D'; this.style.color='#09146E'"
+                       onmouseout="this.style.background='rgba(255,255,255,0.12)'; this.style.borderColor='rgba(255,255,255,0.2)'; this.style.color='white'">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
+                        Revista
+                    </a>
+                    <a href="<?= esc_url(get_permalink(363)); ?>"
+                       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-white transition-all duration-200 hover:scale-105"
+                       style="background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);"
+                       onmouseover="this.style.background='#FEAB0D'; this.style.borderColor='#FEAB0D'; this.style.color='#09146E'"
+                       onmouseout="this.style.background='rgba(255,255,255,0.12)'; this.style.borderColor='rgba(255,255,255,0.2)'; this.style.color='white'">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        Guía Médica
+                    </a>
+                    <a href="<?= esc_url(get_permalink(357)); ?>"
+                       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-white transition-all duration-200 hover:scale-105"
+                       style="background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);"
+                       onmouseover="this.style.background='#FEAB0D'; this.style.borderColor='#FEAB0D'; this.style.color='#09146E'"
+                       onmouseout="this.style.background='rgba(255,255,255,0.12)'; this.style.borderColor='rgba(255,255,255,0.2)'; this.style.color='white'">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        Sucursales
+                    </a>
+                </div>
+
                 <?php
                 wp_nav_menu([
                     'theme_location' => 'primary',
                     'container'      => false,
-                    'menu_class'     => 'flex items-center ml-6',
+                    'menu_class'     => 'flex items-center ml-auto',
                     'fallback_cb'    => false,
                     'depth'          => 3,
                     'walker'         => new Farmapaz_Walker_Nav(),
@@ -247,6 +283,36 @@
                     <a href="<?= get_permalink(wc_get_page_id('shop')); ?>" class="flex items-center justify-center gap-1 p-3 text-sm font-medium text-brand-green hover:underline mt-1">
                         Ver todas las categorías
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Mobile Quick Links -->
+            <div class="mb-6 px-0">
+                <div class="grid grid-cols-2 gap-2">
+                    <a href="<?= esc_url(get_permalink(wc_get_page_id('shop'))); ?>"
+                       class="flex items-center gap-2 p-3 rounded-xl text-sm font-semibold transition-all hover:scale-[1.02]"
+                       style="background: linear-gradient(135deg, #5A7D43 0%, #4a6a36 100%); color: white;">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                        Tienda
+                    </a>
+                    <a href="<?= esc_url(get_permalink(296222)); ?>"
+                       class="flex items-center gap-2 p-3 rounded-xl text-sm font-semibold transition-all hover:scale-[1.02]"
+                       style="background: linear-gradient(135deg, #09146E 0%, #0a1a7a 100%); color: white;">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
+                        Revista
+                    </a>
+                    <a href="<?= esc_url(get_permalink(363)); ?>"
+                       class="flex items-center gap-2 p-3 rounded-xl text-sm font-semibold transition-all hover:scale-[1.02]"
+                       style="background: linear-gradient(135deg, #FEAB0D 0%, #e89900 100%); color: #09146E;">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        Guía Médica
+                    </a>
+                    <a href="<?= esc_url(get_permalink(357)); ?>"
+                       class="flex items-center gap-2 p-3 rounded-xl text-sm font-semibold transition-all hover:scale-[1.02]"
+                       style="background: linear-gradient(135deg, #F97316 0%, #ea580c 100%); color: white;">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        Sucursales
                     </a>
                 </div>
             </div>
