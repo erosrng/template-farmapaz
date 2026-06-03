@@ -155,17 +155,19 @@ get_header(); ?>
     <!-- Description / Stock Availability -->
     <?php if ($product->get_description()): ?>
     <div class="mt-16 lg:mt-24 max-w-4xl mx-auto">
-        <div class="flex items-center gap-3 mb-8">
-            <div class="w-1 h-8 rounded-full" style="background: linear-gradient(to bottom, #09146E, #FEAB0D);"></div>
-            <div>
-                <h2 class="text-xl sm:text-2xl font-bold" style="color: #09146E;">Disponibilidad en sucursales</h2>
-                <p class="text-xs sm:text-sm mt-0.5" style="color: rgba(9,20,110,0.4);">Stock en tiempo real — desplázate para ver todas</p>
+        <button onclick="toggleStock(this)" class="w-full flex items-center gap-3 mb-6 text-left group cursor-pointer">
+            <div class="w-1 h-8 rounded-full transition-all duration-300" style="background: linear-gradient(to bottom, #09146E, #FEAB0D);"></div>
+            <div class="flex-1">
+                <h2 class="text-xl sm:text-2xl font-bold transition-colors" style="color: #09146E;">Disponibilidad en sucursales</h2>
+                <p class="text-xs sm:text-sm mt-0.5" style="color: rgba(9,20,110,0.4);">Stock en tiempo real — toca para ver</p>
             </div>
-        </div>
+            <svg class="w-5 h-5 transition-transform duration-300" style="color: rgba(9,20,110,0.3);" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="stockChevron"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+        </button>
 
-        <div class="rounded-2xl overflow-hidden" style="background: linear-gradient(135deg, #09146E 0%, #0a1a7a 50%, #09146E 100%); box-shadow: 0 20px 60px rgba(9,20,110,0.15);">
-            <?php
-            $desc = $product->get_description();
+        <div id="stockContent" class="overflow-hidden transition-all duration-500 ease-out" style="max-height: 0; opacity: 0;">
+            <div class="rounded-2xl overflow-hidden" style="background: linear-gradient(135deg, #09146E 0%, #0a1a7a 50%, #09146E 100%); box-shadow: 0 20px 60px rgba(9,20,110,0.15);">
+                <?php
+                $desc = $product->get_description();
             // Use DOMDocument to parse and extract stock data
             $dom = new DOMDocument();
             @$dom->loadHTML(mb_convert_encoding($desc, 'HTML-ENTITIES', 'UTF-8'), LIBXML_NOERROR);
@@ -293,5 +295,23 @@ get_header(); ?>
     animation: branchReveal 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 </style>
+
+<script>
+function toggleStock(btn) {
+    const content = document.getElementById('stockContent');
+    const chevron = document.getElementById('stockChevron');
+    if (!content) return;
+    const isOpen = content.style.maxHeight !== '0px' && content.style.maxHeight !== '';
+    if (isOpen) {
+        content.style.maxHeight = '0';
+        content.style.opacity = '0';
+        if (chevron) chevron.style.transform = 'rotate(0deg)';
+    } else {
+        content.style.maxHeight = content.scrollHeight + 'px';
+        content.style.opacity = '1';
+        if (chevron) chevron.style.transform = 'rotate(180deg)';
+    }
+}
+</script>
 
 <?php get_footer(); ?>
