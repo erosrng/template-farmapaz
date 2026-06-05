@@ -49,6 +49,13 @@
                                     Solo por tienda
                                 </span>
                             <?php endif; ?>
+
+                            <?php $s_price = $product->get_price(); if ($s_price && $s_price >= 10): ?>
+                                <span class="absolute top-3 right-3 z-10 bg-orange-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow" style="background: #F97316;">
+                                    Delivery Gratis
+                                </span>
+                            <?php endif; ?>
+
                             <?php if ($image): ?>
                                 <img src="<?= $image; ?>" alt="<?php the_title(); ?>"
                                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"

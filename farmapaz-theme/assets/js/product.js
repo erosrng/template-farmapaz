@@ -6,11 +6,14 @@
     'use strict';
 
     // Quantity buttons
-    document.querySelectorAll('.qty-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const input = this.closest('.flex')?.querySelector('.qty-input');
+    document.querySelectorAll('.qty-btn').forEach(function(btn) {
+        if (btn.dataset.farmapazBound) return;
+        btn.dataset.farmapazBound = '1';
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            var input = this.parentElement.querySelector('.qty-input');
             if (!input) return;
-            let val = parseInt(input.value) || 1;
+            var val = parseInt(input.value) || 1;
             if (this.dataset.action === 'plus') { val++; }
             if (this.dataset.action === 'minus' && val > 1) { val--; }
             input.value = val;
@@ -18,20 +21,20 @@
     });
 
     // Gallery thumbnails
-    const main = document.querySelector('.product-gallery-main');
-    const thumbs = document.querySelectorAll('.product-gallery-thumb');
+    var main = document.querySelector('.product-gallery-main');
+    var thumbs = document.querySelectorAll('.product-gallery-thumb');
     if (main && thumbs.length) {
-        thumbs.forEach(thumb => {
+        thumbs.forEach(function(thumb) {
             thumb.addEventListener('click', function() {
-                const src = this.dataset.src;
+                var src = this.dataset.src;
                 if (src) {
                     main.style.opacity = '0';
-                    setTimeout(() => {
+                    setTimeout(function() {
                         main.src = src;
                         main.style.opacity = '1';
                     }, 150);
-                    thumbs.forEach(t => t.classList.remove('border-brand-green'));
-                    this.classList.add('border-brand-green');
+                    thumbs.forEach(function(t) { t.style.borderColor = 'transparent'; });
+                    this.style.borderColor = '#09146E';
                 }
             });
         });

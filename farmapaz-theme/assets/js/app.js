@@ -206,18 +206,6 @@
     setTimeout(initCarousels, 1500);
     window.addEventListener('load', initCarousels);
 
-    // ====== QUANTITY BUTTONS ======
-    document.querySelectorAll('.qty-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const input = this.closest('.flex')?.querySelector('.qty-input');
-            if (!input) return;
-            let val = parseInt(input.value) || 1;
-            if (this.dataset.action === 'plus') val++;
-            if (this.dataset.action === 'minus' && val > 1) val--;
-            input.value = val;
-        });
-    });
-
     // ====== SCROLL ANIMATIONS (Apple-style) ======
     function initScrollAnimations() {
         const selectors = [
@@ -290,35 +278,271 @@
     }
 
     // ====== AJAX ADD TO CART ======
-    document.querySelectorAll('.add_to_cart_button, a[data-product_id]').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const productId = this.dataset.product_id;
-            if (!productId) return;
+    function bindAddToCart(container) {
+        const scope = container || document;
+        scope.querySelectorAll('.add_to_cart_button, a[data-product_id]').forEach(btn => {
+            if (btn.dataset.farmapazCartBound) return;
+            btn.dataset.farmapazCartBound = '1';
 
-            const originalText = this.textContent;
-            this.textContent = 'Añadiendo...';
-            this.style.opacity = '0.7';
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const productId = this.dataset.product_id;
+                if (!productId) return;
 
-            fetch(farmapazData.ajaxUrl + '?add-to-cart=' + productId, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: 'add-to-cart=' + productId
-            }).then(() => {
-                this.textContent = '✓ Añadido';
-                this.style.opacity = '1';
-                this.style.background = '#16a34a';
-                setTimeout(() => {
+                const originalText = this.textContent;
+                this.textContent = 'Añadiendo...';
+                this.style.opacity = '0.7';
+
+                const formData = new FormData();
+                formData.append('product_id', productId);
+                formData.append('quantity', 1);
+
+                fetch(farmapazData.homeUrl + '/?wc-ajax=add_to_cart', {
+                    method: 'POST',
+                    body: formData
+                }).then(r => r.json()).then(data => {
+                    var btn = this;
+                    btn.textContent = '✓ Añadido';
+                    btn.style.opacity = '1';
+                    btn.style.background = '#16a34a';
+
+                    if (data.fragments) {
+                        updateBadgeFromFragments(data.fragments);
+                        updateCartMapFromFragments(data.fragments);
+                    }
+
+                    cartBounce();
+                    showAddToast(productId);
+
+                    setTimeout(function() {
+                        var container = btn.closest('.cart-card-actions') || btn.parentNode;
+                        if (container && container.dataset.product_id) {
+                            var qty = 1;
+                            var cm = getCartMap();
+                            if (cm[productId]) qty = cm[productId].qty;
+                            container.innerHTML = '<div class="cart-card-stepper" data-product_id="' + productId + '">'
+                                + '<button class="cart-card-stepper-btn cart-card-stepper-minus" data-product_id="' + productId + '">\u2212</button>'
+                                + '<span class="cart-card-stepper-value">' + qty + '</span>'
+                                + '<button class="cart-card-stepper-btn cart-card-stepper-plus" data-product_id="' + productId + '">+</button>'
+                                + '</div>';
+                            bindCardSteppers(container);
+                        }
+                    }, 800);
+                }).catch(() => {
                     this.textContent = originalText;
-                    this.style.background = '';
-                }, 2000);
-                if (typeof wc_add_to_cart_params !== 'undefined') {
-                    jQuery(document.body).trigger('wc_fragment_refresh');
-                }
-            }).catch(() => {
-                this.textContent = originalText;
-                this.style.opacity = '1';
+                    this.style.opacity = '1';
+                });
             });
+        });
+        bindCardSteppers(scope);
+    }
+
+    function cartBounce() {
+        const badge = document.getElementById('cart-count');
+        if (badge) {
+            badge.classList.remove('cart-bounce');
+            void badge.offsetWidth;
+            badge.classList.add('cart-bounce');
+        }
+    }
+
+    function showAddToast(productId) {
+        const existing = document.querySelector('.farmapaz-toast');
+        if (existing) existing.remove();
+
+        const nameEl = document.querySelector(`a[data-product_id="${productId}"]`);
+        let productName = 'Producto';
+        if (nameEl) {
+            const card = nameEl.closest('.sp-card, .product-card');
+            if (card) {
+                const titleEl = card.querySelector('.sp-card-title a, .product-card-title');
+                if (titleEl) productName = titleEl.textContent.trim().substring(0, 60);
+            }
+        }
+
+        const toast = document.createElement('div');
+        toast.className = 'farmapaz-toast';
+        toast.setAttribute('role', 'alert');
+        toast.innerHTML = '<svg width="18" height="18" fill="none" stroke="#16a34a" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>'
+            + '<span>' + productName.substring(0, 50) + ' añadido</span>'
+            + '<a href="' + farmapazData.cartUrl + '" class="farmapaz-toast-link">Ver carrito</a>';
+        document.body.appendChild(toast);
+
+        setTimeout(() => { if (toast.parentNode) toast.remove(); }, 4000);
+    }
+
+    // Initial bind
+    bindAddToCart();
+    window.farmapazBindAddToCart = bindAddToCart;
+
+    // ====== CARD QUANTITY STEPPER ======
+
+    function getCartMap() {
+        var el = document.querySelector('.farmapaz-cart-map');
+        if (!el) return {};
+        try { return JSON.parse(el.textContent || el.innerText); } catch(e) { return {}; }
+    }
+
+    function updateBadgeFromFragments(fragments) {
+        if (!fragments['#cart-count']) return;
+        var tmp = document.createElement('div');
+        tmp.innerHTML = fragments['#cart-count'];
+        var nb = tmp.querySelector('#cart-count');
+        if (nb) {
+            var badge = document.getElementById('cart-count');
+            if (badge) badge.textContent = nb.textContent;
+        }
+    }
+
+    function updateCartMapFromFragments(fragments) {
+        if (!fragments['div.farmapaz-cart-map']) return;
+        var tmp = document.createElement('div');
+        tmp.innerHTML = fragments['div.farmapaz-cart-map'];
+        var nm = tmp.querySelector('.farmapaz-cart-map');
+        var om = document.querySelector('.farmapaz-cart-map');
+        if (nm && om) om.outerHTML = nm.outerHTML;
+        else if (nm) document.body.appendChild(nm);
+    }
+
+    function bindCardSteppers(container) {
+        var scope = container || document;
+        scope.querySelectorAll('.cart-card-stepper-plus, .cart-card-stepper-minus').forEach(function(btn) {
+            if (btn.dataset.farmapazStepperBound) return;
+            btn.dataset.farmapazStepperBound = '1';
+            btn.addEventListener('click', function() {
+                var productId = this.dataset.product_id;
+                var stepper = this.closest('.cart-card-stepper');
+                if (!stepper) return;
+                var valueEl = stepper.querySelector('.cart-card-stepper-value');
+                if (!valueEl) return;
+                var currentQty = parseInt(valueEl.textContent) || 1;
+                var isPlus = this.classList.contains('cart-card-stepper-plus');
+                var newQty = isPlus ? currentQty + 1 : currentQty - 1;
+
+                if (newQty < 1) {
+                    removeFromCardCart(productId, stepper);
+                    return;
+                }
+
+                valueEl.textContent = newQty;
+
+                if (isPlus) {
+                    cardAddQty(productId, stepper, valueEl, currentQty);
+                } else {
+                    cardRemoveAddQty(productId, newQty, stepper, valueEl, currentQty);
+                }
+            });
+        });
+    }
+
+    function cardAddQty(productId, stepper, valueEl, oldQty) {
+        var fd = new FormData();
+        fd.append('product_id', productId);
+        fd.append('quantity', 1);
+
+        fetch(farmapazData.homeUrl + '/?wc-ajax=add_to_cart', {
+            method: 'POST', body: fd
+        }).then(function(r) { return r.json(); }).then(function(data) {
+            if (data.fragments) {
+                updateBadgeFromFragments(data.fragments);
+                updateCartMapFromFragments(data.fragments);
+            }
+            var cm = getCartMap();
+            if (cm[productId]) valueEl.textContent = cm[productId].qty;
+            cartBounce();
+        }).catch(function() {
+            valueEl.textContent = oldQty;
+        });
+    }
+
+    function cardRemoveAddQty(productId, newQty, stepper, valueEl, oldQty) {
+        var cm = getCartMap();
+        var cartKey = cm[productId] ? cm[productId].key : null;
+        if (!cartKey) return;
+
+        var fd = new FormData();
+        fd.append('cart_item_key', cartKey);
+
+        fetch(farmapazData.homeUrl + '/?wc-ajax=remove_from_cart', {
+            method: 'POST', body: fd
+        }).then(function(r) { return r.json(); }).then(function(data) {
+            var fd2 = new FormData();
+            fd2.append('product_id', productId);
+            fd2.append('quantity', newQty);
+            return fetch(farmapazData.homeUrl + '/?wc-ajax=add_to_cart', {
+                method: 'POST', body: fd2
+            }).then(function(r) { return r.json(); });
+        }).then(function(data) {
+            if (data.fragments) {
+                updateBadgeFromFragments(data.fragments);
+                updateCartMapFromFragments(data.fragments);
+            }
+            var cm = getCartMap();
+            if (cm[productId]) valueEl.textContent = cm[productId].qty;
+            cartBounce();
+        }).catch(function() {
+            valueEl.textContent = oldQty;
+        });
+    }
+
+    function removeFromCardCart(productId, stepper) {
+        var cm = getCartMap();
+        var cartKey = cm[productId] ? cm[productId].key : null;
+        if (!cartKey) return;
+
+        var fd = new FormData();
+        fd.append('cart_item_key', cartKey);
+
+        fetch(farmapazData.homeUrl + '/?wc-ajax=remove_from_cart', {
+            method: 'POST', body: fd
+        }).then(function(r) { return r.json(); }).then(function(data) {
+            if (data.fragments) {
+                updateBadgeFromFragments(data.fragments);
+                updateCartMapFromFragments(data.fragments);
+            }
+            cartBounce();
+            restoreAddBtn(productId, stepper);
+        }).catch(function() {
+            location.reload();
+        });
+    }
+
+    function restoreAddBtn(productId, stepper) {
+        var container = stepper.closest('.cart-card-actions') || stepper.parentNode;
+        if (!container) return;
+
+        var isShop = container.classList.contains('sp-card-actions');
+        var btn = document.createElement('a');
+
+        if (isShop) {
+            btn.href = '?add-to-cart=' + productId;
+            btn.className = 'sp-card-btn sp-card-btn-cart';
+            btn.dataset.product_id = productId;
+            btn.innerHTML = '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg> Añadir';
+        } else {
+            btn.href = '?add-to-cart=' + productId;
+            btn.className = 'flex items-center justify-center gap-2 w-full py-2.5 text-sm font-semibold rounded-xl transition-all duration-300 shadow-sm';
+            btn.style.background = 'linear-gradient(135deg, #09146E 0%, #0a1a7a 100%)';
+            btn.style.color = 'white';
+            btn.dataset.product_id = productId;
+            btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg> Comprar';
+        }
+
+        container.innerHTML = '';
+        container.appendChild(btn);
+        window.farmapazBindAddToCart(container);
+    }
+
+    // Bind initial steppers (for products already in cart on page load)
+    bindCardSteppers();
+
+    // Suppress default WooCommerce notices
+    jQuery(document.body).on('wc_fragment_refresh added_to_cart', function() {
+        cartBounce();
+        // Remove any default WooCommerce notices that appear
+        document.querySelectorAll('.woocommerce-message, .woocommerce-notice, .woocommerce-info').forEach(function(el) {
+            if (el.closest('.farmapaz-toast')) return;
+            el.remove();
         });
     });
 

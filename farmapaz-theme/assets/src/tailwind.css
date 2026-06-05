@@ -114,18 +114,7 @@
   @apply bg-gray-50 rounded-2xl p-6;
 }
 
-/* Checkout */
-.woocommerce-checkout {
-  @apply grid lg:grid-cols-3 gap-8;
-}
-
-.woocommerce-checkout > .col2-set {
-  @apply lg:col-span-2;
-}
-
-#order_review {
-  @apply lg:col-span-1;
-}
+/* Checkout layout handled by shop.css (flex two-column) */
 
 /* WhatsApp Float */
 .whatsapp-float {

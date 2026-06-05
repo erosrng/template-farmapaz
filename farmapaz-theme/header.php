@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://farmapazvenezuela.com">
+    <link rel="dns-prefetch" href="https://farmapazvenezuela.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="<?= get_template_directory_uri(); ?>/assets/images/favicon.ico">
     <link rel="apple-touch-icon" sizes="180x180" href="<?= get_template_directory_uri(); ?>/assets/images/apple-touch-icon.png">
@@ -116,9 +118,9 @@
                     <a href="<?= esc_url(wc_get_cart_url()); ?>"
                        class="relative flex items-center space-x-1.5 text-gray-600 hover:text-brand-green transition-colors text-xs sm:text-sm font-medium p-1 sm:p-0">
                         <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
-                        <span class="hidden md:inline">Carrito</span>
+                         <span class="hidden md:inline">Carrito</span>
                         <?php if (WC()->cart): ?>
-                            <span class="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 bg-brand-orange text-white text-xs font-bold rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center shadow-sm">
+                            <span id="cart-count" class="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 bg-brand-orange text-white text-xs font-bold rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center shadow-sm">
                                 <?= WC()->cart->get_cart_contents_count(); ?>
                             </span>
                         <?php endif; ?>
@@ -135,55 +137,57 @@
         </div>
     </div>
 
-    <!-- Desktop Navigation -->
-    <nav class="hidden lg:block" style="background: linear-gradient(90deg, #5A7D43 0%, #4a6a36 100%);">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center h-11">
-                <!-- Categories Mega Dropdown -->
-                <div class="relative group">
-                    <button class="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white hover:text-brand-yellow transition-colors rounded-lg hover:bg-white hover:bg-opacity-10">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-                        Categorías
-                        <svg class="w-3 h-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                    </button>
-                    <div class="absolute top-full left-0 mt-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                        <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-5" style="min-width: 600px;">
-                            <?php
-                            $cats = get_terms([
-                                'taxonomy'   => 'product_cat',
-                                'hide_empty' => true,
-                                'parent'     => 0,
-                                'orderby'    => 'count',
-                                'order'      => 'DESC',
-                            ]);
-                            if (!empty($cats) && !is_wp_error($cats)):
-                            ?>
-                            <div class="grid grid-cols-3 gap-2">
-                                <?php foreach ($cats as $cat): ?>
-                                <a href="<?= get_term_link($cat); ?>"
-                                   class="flex items-center gap-3 p-3 rounded-xl hover:bg-brand-green hover:bg-opacity-5 hover:text-brand-green transition-all group/cat">
-                                    <div class="w-9 h-9 rounded-lg flex items-center justify-center text-brand-green transition-all" style="background: rgba(90,125,67,0.1);">
-                                        <?= farmapaz_cat_icon($cat->slug); ?>
-                                    </div>
-                                    <div>
-                                        <span class="text-sm font-medium text-gray-700 group-hover/cat:text-brand-green transition-colors"><?= $cat->name; ?></span>
-                                        <span class="text-xs text-gray-400 block"><?= $cat->count; ?> prod.</span>
-                                    </div>
-                                </a>
-                                <?php endforeach; ?>
-                            </div>
-                            <?php endif; ?>
-                            <div class="mt-3 pt-3 border-t border-gray-100 text-center">
-                                <a href="<?= get_permalink(wc_get_page_id('shop')); ?>" class="text-sm text-brand-green font-semibold hover:underline">
-                                    Ver todas las categorías →
-                                </a>
+    <!-- Desktop Navigation - Full Width -->
+    <nav class="hidden lg:block w-full" style="background: linear-gradient(90deg, #5A7D43 0%, #4a6a36 100%);">
+        <div class="w-full px-2 sm:px-4 lg:px-6">
+            <div class="flex items-center justify-center h-11 gap-2">
+
+                                <!-- Categorías button with text -->
+                    <div class="relative group flex-shrink-0">
+                        <button class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-white transition-all duration-200 hover:scale-105 hover:bg-white hover:bg-opacity-15 flex-shrink-0"
+                                style="background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25);">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                            Categorías
+                            <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+                        </button>
+                        <div class="absolute top-full left-0 mt-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                            <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-5" style="min-width: 580px;">
+                                <?php
+                                $all_cats = get_terms([
+                                    'taxonomy'   => 'product_cat',
+                                    'hide_empty' => true,
+                                    'parent'     => 0,
+                                    'orderby'    => 'count',
+                                    'order'      => 'DESC',
+                                ]);
+                                if (!empty($all_cats) && !is_wp_error($all_cats)):
+                                ?>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <?php foreach ($all_cats as $acat): ?>
+                                    <a href="<?= get_term_link($acat); ?>"
+                                       class="flex items-center gap-3 p-3 rounded-xl hover:bg-brand-green hover:bg-opacity-5 hover:text-brand-green transition-all group/cat">
+                                        <div class="w-9 h-9 rounded-lg flex items-center justify-center text-brand-green transition-all" style="background: rgba(90,125,67,0.1);">
+                                            <?= farmapaz_cat_icon($acat->slug); ?>
+                                        </div>
+                                        <div>
+                                            <span class="text-sm font-medium text-gray-700 group-hover/cat:text-brand-green transition-colors"><?= farmapaz_cat_display_name($acat->slug); ?></span>
+                                            <span class="text-xs text-gray-400 block"><?= $acat->count; ?> prod.</span>
+                                        </div>
+                                    </a>
+                                    <?php endforeach; ?>
+                                </div>
+                                <?php endif; ?>
+                                <div class="mt-3 pt-3 border-t border-gray-100 text-center">
+                                    <a href="<?= get_permalink(wc_get_page_id('shop')); ?>" class="text-sm text-brand-green font-semibold hover:underline">
+                                        Ver todas las categorías →
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Quick Links -->
-                <div class="flex items-center gap-1 ml-3">
+                <!-- Left: Categories section -->
+                <div class="flex items-center gap-1 flex-shrink-0">
                     <a href="<?= esc_url(get_permalink(wc_get_page_id('shop'))); ?>"
                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-white transition-all duration-200 hover:scale-105"
                        style="background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);"
@@ -216,18 +220,48 @@
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                         Sucursales
                     </a>
+
+                    <?php
+                    wp_nav_menu([
+                        'theme_location' => 'primary',
+                        'container'      => false,
+                        'menu_class'     => 'flex items-center',
+                        'fallback_cb'    => false,
+                        'depth'          => 3,
+                        'walker'         => new Farmapaz_Walker_Nav(),
+                    ]);
+                    ?>
                 </div>
 
-                <?php
-                wp_nav_menu([
-                    'theme_location' => 'primary',
-                    'container'      => false,
-                    'menu_class'     => 'flex items-center ml-auto',
-                    'fallback_cb'    => false,
-                    'depth'          => 3,
-                    'walker'         => new Farmapaz_Walker_Nav(),
-                ]);
-                ?>
+                <!-- Right: Quick Links + Primary Menu -->
+                <div class="flex items-center gap-1 min-w-0 overflow-x-auto scrollbar-hide" style="-webkit-overflow-scrolling: touch;">
+
+                    <!-- Category Pills -->
+                    <?php
+                    $nav_cats = get_terms([
+                        'taxonomy'   => 'product_cat',
+                        'hide_empty' => true,
+                        'parent'     => 0,
+                        'orderby'    => 'count',
+                        'order'      => 'DESC',
+                        'number'     => 6,
+                    ]);
+                    if (!empty($nav_cats) && !is_wp_error($nav_cats)):
+                        $nav_cat_colors = ['#FEAB0D', '#F97316', '#5A7D43', '#09146E', '#FF1A27', '#7c3aed'];
+                        $i = 0;
+                        foreach ($nav_cats as $nav_cat):
+                            $color = $nav_cat_colors[$i % count($nav_cat_colors)];
+                            $i++;
+                    ?>
+                    <a href="<?= get_term_link($nav_cat); ?>"
+                       class="flex-shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-200 hover:scale-105 hover:brightness-110"
+                       style="background: <?= $color; ?>; color: #fff;">
+                        <?= farmapaz_cat_icon($nav_cat->slug); ?>
+                        <?= farmapaz_cat_display_name($nav_cat->slug); ?>
+                    </a>
+                    <?php endforeach; endif; ?>
+                </div>
+
             </div>
         </div>
     </nav>
@@ -246,7 +280,7 @@
             </button>
         </div>
         <div class="p-4 overflow-y-auto" style="height: calc(100% - 65px);">
-            <form role="search" method="get" action="<?= esc_url(home_url('/')); ?>" class="relative mb-6">
+            <form role="search" method="get" action="<?= esc_url(home_url('/')); ?>" class="relative mb-5">
                 <input type="text" name="s" placeholder="Buscar productos..."
                        class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-green focus:border-brand-green">
                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
@@ -280,7 +314,7 @@
                         <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style="background: rgba(90,125,67,0.08); color: #5A7D43;">
                             <?= farmapaz_cat_icon($mcat->slug); ?>
                         </div>
-                        <span><?= $mcat->name; ?></span>
+                        <span><?= farmapaz_cat_display_name($mcat->slug); ?></span>
                         <span class="ml-auto text-xs text-gray-400"><?= $mcat->count; ?></span>
                     </a>
                     <?php endforeach; endif; ?>

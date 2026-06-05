@@ -3,7 +3,7 @@
 <!-- Footer -->
 <footer class="text-white" style="background: #09146E;">
     <!-- Newsletter -->
-    <div class="border-b border-white border-opacity-10">
+    <!-- <div class="border-b border-white border-opacity-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
             <div class="grid sm:grid-cols-2 gap-6 sm:gap-8 items-center fade-in-up">
                 <div>
@@ -22,7 +22,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> -->
 
     <!-- Main Footer -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
@@ -67,7 +67,7 @@
 
             <!-- Contact -->
             <div class="fade-in-up" style="transition-delay: 0.2s">
-                <h4 class="text-xs font-semibold uppercase tracking-wider text-white text-opacity-80 mb-5 sm:mb-6">Contacto</h4>
+                <h4 class="text-xs font-semibold uppercase tracking-wider text-white text-opacity-80 mb-5 sm:mb-6">Call center</h4>
                 <ul class="space-y-3 sm:space-y-4 text-xs sm:text-sm text-white text-opacity-60">
                     <li class="flex items-start gap-3">
                         <?= farmapaz_icon('phone') ?>
@@ -81,10 +81,10 @@
                         <?= farmapaz_icon('location') ?>
                         <span>Maturín, Edo Monagas</span>
                     </li>
-                    <li class="flex items-start gap-3">
+                    <!-- <li class="flex items-start gap-3">
                         <?= farmapaz_icon('clock') ?>
                         <span>7:30 am - 9:00 pm</span>
-                    </li>
+                    </li> -->
                 </ul>
             </div>
 

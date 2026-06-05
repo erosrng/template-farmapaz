@@ -40,7 +40,7 @@
                         <?= farmapaz_cat_icon($slug); ?>
                     </div>
                     <span class="text-sm sm:text-base font-semibold mt-3 text-center leading-tight line-clamp-2" style="color: #FEAB0D;">
-                        <?= $cat->name; ?>
+                        <?= farmapaz_cat_display_name($cat->slug); ?>
                     </span>
                     <span class="inline-flex items-center gap-1.5 text-xs font-medium mt-2 px-3 py-1 rounded-full" style="background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.06);">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>

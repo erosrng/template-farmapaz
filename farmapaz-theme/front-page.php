@@ -42,7 +42,7 @@ get_header(); ?>
     'limit'       => 15,
     'orderby'     => 'date',
     'layout'      => 'carousel',
-    'bg_tone'     => 'light',
+    'bg_tone'     => 'brand-blue',
 ]); ?>
 </section>
 

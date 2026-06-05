@@ -9,10 +9,12 @@ get_header(); ?>
     <?php
     while (have_posts()): the_post();
         global $product;
+        $product_id = $product->get_id();
         $is_sale = $product->is_on_sale() && $product->get_regular_price() > 0;
         $regular = $product->get_regular_price();
         $sale = $product->get_sale_price();
         $percent = 0;
+        $is_controlled = farmapaz_is_controlled_product($product_id);
         if ($is_sale && $regular > 0) {
             $percent = round((($regular - $sale) / $regular) * 100);
         }
@@ -35,9 +37,9 @@ get_header(); ?>
         <span class="text-gray-600 truncate max-w-[200px]"><?php the_title(); ?></span>
     </nav>
 
-    <div class="grid lg:grid-cols-2 gap-8 lg:gap-16">
+    <div class="sp-layout">
         <!-- Gallery -->
-        <div class="space-y-4">
+        <div class="sp-gallery">
             <div class="relative group">
                 <?php if ($is_sale): ?>
                     <span class="absolute top-4 left-4 z-10 px-4 py-2 rounded-xl text-sm font-bold text-white"
@@ -48,7 +50,8 @@ get_header(); ?>
                 <div class="rounded-2xl overflow-hidden bg-gray-50/50" style="backdrop-filter: blur(4px);">
                     <img src="<?= farmapaz_product_img_fallback(get_the_post_thumbnail_url(get_the_ID(), 'full')); ?>"
                          alt="<?php the_title(); ?>"
-                         class="product-gallery-main w-full h-auto object-cover transition-transform duration-500 group-hover:scale-[1.02]">
+                         class="product-gallery-main w-full h-auto object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                         onerror="this.onerror=null;this.src='<?= get_template_directory_uri(); ?>/assets/images/producto.png'">
                 </div>
             </div>
             <?php
@@ -63,7 +66,9 @@ get_header(); ?>
                 <button class="product-gallery-thumb w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden flex-shrink-0 transition-all duration-200 hover:ring-2 hover:ring-brand-blue/30 active:scale-95"
                         style="border: 2px solid #09146E;"
                         data-src="<?= esc_attr($main_full); ?>">
-                    <img src="<?= esc_attr($main_thumb); ?>" alt="" class="w-full h-full object-cover bg-gray-50">
+                    <img src="<?= esc_attr($main_thumb); ?>" alt=""
+                         class="w-full h-full object-cover bg-gray-50"
+                         onerror="this.onerror=null;this.src='<?= get_template_directory_uri(); ?>/assets/images/producto.png'">
                 </button>
                 <?php foreach ($attachment_ids as $attachment_id):
                     $thumb = farmapaz_product_img_fallback(wp_get_attachment_image_url($attachment_id, 'thumbnail'));
@@ -72,7 +77,9 @@ get_header(); ?>
                     <button class="product-gallery-thumb w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden flex-shrink-0 transition-all duration-200 hover:ring-2 hover:ring-brand-blue/30 active:scale-95"
                             style="border: 2px solid transparent;"
                             data-src="<?= esc_attr($full); ?>">
-                        <img src="<?= esc_attr($thumb); ?>" alt="" class="w-full h-full object-cover bg-gray-50">
+                        <img src="<?= esc_attr($thumb); ?>" alt=""
+                             class="w-full h-full object-cover bg-gray-50"
+                             onerror="this.onerror=null;this.src='<?= get_template_directory_uri(); ?>/assets/images/producto.png'">
                     </button>
                 <?php endforeach; ?>
             </div>
@@ -80,7 +87,7 @@ get_header(); ?>
         </div>
 
         <!-- Product Info -->
-        <div class="space-y-5 sm:space-y-6">
+        <div class="sp-info">
             <?php if ($cats): ?>
             <div class="flex flex-wrap gap-2">
                 <?php foreach ($cats as $cat): ?>
@@ -91,6 +98,25 @@ get_header(); ?>
                 <?php endforeach; ?>
             </div>
             <?php endif; ?>
+
+            <!-- Brand & SKU -->
+            <div class="flex flex-wrap items-center gap-3 text-xs" style="color: rgba(9,20,110,0.45);">
+                <?php
+                $brands = get_the_terms(get_the_ID(), 'product_brand');
+                if ($brands && !is_wp_error($brands)):
+                ?>
+                <span class="flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                    <?= esc_html($brands[0]->name); ?>
+                </span>
+                <?php endif; ?>
+                <?php if ($product->get_sku()): ?>
+                <span class="flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                    SKU: <?= esc_html($product->get_sku()); ?>
+                </span>
+                <?php endif; ?>
+            </div>
 
             <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight" style="color: #09146E;"><?php the_title(); ?></h1>
 
@@ -108,6 +134,18 @@ get_header(); ?>
                 <p class="text-gray-500 leading-relaxed text-sm sm:text-base"><?= $product->get_short_description(); ?></p>
             <?php endif; ?>
 
+            <?php if ($is_controlled): ?>
+            <!-- Controlled medication - in-store only -->
+            <div class="sp-controlled-notice">
+                <div class="sp-controlled-icon">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                </div>
+                <div>
+                    <strong>Medicamento controlado</strong>
+                    <p>Este producto requiere receta médica y solo se vende en nuestras tiendas físicas. Preséntate en cualquiera de nuestras sucursales con tu receta para adquirirlo.</p>
+                </div>
+            </div>
+            <?php else: ?>
             <!-- Add to Cart -->
             <div class="space-y-3 pt-2">
                 <div class="flex items-center gap-3">
@@ -123,7 +161,7 @@ get_header(); ?>
                    style="background: linear-gradient(135deg, #09146E, #0c1fa0); box-shadow: 0 4px 20px rgba(9,20,110,0.2);"
                    onmouseover="this.style.boxShadow='0 8px 32px rgba(9,20,110,0.3)'; this.style.transform='translateY(-1px)'"
                    onmouseout="this.style.boxShadow='0 4px 20px rgba(9,20,110,0.2)'; this.style.transform='translateY(0)'"
-                   data-product_id="<?= $product->get_id(); ?>">
+                   data-product_id="<?= $product_id; ?>">
                     Añadir al carrito
                 </a>
 
@@ -137,6 +175,7 @@ get_header(); ?>
                     Consultar por WhatsApp
                 </a>
             </div>
+            <?php endif; ?>
 
             <!-- Trust badges -->
             <div class="grid grid-cols-2 gap-3 pt-4" style="border-top: 1px solid rgba(9,20,110,0.06);">
@@ -155,13 +194,18 @@ get_header(); ?>
     <!-- Description / Stock Availability -->
     <?php if ($product->get_description()): ?>
     <div class="mt-16 lg:mt-24 max-w-4xl mx-auto">
-        <button onclick="toggleStock(this)" class="w-full flex items-center gap-3 mb-6 text-left group cursor-pointer">
+        <button onclick="toggleStock(this)" class="w-full flex items-center gap-3 mb-4 text-left group cursor-pointer">
             <div class="w-1 h-8 rounded-full transition-all duration-300" style="background: linear-gradient(to bottom, #09146E, #FEAB0D);"></div>
             <div class="flex-1">
                 <h2 class="text-xl sm:text-2xl font-bold transition-colors" style="color: #09146E;">Disponibilidad en sucursales</h2>
-                <p class="text-xs sm:text-sm mt-0.5" style="color: rgba(9,20,110,0.4);">Stock en tiempo real — toca para ver</p>
+                <p class="text-xs sm:text-sm mt-0.5" style="color: rgba(9,20,110,0.4);">Stock en tiempo real</p>
             </div>
-            <svg class="w-5 h-5 transition-transform duration-300" style="color: rgba(9,20,110,0.3);" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="stockChevron"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-300"
+                  style="background: rgba(9,20,110,0.06); color: #09146E;"
+                  id="stockHint">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+                Toca para ver
+            </span>
         </button>
 
         <div id="stockContent" class="overflow-hidden transition-all duration-500 ease-out" style="max-height: 0; opacity: 0;">
@@ -232,7 +276,7 @@ get_header(); ?>
                     <span class="text-sm font-semibold" style="color: rgba(255,255,255,0.7);">Sucursales</span>
                     <span class="text-xs px-2 py-1 rounded-full" style="background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.4);"><?= count($branches); ?> ubicaciones</span>
                 </div>
-                <div class="space-y-2 max-h-[420px] overflow-y-auto pr-2 branch-scroll" style="scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent;">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[420px] overflow-y-auto pr-2 branch-scroll" style="scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent;">
                     <?php foreach ($branches as $i => $b): ?>
                     <div class="flex items-center justify-between p-3 sm:p-4 rounded-xl transition-all duration-300 branch-item-reveal"
                          style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); animation-delay: <?= $i * 0.03; ?>s;"
@@ -283,6 +327,41 @@ get_header(); ?>
 </div>
 
 <style>
+.sp-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+.sp-gallery {
+    width: 100%;
+}
+.sp-gallery > * + * {
+    margin-top: 1rem;
+}
+.sp-info {
+    width: 100%;
+}
+.sp-info > * + * {
+    margin-top: 1.25rem;
+}
+@media (min-width: 640px) {
+    .sp-info > * + * {
+        margin-top: 1.5rem;
+    }
+}
+@media (min-width: 1024px) {
+    .sp-layout {
+        flex-direction: row;
+        gap: 4rem;
+    }
+    .sp-gallery {
+        width: 50%;
+    }
+    .sp-info {
+        width: 50%;
+    }
+}
+
 .branch-scroll::-webkit-scrollbar { width: 4px; }
 .branch-scroll::-webkit-scrollbar-track { background: transparent; }
 .branch-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
@@ -299,19 +378,33 @@ get_header(); ?>
 <script>
 function toggleStock(btn) {
     const content = document.getElementById('stockContent');
-    const chevron = document.getElementById('stockChevron');
+    const hint = document.getElementById('stockHint');
     if (!content) return;
     const isOpen = content.style.maxHeight !== '0px' && content.style.maxHeight !== '';
     if (isOpen) {
         content.style.maxHeight = '0';
         content.style.opacity = '0';
-        if (chevron) chevron.style.transform = 'rotate(0deg)';
+        if (hint) hint.style.display = 'inline-flex';
     } else {
         content.style.maxHeight = content.scrollHeight + 'px';
         content.style.opacity = '1';
-        if (chevron) chevron.style.transform = 'rotate(180deg)';
+        if (hint) hint.style.display = 'none';
     }
 }
+
+// Gallery
+document.querySelectorAll('.product-gallery-thumb').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        var src = this.getAttribute('data-src');
+        var main = document.querySelector('.product-gallery-main');
+        if (!src || !main) return;
+        main.src = src;
+        document.querySelectorAll('.product-gallery-thumb').forEach(function(t) {
+            t.style.borderColor = 'transparent';
+        });
+        this.style.borderColor = '#09146E';
+    });
+});
 </script>
 
 <?php get_footer(); ?>
