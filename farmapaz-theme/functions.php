@@ -4,6 +4,7 @@
  */
 
 define('FARMA_VERSION', '1.0.3');
+define('FARMA_GEMINI_KEY', 'AIzaSyDf4t4swmo2UpWaEpAwYUZ44a0IsNpvkGw');
 
 // Include custom nav walker
 require_once get_template_directory() . '/inc/nav-walker.php';
@@ -71,6 +72,13 @@ function farmapaz_enqueue() {
     }
 
     if (is_front_page() || is_home()) {
+        wp_enqueue_style('farmapaz-shop', get_template_directory_uri() . '/assets/css/shop.css', ['farmapaz-style'], FARMA_VERSION);
+    }
+
+    // Pastillín chatbot — always available
+    wp_enqueue_script('farmapaz-pastillin', get_template_directory_uri() . '/assets/js/pastillin.js', ['farmapaz-app'], FARMA_VERSION, true);
+    // Pastillín needs shop.css styles everywhere
+    if (!is_shop() && !is_product_category() && !is_product_tag() && !is_product_taxonomy() && !is_front_page() && !is_home() && !is_cart() && !is_checkout() && !is_account_page()) {
         wp_enqueue_style('farmapaz-shop', get_template_directory_uri() . '/assets/css/shop.css', ['farmapaz-style'], FARMA_VERSION);
     }
 
@@ -1432,4 +1440,166 @@ function farmapaz_render_active_filters($current_cats = [], $current_brands = []
         <?php endif; ?>
     </div>
     <?php
+}
+
+// ====== PASTILLÍN — CHATBOT IA DE FARMApAZ ======
+
+define('FARMA_PASTILLIN_OPTION', 'farmapaz_gemini_key');
+
+// Admin page for Gemini API key
+add_action('admin_menu', function () {
+    add_options_page('Pastillín API Key', 'Pastillín AI', 'manage_options', 'pastillin', function () {
+        if (!current_user_can('manage_options')) wp_die('Acceso denegado');
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['gemini_key'])) {
+            update_option(FARMA_PASTILLIN_OPTION, sanitize_text_field($_POST['gemini_key']));
+            echo '<div class="updated"><p>API Key guardada.</p></div>';
+        }
+        $key = get_option(FARMA_PASTILLIN_OPTION, '');
+        ?>
+        <div class="wrap">
+            <h1>Pastillín — Gemini API Key</h1>
+            <p>Obtén tu API Key gratis en <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a>.</p>
+            <form method="post">
+                <input type="text" name="gemini_key" value="<?= esc_attr($key); ?>" style="width:400px;max-width:100%;">
+                <button type="submit" class="button button-primary">Guardar</button>
+            </form>
+            <p style="margin-top:20px;color:#666;">Sin API Key, Pastillín funciona en modo básico (búsqueda local de productos).</p>
+        </div>
+        <?php
+    });
+});
+
+// Build Pastillín system prompt with live product data
+function farmapaz_pastillin_system_prompt() {
+    $prompt = "Eres Pastillín, el asistente virtual IA de Farmapaz Venezuela. ";
+    $prompt .= "Eres amigable, entusiasta, usas español y hablas en primera persona. ";
+    $prompt .= "Tu personalidad: fresco, juvenil, futurista, con estilo Frutiger Aero. ";
+    $prompt .= "Usas emojis ocasionales (💊✨🔬🌿) y frases cortas y claras.\n\n";
+    $prompt .= "REGLAS ESTRICTAS:\n";
+    $prompt .= "- SOLO respondes sobre Farmapaz Venezuela. ";
+    $prompt .= "- Si te preguntan por Farmatodo, Farmadon, Farmatina, Locatel o cualquier otra farmacia, ";
+    $prompt .= "  dices amablemente: 'Lo siento, solo conozco Farmapaz 🙏 ¿Quieres que te ayude con algo de Farmapaz?'\n";
+    $prompt .= "- No inventes precios ni productos que no existan en Farmapaz.\n";
+    $prompt .= "- Si no sabes algo, di que lo consultarás y sugiere contactar por WhatsApp.\n";
+    $prompt .= "- No des consejos médicos. Si te preguntan sobre síntomas, sugiere consultar a un médico.\n";
+    $prompt .= "- Siempre mantén un tono positivo, servicial y futurista.\n\n";
+
+    $cats = get_terms(['taxonomy' => 'product_cat', 'hide_empty' => true]);
+    if (!empty($cats) && !is_wp_error($cats)) {
+        $prompt .= "CATEGORÍAS DISPONIBLES:\n";
+        foreach ($cats as $cat) {
+            $prompt .= "- {$cat->name} ({$cat->count} productos)\n";
+        }
+        $prompt .= "\n";
+    }
+
+    $prompt .= "ENLACES ÚTILES:\n";
+    $prompt .= "- Tienda online: " . get_permalink(wc_get_page_id('shop')) . "\n";
+    $prompt .= "- Carrito: " . wc_get_cart_url() . "\n";
+    $prompt .= "- WhatsApp: https://wa.me/584128798885\n";
+    $prompt .= "- Instagram: @farmapazvzla\n";
+    $prompt .= "- Envío gratis en compras desde \$10.\n";
+    $prompt .= "- Medicamentos controlados solo en tiendas físicas con receta.\n\n";
+    $prompt .= "Sucursales: Pide al usuario que visite la página o contacte por WhatsApp para conocer las sucursales.\n\n";
+    $prompt .= "FORMATO DE RESPUESTA:\n";
+    $prompt .= "- Respuestas cortas y directas (máximo 3-4 líneas).\n";
+    $prompt .= "- Si el usuario pide productos, muéstrale los que tenemos disponibles.\n";
+    $prompt .= "- Siempre finaliza ofreciendo ayuda adicional.\n";
+
+    return $prompt;
+}
+
+// Search products for context
+function farmapaz_pastillin_search_products($query) {
+    $products = [];
+    $args = [
+        'post_type'      => 'product',
+        'post_status'    => 'publish',
+        'posts_per_page' => 8,
+        's'              => $query,
+        'meta_query'     => [
+            ['key' => '_stock_status', 'value' => 'instock'],
+            ['key' => '_thumbnail_id', 'compare' => 'EXISTS'],
+        ],
+    ];
+    $loop = new WP_Query($args);
+    if ($loop->have_posts()) {
+        while ($loop->have_posts()) {
+            $loop->the_post();
+            $product = wc_get_product(get_the_ID());
+            if ($product) {
+                $cats = wp_get_post_terms(get_the_ID(), 'product_cat', ['fields' => 'names']);
+                $products[] = [
+                    'name'   => $product->get_name(),
+                    'price'  => wc_price($product->get_price()),
+                    'cat'    => !empty($cats) ? $cats[0] : '',
+                    'url'    => get_permalink(),
+                    'stock'  => $product->is_in_stock() ? 'Disponible' : 'Agotado',
+                ];
+            }
+        }
+    }
+    wp_reset_postdata();
+    return $products;
+}
+
+// AJAX handler for Pastillín
+add_action('wp_ajax_farmapaz_pastillin', 'farmapaz_pastillin_ajax');
+add_action('wp_ajax_nopriv_farmapaz_pastillin', 'farmapaz_pastillin_ajax');
+function farmapaz_pastillin_ajax() {
+    $message = isset($_POST['message']) ? trim(sanitize_text_field($_POST['message'])) : '';
+    if (!$message) {
+        wp_send_json(['reply' => '¡Hola! Soy Pastillín 💊 ¿En qué puedo ayudarte hoy?']);
+    }
+
+    $api_key = get_option(FARMA_PASTILLIN_OPTION, '');
+    if (!$api_key && defined('FARMA_GEMINI_KEY')) {
+        $api_key = FARMA_GEMINI_KEY;
+    }
+    $products = farmapaz_pastillin_search_products($message);
+
+    if ($api_key) {
+        $system_prompt = farmapaz_pastillin_system_prompt();
+        $context = '';
+        if (!empty($products)) {
+            $context = "Productos de Farmapaz relacionados:\n";
+            foreach ($products as $p) {
+                $context .= "- {$p['name']} — {$p['price']} — {$p['cat']} — {$p['stock']}\n";
+            }
+            $context .= "\n";
+        }
+
+        $contents = [
+            ['role' => 'user', 'parts' => [['text' => $system_prompt . "\n\n" . $context . "Usuario: " . $message]]],
+        ];
+
+        $response = wp_remote_post('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' . $api_key, [
+            'headers' => ['Content-Type' => 'application/json'],
+            'body'    => json_encode(['contents' => $contents]),
+            'timeout' => 15,
+        ]);
+
+        if (!is_wp_error($response)) {
+            $body = json_decode(wp_remote_retrieve_body($response), true);
+            $reply = $body['candidates'][0]['content']['parts'][0]['text'] ?? '';
+            if ($reply) {
+                wp_send_json(['reply' => $reply]);
+            }
+        }
+    }
+
+    // Fallback: local response
+    if (!empty($products)) {
+        $reply = "¡Claro! En Farmapaz tenemos:\n";
+        $count = 0;
+        foreach ($products as $p) {
+            if ($count >= 5) break;
+            $reply .= "🔹 {$p['name']} — {$p['price']}\n";
+            $count++;
+        }
+        $reply .= "\n¿Quieres ver más detalles de alguno? 😊";
+        wp_send_json(['reply' => $reply]);
+    }
+
+    wp_send_json(['reply' => "No encontré \"{$message}\" en Farmapaz. ¿Pruebas con otra palabra o prefieres hablar con un asesor por WhatsApp? 🙏"]);
 }

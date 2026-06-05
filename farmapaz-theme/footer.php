@@ -115,6 +115,33 @@
 <!-- WhatsApp Float -->
 <?= do_shortcode('[farmapaz_whatsapp]'); ?>
 
+<!-- Pastillín — Chatbot -->
+<button id="pastillin-btn" aria-label="Abrir Pastillín">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+</button>
+
+<div id="pastillin-box">
+    <div class="past-header">
+        <div class="past-header-avatar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-3-3v6m-7 4l2-2m14 2l-2-2M12 21a9 9 0 100-18 9 9 0 000 18z"/></svg>
+        </div>
+        <div class="past-header-info">
+            <strong>Pastillín</strong>
+            <span>Asistente Farmapaz</span>
+        </div>
+        <button id="pastillin-close" aria-label="Cerrar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+    </div>
+    <div class="past-messages" id="pastillin-msgs"></div>
+    <div class="past-input-wrap">
+        <textarea id="pastillin-input" placeholder="Escribe tu mensaje..." rows="1"></textarea>
+        <button id="pastillin-send" aria-label="Enviar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+        </button>
+    </div>
+</div>
+
 <?php wp_footer(); ?>
 </body>
 </html>
