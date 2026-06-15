@@ -1,10 +1,13 @@
 <?php
 /**
  * Farmapaz Theme Functions
+ *
+ * CONVENCIÓN:
+ *   [†] (dagger) marca modificaciones personalizadas hechas sobre el código base.
+ *   Busca "[†]" para encontrar rápido todos los cambios custom.
  */
 
 define('FARMA_VERSION', '1.0.3');
-define('FARMA_GEMINI_KEY', 'AIzaSyDf4t4swmo2UpWaEpAwYUZ44a0IsNpvkGw');
 
 // Include custom nav walker
 require_once get_template_directory() . '/inc/nav-walker.php';
@@ -18,12 +21,22 @@ add_filter('woocommerce_is_purchasable', function ($purchasable, $product) {
     if ($product && farmapaz_is_controlled_product($product->get_id())) {
         return false;
     }
+    // [†] Productos con precio $0 no se pueden comprar
+    if ($product && $product->get_price() !== '' && floatval($product->get_price()) === 0.0) {
+        return false;
+    }
     return $purchasable;
 }, 10, 2);
 
 add_filter('woocommerce_add_to_cart_validation', function ($passed, $product_id) {
     if (farmapaz_is_controlled_product($product_id)) {
         wc_add_notice('Este producto requiere receta médica y solo se vende en nuestras tiendas físicas.', 'error');
+        return false;
+    }
+    $product = wc_get_product($product_id);
+    // [†] Bloquear adición al carrito de productos con precio $0
+    if ($product && $product->get_price() !== '' && floatval($product->get_price()) === 0.0) {
+        wc_add_notice('Este producto no está disponible para la venta en línea.', 'error');
         return false;
     }
     return $passed;
@@ -461,6 +474,72 @@ function farmapaz_admin_order_custom_fields($order) {
     }
 }
 
+// Display custom checkout fields in order emails
+add_action('woocommerce_email_order_meta', 'farmapaz_email_order_custom_fields', 10, 3);
+function farmapaz_email_order_custom_fields($order, $sent_to_admin, $plain_text) {
+    if (!$order) return;
+    $fields = [
+        '_billing_cedula'            => 'Cédula',
+        '_billing_phone_banco'       => 'Teléfono afiliado al banco',
+        '_billing_numero_referencia' => 'Número de Referencia',
+    ];
+    if ($plain_text) {
+        echo "\n--- Datos de pago ---\n";
+        foreach ($fields as $meta_key => $label) {
+            $value = $order->get_meta($meta_key);
+            if ($value) {
+                echo $label . ': ' . $value . "\n";
+            }
+        }
+        $capture = $order->get_meta('_billing_capture_pago');
+        if ($capture) {
+            echo "Comprobante de pago: " . $capture . "\n";
+        }
+        echo "\n";
+    } else {
+        echo '<table class="td font-family" cellspacing="0" cellpadding="6" style="width: 100%;" border="1"><tbody>';
+        foreach ($fields as $meta_key => $label) {
+            $value = $order->get_meta($meta_key);
+            if ($value) {
+                echo '<tr><th class="td text-align-left" scope="row" style="width: 40%;">' . $label . '</th><td class="td text-align-left">' . esc_html($value) . '</td></tr>';
+            }
+        }
+        $capture = $order->get_meta('_billing_capture_pago');
+        if ($capture) {
+            echo '<tr><th class="td text-align-left" scope="row" style="width: 40%;">Comprobante de pago</th><td class="td text-align-left"><a href="' . esc_url($capture) . '" target="_blank">Ver imagen</a></td></tr>';
+        }
+        echo '</tbody></table>';
+    }
+}
+
+// Translate order item totals labels to Spanish
+add_filter('woocommerce_get_order_item_totals', 'farmapaz_translate_order_totals', 10, 3);
+function farmapaz_translate_order_totals($total_rows, $order, $tax_display) {
+    $translations = [
+        'cart_subtotal'  => 'Subtotal:',
+        'shipping'       => 'Envío:',
+        'payment_method' => 'Método de pago:',
+        'order_total'    => 'Total:',
+    ];
+    foreach ($total_rows as $key => &$row) {
+        if (isset($translations[$key])) {
+            $row['label'] = $translations[$key];
+        }
+    }
+    return $total_rows;
+}
+
+// Translate WooCommerce email headings to Spanish
+add_filter('woocommerce_email_heading_' . 'customer_processing_order', function($heading) {
+    return 'Pedido recibido';
+});
+add_filter('woocommerce_email_heading_' . 'customer_on_hold_order', function($heading) {
+    return 'Pedido recibido';
+});
+add_filter('woocommerce_email_heading_' . 'customer_completed_order', function($heading) {
+    return 'Pedido completado';
+});
+
 // Validate custom checkout fields
 add_action('woocommerce_checkout_process', 'farmapaz_validate_checkout_fields');
 function farmapaz_validate_checkout_fields() {
@@ -475,6 +554,33 @@ function farmapaz_validate_checkout_fields() {
         }
     }
 }
+
+// Translate WooCommerce search results title to Spanish
+add_filter('woocommerce_page_title', function($title) {
+    if (is_search()) {
+        return 'Resultados de búsqueda: "' . get_search_query() . '"';
+    }
+    return $title;
+});
+
+// Translate My Account navigation menu labels to Spanish
+add_filter('woocommerce_account_menu_items', function($items) {
+    $translations = [
+        'dashboard'       => 'Panel de Control',
+        'orders'          => 'Pedidos',
+        'downloads'       => 'Descargas',
+        'edit-address'    => 'Direcciones',
+        'payment-methods' => 'Métodos de Pago',
+        'edit-account'    => 'Detalles de la Cuenta',
+        'customer-logout' => 'Cerrar Sesión',
+    ];
+    foreach ($items as $key => &$label) {
+        if (isset($translations[$key])) {
+            $label = $translations[$key];
+        }
+    }
+    return $items;
+});
 
 // Render Capture del pago file upload after billing fields
 add_action('woocommerce_after_checkout_billing_form', 'farmapaz_render_capture_pago_field');
@@ -492,17 +598,27 @@ function farmapaz_render_capture_pago_field($checkout) {
                 <span>Seleccionar imagen</span>
             </div>
             <span class="farmapaz-capture-name"></span>
+            <div class="farmapaz-capture-preview"></div>
         </div>
         <span class="farmapaz-capture-hint">Formatos: PNG, JPG, WEBP</span>
     </div>
     <script>
     document.getElementById('billing_capture_pago')?.addEventListener('change', function() {
-        var nameEl = this.closest('.farmapaz-capture-input').querySelector('.farmapaz-capture-name');
+        var wrap = this.closest('.farmapaz-capture-wrap');
+        var nameEl = wrap.querySelector('.farmapaz-capture-name');
+        var previewEl = wrap.querySelector('.farmapaz-capture-preview');
         if (this.files && this.files[0]) {
             nameEl.textContent = this.files[0].name;
             nameEl.style.display = 'inline';
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                previewEl.innerHTML = '<img src="' + e.target.result + '" alt="Preview">';
+                previewEl.style.display = 'block';
+            };
+            reader.readAsDataURL(this.files[0]);
         } else {
             nameEl.style.display = 'none';
+            previewEl.style.display = 'none';
         }
     });
     </script>
@@ -599,6 +715,9 @@ function farmapaz_product_carousel($args = []) {
     if ($atts['featured']) {
         $meta_query[] = ['key' => '_featured', 'value' => 'yes'];
     }
+
+    // [†] Exclude products with price zero ($0 = sin precio asignado)
+    $meta_query[] = ['key' => '_price', 'value' => 0, 'compare' => '>', 'type' => 'DECIMAL'];
 
     $meta_query[] = ['key' => '_stock_status', 'value' => 'instock'];
     $meta_query[] = ['key' => '_thumbnail_id', 'compare' => 'EXISTS'];
@@ -937,6 +1056,7 @@ function farmapaz_search_suggest(WP_REST_Request $request) {
         'posts_per_page' => 20,
         'post_status'    => 'publish',
         'meta_query'     => [
+            ['key' => '_price', 'value' => 0, 'compare' => '>', 'type' => 'DECIMAL'], // [†] $0 excluded
             ['key' => '_stock_status', 'value' => 'instock'],
             ['key' => '_thumbnail_id', 'compare' => 'EXISTS'],
         ],
@@ -1013,6 +1133,7 @@ function farmapaz_pre_get_products($q) {
         // Stock status filter
         $meta_q = $q->get('meta_query');
         if (!is_array($meta_q)) $meta_q = [];
+        $meta_q[] = ['key' => '_price', 'value' => 0, 'compare' => '>', 'type' => 'DECIMAL']; // [†] $0 excluded
         $meta_q[] = ['key' => '_stock_status', 'value' => 'instock'];
         $meta_q[] = ['key' => '_thumbnail_id', 'compare' => 'EXISTS'];
         $q->set('meta_query', $meta_q);
@@ -1128,6 +1249,7 @@ function farmapaz_shop_filter_ajax() {
         'posts_per_page' => $per_page,
         'paged'          => $paged,
         'meta_query'     => [
+            ['key' => '_price', 'value' => 0, 'compare' => '>', 'type' => 'DECIMAL'], // [†] $0 excluded
             ['key' => '_stock_status', 'value' => 'instock'],
             ['key' => '_thumbnail_id', 'compare' => 'EXISTS'],
         ],
@@ -1301,7 +1423,7 @@ function farmapaz_render_filters($current_cats = [], $current_brands = [], $curr
             </div>
         </div>
 
-        <!-- Categories -->
+        <!-- Categories (hierarchical) -->
         <div class="filter-block">
             <button class="filter-title filter-toggle" data-target="cat-list">
                 Categorías
@@ -1309,21 +1431,42 @@ function farmapaz_render_filters($current_cats = [], $current_brands = [], $curr
             </button>
             <div class="filter-list" id="cat-list">
                 <?php
-                $categories = get_terms([
+                $parent_cats = get_terms([
                     'taxonomy'   => 'product_cat',
                     'hide_empty' => true,
+                    'parent'     => 0,
                     'orderby'    => 'name',
                     'order'      => 'ASC',
                 ]);
-                if (!is_wp_error($categories)):
-                    foreach ($categories as $cat):
-                        $checked = in_array($cat->slug, $current_cats) ? 'checked' : '';
+                if (!is_wp_error($parent_cats)):
+                    foreach ($parent_cats as $parent):
+                        $checked = in_array($parent->slug, $current_cats) ? 'checked' : '';
+                        $children = get_terms([
+                            'taxonomy'   => 'product_cat',
+                            'hide_empty' => true,
+                            'parent'     => $parent->term_id,
+                            'orderby'    => 'name',
+                            'order'      => 'ASC',
+                        ]);
                 ?>
-                <label class="filter-option">
-                    <input type="checkbox" class="filter-check filter-cat" value="<?= esc_attr($cat->slug); ?>" <?= $checked; ?>>
-                    <span class="filter-label-text"><?= esc_html(farmapaz_cat_display_name($cat->slug)); ?></span>
-                    <span class="filter-count"><?= $cat->count; ?></span>
+                <label class="filter-option filter-option-parent">
+                    <input type="checkbox" class="filter-check filter-cat" value="<?= esc_attr($parent->slug); ?>" <?= $checked; ?>>
+                    <span class="filter-label-text" style="font-weight: 700;"><?= esc_html(farmapaz_cat_display_name($parent->slug)); ?></span>
+                    <span class="filter-count"><?= $parent->count; ?></span>
                 </label>
+                <?php if (!empty($children) && !is_wp_error($children)): ?>
+                <div class="filter-children">
+                    <?php foreach ($children as $child):
+                        $checked = in_array($child->slug, $current_cats) ? 'checked' : '';
+                    ?>
+                    <label class="filter-option filter-option-child">
+                        <input type="checkbox" class="filter-check filter-cat" value="<?= esc_attr($child->slug); ?>" <?= $checked; ?>>
+                        <span class="filter-label-text"><?= esc_html(farmapaz_cat_display_name($child->slug)); ?></span>
+                        <span class="filter-count"><?= $child->count; ?></span>
+                    </label>
+                    <?php endforeach; ?>
+                </div>
+                <?php endif; ?>
                 <?php endforeach; endif; ?>
             </div>
         </div>
@@ -1445,25 +1588,228 @@ function farmapaz_render_active_filters($current_cats = [], $current_brands = []
 // ====== PASTILLÍN — CHATBOT IA DE FARMApAZ ======
 
 define('FARMA_PASTILLIN_OPTION', 'farmapaz_gemini_key');
+define('FARMA_OPENROUTER_KEY_OPTION', 'farmapaz_openrouter_key');
+define('FARMA_OPENROUTER_MODEL_OPTION', 'farmapaz_openrouter_model');
+define('FARMA_GROQ_KEY_OPTION', 'farmapaz_groq_key');
+define('FARMA_GROQ_MODEL_OPTION', 'farmapaz_groq_model');
 
-// Admin page for Gemini API key
+
+// Admin page for AI providers
 add_action('admin_menu', function () {
-    add_options_page('Pastillín API Key', 'Pastillín AI', 'manage_options', 'pastillin', function () {
+    add_options_page('Pastillín AI — Configuración', 'Pastillín AI', 'manage_options', 'pastillin', function () {
         if (!current_user_can('manage_options')) wp_die('Acceso denegado');
-        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['gemini_key'])) {
-            update_option(FARMA_PASTILLIN_OPTION, sanitize_text_field($_POST['gemini_key']));
-            echo '<div class="updated"><p>API Key guardada.</p></div>';
+        $gemini_result = '';
+        $or_result = '';
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Save Gemini key
+            if (isset($_POST['gemini_key'])) {
+                update_option(FARMA_PASTILLIN_OPTION, sanitize_text_field($_POST['gemini_key']));
+                echo '<div class="updated"><p>Gemini API Key guardada.</p></div>';
+            }
+            // Save OpenRouter key + model
+            if (isset($_POST['openrouter_key'])) {
+                update_option(FARMA_OPENROUTER_KEY_OPTION, sanitize_text_field($_POST['openrouter_key']));
+            }
+            if (isset($_POST['openrouter_model'])) {
+                update_option(FARMA_OPENROUTER_MODEL_OPTION, sanitize_text_field($_POST['openrouter_model']));
+                echo '<div class="updated"><p>OpenRouter configuración guardada.</p></div>';
+            }
+
+            // Test Gemini
+            if (isset($_POST['test_gemini'])) {
+                $key = get_option(FARMA_PASTILLIN_OPTION, '');
+                if ($key) {
+                    $test = wp_remote_post('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' . $key, [
+                        'headers' => ['Content-Type' => 'application/json'],
+                        'body'    => json_encode(['contents' => [['role' => 'user', 'parts' => [['text' => 'Hola']]]]]),
+                        'timeout' => 10,
+                    ]);
+                    if (is_wp_error($test)) {
+                        $gemini_result = '<div class="notice notice-error"><p>Error: ' . $test->get_error_message() . '</p></div>';
+                    } else {
+                        $body = json_decode(wp_remote_retrieve_body($test), true);
+                        if (isset($body['error'])) {
+                            $gemini_result = '<div class="notice notice-error"><p>Error: ' . esc_html($body['error']['message']) . '</p></div>';
+                        } elseif (isset($body['candidates'][0]['content']['parts'][0]['text'])) {
+                            $gemini_result = '<div class="notice notice-success"><p>Gemini funciona! Respuesta: ' . esc_html($body['candidates'][0]['content']['parts'][0]['text']) . '</p></div>';
+                        } else {
+                            $gemini_result = '<div class="notice notice-warning"><p>Respuesta inesperada.</p></div>';
+                        }
+                    }
+                } else {
+                    $gemini_result = '<div class="notice notice-warning"><p>Guarda una Gemini key primero.</p></div>';
+                }
+            }
+
+            // Test OpenRouter
+            if (isset($_POST['test_openrouter'])) {
+                $or_key = get_option(FARMA_OPENROUTER_KEY_OPTION, '');
+    $or_model = get_option(FARMA_OPENROUTER_MODEL_OPTION, 'openai/gpt-4o-mini');
+                if ($or_key) {
+                    $test = wp_remote_post('https://openrouter.ai/api/v1/chat/completions', [
+                        'headers' => [
+                            'Authorization' => 'Bearer ' . $or_key,
+                            'Content-Type'  => 'application/json',
+                        ],
+                        'body' => json_encode([
+                            'model'    => $or_model,
+                            'messages' => [['role' => 'user', 'content' => 'Hola']],
+                            'max_tokens' => 50,
+                        ]),
+                        'timeout' => 15,
+                    ]);
+                    if (is_wp_error($test)) {
+                        $or_result = '<div class="notice notice-error"><p>Error: ' . $test->get_error_message() . '</p></div>';
+                    } else {
+                        $body = json_decode(wp_remote_retrieve_body($test), true);
+                        if (isset($body['error'])) {
+                            $or_result = '<div class="notice notice-error"><p>Error: ' . esc_html($body['error']['message']) . '</p></div>';
+                        } elseif (isset($body['choices'][0]['message']['content'])) {
+                            $or_result = '<div class="notice notice-success"><p>OpenRouter funciona con ' . esc_html($or_model) . '! Respuesta: ' . esc_html($body['choices'][0]['message']['content']) . '</p></div>';
+                        } else {
+                            $or_result = '<div class="notice notice-warning"><p>Respuesta inesperada.</p></div>';
+                        }
+                    }
+                } else {
+                    $or_result = '<div class="notice notice-warning"><p>Guarda una OpenRouter key primero.</p></div>';
+                }
+            }
         }
-        $key = get_option(FARMA_PASTILLIN_OPTION, '');
+
+        $gemini_key = get_option(FARMA_PASTILLIN_OPTION, '');
+        $or_key = get_option(FARMA_OPENROUTER_KEY_OPTION, '');
+        $or_model = get_option(FARMA_OPENROUTER_MODEL_OPTION, 'openai/gpt-4o-mini');
         ?>
         <div class="wrap">
-            <h1>Pastillín — Gemini API Key</h1>
-            <p>Obtén tu API Key gratis en <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a>.</p>
+            <h1>Pastillín — Configuración de IA</h1>
+            <p>Configura al menos un proveedor de IA. El sistema prueba Gemini primero, luego OpenRouter, y si ambos fallan usa el modo local.</p>
+
+            <hr>
+            <h2>Opción 1: Google Gemini</h2>
+            <p>Funciona mejor en servidores USA/Europa. Obtén tu key en <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a>.</p>
             <form method="post">
-                <input type="text" name="gemini_key" value="<?= esc_attr($key); ?>" style="width:400px;max-width:100%;">
-                <button type="submit" class="button button-primary">Guardar</button>
+                <table class="form-table">
+                    <tr>
+                        <th><label for="gemini_key">API Key</label></th>
+                        <td>
+                            <input type="text" id="gemini_key" name="gemini_key" value="<?= esc_attr($gemini_key); ?>" style="width:450px;max-width:100%;font-family:monospace;">
+                        </td>
+                    </tr>
+                </table>
+                <button type="submit" class="button button-primary">Guardar Gemini</button>
+                <button type="submit" name="test_gemini" value="1" class="button">Probar Gemini</button>
             </form>
-            <p style="margin-top:20px;color:#666;">Sin API Key, Pastillín funciona en modo básico (búsqueda local de productos).</p>
+            <?= $gemini_result; ?>
+
+            <hr>
+            <h2>Opción 2: OpenRouter (recomendado para todas las regiones)</h2>
+            <p>Funciona desde cualquier país. Modelos gratis disponibles (sin tarjeta de crédito).</p>
+            <p><strong>Regístrate:</strong> <a href="https://openrouter.ai/keys" target="_blank">openrouter.ai/keys</a> → usa GitHub o Google → crea una key</p>
+            <form method="post">
+                <table class="form-table">
+                    <tr>
+                        <th><label for="openrouter_key">API Key</label></th>
+                        <td>
+                            <input type="text" id="openrouter_key" name="openrouter_key" value="<?= esc_attr($or_key); ?>" style="width:450px;max-width:100%;font-family:monospace;">
+                            <p class="description">Comienza con <code>sk-or-v1-</code></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><label for="openrouter_model">Modelo</label></th>
+                        <td>
+                            <select id="openrouter_model" name="openrouter_model">
+                                <option value="openai/gpt-4o-mini" <?= $or_model === 'openai/gpt-4o-mini' ? 'selected' : ''; ?>>GPT-4o-mini (rápido, ~$0.00003/msg)</option>
+                                <option value="meta-llama/llama-3.3-70b-instruct:free" <?= $or_model === 'meta-llama/llama-3.3-70b-instruct:free' ? 'selected' : ''; ?>>Llama 3.3 70B (gratis, a veces saturado)</option>
+                                <option value="google/gemma-4-26b-a4b-it:free" <?= $or_model === 'google/gemma-4-26b-a4b-it:free' ? 'selected' : ''; ?>>Gemma 4 26B (gratis, a veces saturado)</option>
+                            </select>
+                            <p class="description">GPT-4o-mini requiere saldo en OpenRouter (los $1 gratis iniciales alcanzan para ~30,000 mensajes).</p>
+                        </td>
+                    </tr>
+                </table>
+                <button type="submit" class="button button-primary">Guardar OpenRouter</button>
+                <button type="submit" name="test_openrouter" value="1" class="button">Probar OpenRouter</button>
+            </form>
+            <?= $or_result; ?>
+
+            <hr>
+            <h2>Opción 3: Groq (recomendado — gratis y confiable)</h2>
+            <p>Completamente gratis, 30 requests/minuto, funciona desde cualquier país. Usa Llama 3, Mixtral, Gemma.</p>
+            <p><strong>Regístrate:</strong> <a href="https://console.groq.com/keys" target="_blank">console.groq.com/keys</a> → crea key gratis</p>
+            <?php
+            $groq_key = get_option(FARMA_GROQ_KEY_OPTION, '');
+            $groq_model = get_option(FARMA_GROQ_MODEL_OPTION, 'llama-3.3-70b-versatile');
+
+            // Save BEFORE test so test uses the fresh config
+            if (isset($_POST['groq_key'])) {
+                update_option(FARMA_GROQ_KEY_OPTION, sanitize_text_field($_POST['groq_key']));
+            }
+            if (isset($_POST['groq_model'])) {
+                update_option(FARMA_GROQ_MODEL_OPTION, sanitize_text_field($_POST['groq_model']));
+                echo '<div class="updated"><p>Groq configuración guardada.</p></div>';
+            }
+            $groq_key = get_option(FARMA_GROQ_KEY_OPTION, '');
+            $groq_model = get_option(FARMA_GROQ_MODEL_OPTION, 'llama-3.3-70b-versatile');
+
+            $groq_result = '';
+            if (isset($_POST['test_groq'])) {
+                if ($groq_key) {
+                    $test = wp_remote_post('https://api.groq.com/openai/v1/chat/completions', [
+                        'headers' => [
+                            'Authorization' => 'Bearer ' . $groq_key,
+                            'Content-Type'  => 'application/json',
+                        ],
+                        'body' => json_encode([
+                            'model'    => $groq_model,
+                            'messages' => [['role' => 'user', 'content' => 'Hola']],
+                            'max_tokens' => 30,
+                        ]),
+                        'timeout' => 10,
+                    ]);
+                    if (is_wp_error($test)) {
+                        $groq_result = '<div class="notice notice-error"><p>Error: ' . $test->get_error_message() . '</p></div>';
+                    } else {
+                        $body = json_decode(wp_remote_retrieve_body($test), true);
+                        if (isset($body['error'])) {
+                            $groq_result = '<div class="notice notice-error"><p>Error: ' . esc_html($body['error']['message']) . '</p></div>';
+                        } elseif (isset($body['choices'][0]['message']['content'])) {
+                            $groq_result = '<div class="notice notice-success"><p>Groq funciona! Respuesta: ' . esc_html($body['choices'][0]['message']['content']) . '</p></div>';
+                        } else {
+                            $groq_result = '<div class="notice notice-warning"><p>Respuesta inesperada.</p></div>';
+                        }
+                    }
+                } else {
+                    $groq_result = '<div class="notice notice-warning"><p>Guarda una Groq key primero.</p></div>';
+                }
+            }
+            ?>
+            <form method="post">
+                <table class="form-table">
+                    <tr>
+                        <th><label for="groq_key">API Key</label></th>
+                        <td>
+                            <input type="text" id="groq_key" name="groq_key" value="<?= esc_attr($groq_key); ?>" style="width:450px;max-width:100%;font-family:monospace;">
+                            <p class="description"><code>gsk_...</code></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><label for="groq_model">Modelo</label></th>
+                        <td>
+                            <select id="groq_model" name="groq_model">
+                                <option value="llama-3.3-70b-versatile" <?= $groq_model === 'llama-3.3-70b-versatile' ? 'selected' : ''; ?>>Llama 3.3 70B (inteligente, gratis)</option>
+                                <option value="llama-3.1-8b-instant" <?= $groq_model === 'llama-3.1-8b-instant' ? 'selected' : ''; ?>>Llama 3.1 8B (rápido, gratis)</option>
+                                <option value="mixtral-8x7b-32768" <?= $groq_model === 'mixtral-8x7b-32768' ? 'selected' : ''; ?>>Mixtral 8x7B (gratis)</option>
+                            </select>
+                        </td>
+                    </tr>
+                </table>
+                <button type="submit" class="button button-primary">Guardar Groq</button>
+                <button type="submit" name="test_groq" value="1" class="button">Probar Groq</button>
+            </form>
+            <?= $groq_result; ?>
+
+            <hr>
+            <p style="color:#666;"><strong>Sin ningún proveedor de IA</strong>, Pastillín funciona en modo básico: responde con información de Farmapaz (horarios, sucursales, pagos, delivery) y busca productos en el catálogo. Es útil pero no conversacional.</p>
         </div>
         <?php
     });
@@ -1471,39 +1817,72 @@ add_action('admin_menu', function () {
 
 // Build Pastillín system prompt with live product data
 function farmapaz_pastillin_system_prompt() {
-    $prompt = "Eres Pastillín, el asistente virtual IA de Farmapaz Venezuela. ";
-    $prompt .= "Eres amigable, entusiasta, usas español y hablas en primera persona. ";
-    $prompt .= "Tu personalidad: fresco, juvenil, futurista, con estilo Frutiger Aero. ";
-    $prompt .= "Usas emojis ocasionales (💊✨🔬🌿) y frases cortas y claras.\n\n";
+    $prompt = "Eres Pastillín, el asistente virtual de Farmapaz Venezuela. ";
+    $prompt .= "Eres amigable, entusiasta, usas español. ";
+    $prompt .= "Tu personalidad: fresco, juvenil, futurista. ";
+    $prompt .= "Usas frases cortas y claras.\n\n";
     $prompt .= "REGLAS ESTRICTAS:\n";
     $prompt .= "- SOLO respondes sobre Farmapaz Venezuela. ";
     $prompt .= "- Si te preguntan por Farmatodo, Farmadon, Farmatina, Locatel o cualquier otra farmacia, ";
-    $prompt .= "  dices amablemente: 'Lo siento, solo conozco Farmapaz 🙏 ¿Quieres que te ayude con algo de Farmapaz?'\n";
+    $prompt .= "  dices amablemente: 'Lo siento, solo conozco Farmapaz. ¿Quieres que te ayude con algo de Farmapaz?'\n";
     $prompt .= "- No inventes precios ni productos que no existan en Farmapaz.\n";
-    $prompt .= "- Si no sabes algo, di que lo consultarás y sugiere contactar por WhatsApp.\n";
+    $prompt .= "- Si no sabes algo, sugiere contactar por WhatsApp.\n";
     $prompt .= "- No des consejos médicos. Si te preguntan sobre síntomas, sugiere consultar a un médico.\n";
-    $prompt .= "- Siempre mantén un tono positivo, servicial y futurista.\n\n";
+    $prompt .= "- Siempre mantén un tono positivo y servicial.\n\n";
 
-    $cats = get_terms(['taxonomy' => 'product_cat', 'hide_empty' => true]);
-    if (!empty($cats) && !is_wp_error($cats)) {
-        $prompt .= "CATEGORÍAS DISPONIBLES:\n";
-        foreach ($cats as $cat) {
-            $prompt .= "- {$cat->name} ({$cat->count} productos)\n";
+    $prompt .= "INFORMACIÓN DE FARMApAZ:\n";
+    $prompt .= "- Horario de atención: 7:00 AM a 9:30 PM (incluyendo delivery).\n";
+    $prompt .= "- Delivery disponible en Maturín, Edo Monagas.\n";
+    $prompt .= "- Delivery gratis en compras desde \$10.\n";
+    $prompt .= "- Envío nacional disponible (consultar por WhatsApp).\n";
+    $prompt .= "- WhatsApp: +58 412-8798885\n";
+    $prompt .= "- Instagram: @farmapazofficial\n";
+    $prompt .= "- Dirección: Maturín, Estado Monagas, Venezuela.\n";
+    $prompt .= "- Medicamentos controlados (psicotrópicos) solo se venden en tiendas físicas con receta médica.\n";
+    $prompt .= "- Formas de pago: transferencia bancaria, pago móvil, efectivo en tienda.\n";
+    $prompt .= "- Para pagos por transferencia se requiere: número de cédula, banco, teléfono y referencia.\n";
+    $prompt .= "- Las sucursales están en Maturín. Para dirección exacta, consultar por WhatsApp.\n\n";
+
+    // [†] Categorías jerárquicas: padres → hijas (el AI conoce toda la estructura)
+    $parent_cats = get_terms(['taxonomy' => 'product_cat', 'hide_empty' => true, 'parent' => 0, 'orderby' => 'count', 'order' => 'DESC']);
+    if (!empty($parent_cats) && !is_wp_error($parent_cats)) {
+        $prompt .= "CATEGORÍAS DISPONIBLES (usar el enlace al mencionarlas):\n";
+        foreach ($parent_cats as $pcat) {
+            $pcat_url = get_term_link($pcat);
+            $prompt .= "- [{$pcat->name}]({$pcat_url}) ({$pcat->count} productos)\n";
+            $child_cats = get_terms(['taxonomy' => 'product_cat', 'hide_empty' => true, 'parent' => $pcat->term_id, 'orderby' => 'count', 'order' => 'DESC']);
+            if (!empty($child_cats) && !is_wp_error($child_cats)) {
+                foreach ($child_cats as $ccat) {
+                    $ccat_url = get_term_link($ccat);
+                    $prompt .= "  - [{$ccat->name}]({$ccat_url}) ({$ccat->count} productos)\n";
+                }
+            }
         }
         $prompt .= "\n";
     }
 
-    $prompt .= "ENLACES ÚTILES:\n";
-    $prompt .= "- Tienda online: " . get_permalink(wc_get_page_id('shop')) . "\n";
+    // [†] Marcas disponibles (todas, con enlace directo y conteo de productos)
+    $brands_terms = get_terms(['taxonomy' => 'product_brand', 'hide_empty' => true, 'orderby' => 'name', 'order' => 'ASC']);
+    if (!empty($brands_terms) && !is_wp_error($brands_terms)) {
+        $prompt .= "MARCAS DISPONIBLES (usar el enlace al mencionarlas):\n";
+        foreach ($brands_terms as $brand) {
+            $brand_url = get_term_link($brand);
+            $prompt .= "- [{$brand->name}]({$brand_url}) ({$brand->count} productos)\n";
+        }
+        $prompt .= "\n";
+    }
+
+    $prompt .= "ENLACES:\n";
+    $prompt .= "- Tienda: " . get_permalink(wc_get_page_id('shop')) . "\n";
     $prompt .= "- Carrito: " . wc_get_cart_url() . "\n";
     $prompt .= "- WhatsApp: https://wa.me/584128798885\n";
-    $prompt .= "- Instagram: @farmapazvzla\n";
-    $prompt .= "- Envío gratis en compras desde \$10.\n";
-    $prompt .= "- Medicamentos controlados solo en tiendas físicas con receta.\n\n";
-    $prompt .= "Sucursales: Pide al usuario que visite la página o contacte por WhatsApp para conocer las sucursales.\n\n";
+    $prompt .= "- Instagram: @farmapazofficial\n\n";
+
     $prompt .= "FORMATO DE RESPUESTA:\n";
     $prompt .= "- Respuestas cortas y directas (máximo 3-4 líneas).\n";
-    $prompt .= "- Si el usuario pide productos, muéstrale los que tenemos disponibles.\n";
+    $prompt .= "- Cuando menciones productos, marcas o categorias, incluye el enlace usando el formato [nombre](url) que recibe en el contexto.\n";
+    $prompt .= "- SOLO usa los enlaces exactos que recibes en el contexto — NO inventes URLs.\n";
+    $prompt .= "- Al FINAL de cada respuesta, SIEMPRE agrega: Contactanos por WhatsApp: https://wa.me/584128798885\n";
     $prompt .= "- Siempre finaliza ofreciendo ayuda adicional.\n";
 
     return $prompt;
@@ -1511,95 +1890,667 @@ function farmapaz_pastillin_system_prompt() {
 
 // Search products for context
 function farmapaz_pastillin_search_products($query) {
-    $products = [];
-    $args = [
-        'post_type'      => 'product',
-        'post_status'    => 'publish',
-        'posts_per_page' => 8,
-        's'              => $query,
-        'meta_query'     => [
-            ['key' => '_stock_status', 'value' => 'instock'],
-            ['key' => '_thumbnail_id', 'compare' => 'EXISTS'],
-        ],
+    global $wpdb;
+
+    $query = trim($query);
+    if (empty($query)) return [];
+
+    $normalized = remove_accents(mb_strtolower($query));
+
+    // Synonym map — every term maps to related search keywords
+    $synonyms = [
+        // Medicamentos
+        'acetaminofen'  => 'acetaminofen paracetamol',
+        'acetaminofén'  => 'acetaminofen paracetamol',
+        'paracetamol'   => 'paracetamol acetaminofen',
+        'ibuprofeno'    => 'ibuprofeno',
+        'aspirina'      => 'aspirina acido acetilsalicilico',
+        'amoxicilina'   => 'amoxicilina',
+        'loratadina'    => 'loratadina',
+        'omeprazol'     => 'omeprazol',
+        'vitamina'      => 'vitamina complejo',
+        'vitaminas'     => 'vitamina complejo suplemento',
+        'suplemento'    => 'suplemento vitaminas',
+        'suplementos'   => 'suplemento vitaminas minerales',
+        'alcohol'       => 'alcohol antiseptico',
+        'antibiotico'   => 'antibiotico amoxicilina',
+        'antialergico'  => 'antialergico loratadina cetirizina',
+        'antigripal'    => 'antigripal resfriado gripe',
+        'gripe'         => 'gripe resfriado antigripal',
+        'dolor'         => 'dolor analgesico ibuprofeno acetaminofen',
+        'analgesico'    => 'analgesico dolor ibuprofeno acetaminofen',
+        'fiebre'        => 'fiebre acetaminofen ibuprofeno',
+        'colicos'       => 'dolor menstrual colicos',
+        'estomacal'     => 'estomago digestion antiacido',
+        'dolores'       => 'dolor analgesico',
+        'cuidado personal' => 'shampoo jabon crema desodorante',
+        'higiene'       => 'jabon shampoo desodorante dental',
+        // Protección
+        'tapaboca'      => 'tapaboca mascarilla barbijo cubreboca',
+        'mascarilla'    => 'tapaboca mascarilla barbijo cubreboca',
+        'cubreboca'     => 'tapaboca mascarilla barbijo cubreboca',
+        'barbijo'       => 'tapaboca mascarilla barbijo',
+        // Skin care
+        'skincare'      => 'skincare cuidado facial crema serum',
+        'crema'         => 'crema hidratante facial cuerpo',
+        'cremas'        => 'crema hidratante facial cuerpo',
+        'facial'        => 'facial crema serum limpieza',
+        'coreano'       => 'coreano korean skincare',
+        'korean'        => 'coreano korean skincare',
+        'protector solar' => 'protector solar bloqueador',
+        'bloqueador'    => 'protector solar bloqueador',
+        // Cabello
+        'cabello'       => 'cabello pelo shampoo acondicionador capilar',
+        'pelo'          => 'cabello pelo shampoo acondicionador capilar',
+        'shampoo'       => 'shampoo champu cabello pelo',
+        'champu'        => 'shampoo champu cabello pelo',
+        'acondicionador' => 'acondicionador cabello pelo',
+        'capilar'       => 'capilar cabello pelo shampoo',
+        // Bebé
+        'bebe'          => 'bebe bebe infantil pañal toallita',
+        'bebé'          => 'bebe bebe infantil pañal toallita',
+        'pañal'         => 'pañal pañales bebe infantil',
+        'pañales'       => 'pañal pañales bebe infantil',
+        'infantil'      => 'infantil bebe niño',
+        'bebe'          => 'bebe infantil pañal toallita',
+        // [†] Dulces / Comida (sinónimos expandidos para búsqueda de snacks/alimentos)
+        'dulces'        => 'dulces caramelos chocolate chicle chupeta',
+        'caramelos'     => 'dulces caramelos chocolate',
+        'chocolate'     => 'chocolate dulces',
+        'chupeta'       => 'chupeta dulce caramelo',
+        'chicle'        => 'chicle goma de mascar',
+        'galletas'      => 'galletas snack',
+        'snacks'        => 'snacks galletas dulces papitas',
+        'comer'         => 'comida dulces snack galletas papitas brownie chucheria',
+        'comida'        => 'snacks dulces galletas alimentos',
+        'almorzar'      => 'comida almuerzo snack',
+        'hambre'        => 'comer comida snack galletas',
+        'tentempie'     => 'snack galletas dulces papitas',
+        'snack'         => 'snacks galletas dulces papitas brownie',
+        'golosinas'     => 'dulces caramelos golosinas',
+        // Cosméticos / Belleza
+        'maquillaje'    => 'maquillaje labial rimel base',
+        'labial'        => 'labial pintalabios',
+        'rimel'         => 'rimel pestanas',
+        'esmalte'       => 'esmalte unas',
+        'belleza'       => 'belleza cosmeticos maquillaje',
+        'cosmeticos'    => 'cosmeticos maquillaje belleza',
+        // Jabones / Desodorantes
+        'jabon'         => 'jabon baño corporal',
+        'jabón'         => 'jabon baño corporal',
+        'desodorante'   => 'desodorante antitranspirante',
+        'colonia'       => 'colonia perfume fragancia',
+        'perfume'       => 'colonia perfume fragancia',
+        // Oral
+        'dental'        => 'dental cepillo pasta hilo bucal',
+        'cepillo'       => 'cepillo dental dientes',
+        'pasta dental'  => 'crema dental pasta dental',
+        // Aseo / Hogar
+        'lavandina'     => 'lavandina cloro blanqueador',
+        'cloro'         => 'cloro lavandina',
+        'jabon liquido' => 'jabon liquido manos',
+        'papel'         => 'papel higienico servilleta toalla',
+        'higienico'     => 'papel higienico',
+        'toallas'       => 'toalla femenina sanitaria',
+        'femenina'      => 'toalla femenina sanitaria',
+        'pañito'        => 'pañito humedo toallita',
+        // Primeros auxilios
+        'curita'        => 'curita bandita adhesivo',
+        'vendas'        => 'venda gasa vendaje',
+        'gasas'         => 'gasa vendas',
+        // Categorías comunes
+        'medicina'      => 'medicamento farmacia',
+        'medicamento'   => 'medicamento farmacia',
+        'farmacia'      => 'farmacia medicamento',
+        'tienda'        => 'tienda online catalogo',
+        'productos'     => 'productos catalogo',
+        'catalogo'      => 'catalogo productos',
     ];
-    $loop = new WP_Query($args);
-    if ($loop->have_posts()) {
-        while ($loop->have_posts()) {
-            $loop->the_post();
-            $product = wc_get_product(get_the_ID());
-            if ($product) {
-                $cats = wp_get_post_terms(get_the_ID(), 'product_cat', ['fields' => 'names']);
-                $products[] = [
-                    'name'   => $product->get_name(),
-                    'price'  => wc_price($product->get_price()),
-                    'cat'    => !empty($cats) ? $cats[0] : '',
-                    'url'    => get_permalink(),
-                    'stock'  => $product->is_in_stock() ? 'Disponible' : 'Agotado',
-                ];
+
+    $search_queries = [$query, $normalized];
+
+    // Stop words to exclude from individual word search
+    $stop_words = ['de', 'la', 'el', 'los', 'las', 'del', 'en', 'un', 'una', 'para', 'por', 'con', 'sin', 'y', 'e', 'o', 'a', 'que', 'es', 'se', 'su', 'lo', 'le', 'da', 'al', 'como', 'mas', 'más', 'muy', 'todo', 'dame', 'quiero', 'necesito', 'busco', 'tiene', 'tienen', 'productos', 'producto', 'comprar'];
+
+    // Synonyms per-word and full-phrase
+    $words = explode(' ', $normalized);
+    foreach ($words as $w) {
+        if (isset($synonyms[$w])) {
+            $search_queries[] = $synonyms[$w];
+        }
+    }
+    if (isset($synonyms[$normalized])) {
+        $search_queries[] = $synonyms[$normalized];
+    }
+
+    // Check if $normalized CONTAINS any multi-word synonym key (substring match)
+    foreach ($synonyms as $key => $value) {
+        if (strpos($key, ' ') !== false && strpos($normalized, $key) !== false) {
+            $search_queries[] = $value;
+        }
+    }
+
+    // Also try "para el X" → just X
+    foreach (['para el ', 'para la ', 'de ', 'del '] as $prefix) {
+        if (strpos($normalized, $prefix) === 0) {
+            $stripped = substr($normalized, strlen($prefix));
+            if (strlen($stripped) >= 3) {
+                $search_queries[] = $stripped;
             }
         }
     }
-    wp_reset_postdata();
+
+    // Individual words (multi-word queries) — exclude stop words
+    if (count($words) > 1) {
+        foreach ($words as $w) {
+            if (strlen($w) >= 3 && !in_array($w, $stop_words)) {
+                $search_queries[] = $w;
+            }
+        }
+    }
+
+    // Look up category slugs that match any word — adds category-based results
+    $cat_words = [];
+    foreach ($words as $w) {
+        if (strlen($w) >= 3) {
+            $cat_words[] = $w;
+        }
+    }
+    if (!empty($cat_words)) {
+        $cat_slugs = $wpdb->get_col(
+            "SELECT slug FROM {$wpdb->terms} t
+             JOIN {$wpdb->term_taxonomy} tt ON t.term_id = tt.term_id
+             WHERE tt.taxonomy = 'product_cat'
+             AND (" . implode(' OR ', array_map(function($w) use ($wpdb) {
+                 return $wpdb->prepare("t.slug LIKE %s OR t.name LIKE %s", '%' . $wpdb->esc_like($w) . '%', '%' . $wpdb->esc_like($w) . '%');
+             }, $cat_words)) . ")"
+        );
+        foreach ($cat_slugs as $slug) {
+            $search_queries[] = $slug;
+        }
+    }
+
+    // [†] Category-aware search: si el usuario menciona ciertas palabras, busca directo en categorías relevantes
+    //     Ej: "comer" → busca en "snacks", "dulces", "alimentos"
+    //     Ej: "dolor" → busca en "alivio-del-dolor"
+    $cat_intents = [
+        'comer'    => ['snacks', 'dulces', 'alimentos'],
+        'comida'   => ['snacks', 'dulces', 'alimentos'],
+        'snack'    => ['snacks', 'dulces'],
+        'snacks'   => ['snacks', 'dulces'],
+        'dulces'   => ['dulces', 'snacks'],
+        'galleta'  => ['snacks', 'dulces'],
+        'galletas' => ['snacks', 'dulces'],
+        'papitas'  => ['snacks'],
+        'bebida'   => ['bebidas'],
+        'bebidas'  => ['bebidas'],
+        'dolor'    => ['alivio-del-dolor'],
+        'gripe'    => ['salud-respiratoria', 'antigripales'],
+        'fiebre'   => ['alivio-del-dolor'],
+        'cuidado'  => ['cuidado-personal'],
+        'shampoo'  => ['cuidado-personal'],
+        'maquillaje' => ['cosmeticos', 'belleza'],
+        'bebe'     => ['bebes', 'infantil'],
+        'pañal'    => ['bebes', 'infantil'],
+        'vitamina' => ['vitaminas', 'suplementos'],
+        'crema'    => ['cuidado-personal', 'dermatologicos'],
+        'cara'     => ['cuidado-personal'],
+        'snack'    => ['snacks'],
+    ];
+
+    // Check which category intents match the user's words
+    $target_cat_slugs = [];
+    foreach ($words as $w) {
+        if (isset($cat_intents[$w])) {
+            $target_cat_slugs = array_merge($target_cat_slugs, $cat_intents[$w]);
+        }
+    }
+    $target_cat_slugs = array_unique($target_cat_slugs);
+
+    $search_queries = array_unique(array_filter($search_queries));
+    $all_ids = [];
+    $limit = 15;
+
+    foreach ($search_queries as $sq) {
+        if (count($all_ids) >= $limit) break;
+
+        $terms = array_unique(array_filter(explode(' ', $sq)));
+        if (empty($terms)) continue;
+
+        $like_conditions = [];
+        foreach ($terms as $term) {
+            $like = '%' . $wpdb->esc_like($term) . '%';
+            $like_conditions[] = $wpdb->prepare(
+                "(p.post_title LIKE %s OR p.post_excerpt LIKE %s OR p.post_content LIKE %s
+                  OR (tt.taxonomy IN ('product_cat','product_tag','product_brand') AND t.name LIKE %s))", // [†] brand incluido
+                $like, $like, $like, $like
+            );
+        }
+        $where_extra = implode(' OR ', $like_conditions);
+
+        $sql = "SELECT DISTINCT p.ID
+                FROM {$wpdb->posts} p
+                LEFT JOIN {$wpdb->term_relationships} tr ON p.ID = tr.object_id
+                LEFT JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+                LEFT JOIN {$wpdb->terms} t ON tt.term_id = t.term_id
+                WHERE p.post_type = 'product'
+                  AND p.post_status = 'publish'
+                  AND ({$where_extra})
+                  AND EXISTS (
+                      SELECT 1 FROM {$wpdb->postmeta} pmStock
+                      WHERE pmStock.post_id = p.ID AND pmStock.meta_key = '_stock_status' AND pmStock.meta_value = 'instock'
+                  )
+                  AND EXISTS (
+                      SELECT 1 FROM {$wpdb->postmeta} pmImg
+                      WHERE pmImg.post_id = p.ID AND pmImg.meta_key = '_thumbnail_id'
+                  )
+                  AND EXISTS (
+                      SELECT 1 FROM {$wpdb->postmeta} pmPrice
+                      WHERE pmPrice.post_id = p.ID AND pmPrice.meta_key = '_price' AND pmPrice.meta_value+0 > 0
+                  )
+                ORDER BY p.menu_order ASC, p.post_title ASC
+                LIMIT " . ($limit - count($all_ids));
+
+        $ids = $wpdb->get_col($sql);
+        if (!empty($ids)) {
+            foreach ($ids as $id) {
+                if (!in_array($id, $all_ids)) {
+                    $all_ids[] = $id;
+                }
+            }
+        }
+    }
+
+    // If we detected category intents AND still have room, search by category directly
+    if (!empty($target_cat_slugs) && count($all_ids) < $limit) {
+        $cat_slug_placeholders = implode(',', array_fill(0, count($target_cat_slugs), '%s'));
+        $cat_sql = $wpdb->prepare(
+            "SELECT DISTINCT p.ID
+             FROM {$wpdb->posts} p
+             JOIN {$wpdb->term_relationships} tr ON p.ID = tr.object_id
+             JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+             JOIN {$wpdb->terms} t ON tt.term_id = t.term_id
+             WHERE p.post_type = 'product'
+               AND p.post_status = 'publish'
+               AND tt.taxonomy = 'product_cat'
+               AND t.slug IN ({$cat_slug_placeholders})
+               AND EXISTS (
+                   SELECT 1 FROM {$wpdb->postmeta} pmStock
+                   WHERE pmStock.post_id = p.ID AND pmStock.meta_key = '_stock_status' AND pmStock.meta_value = 'instock'
+               )
+               AND EXISTS (
+                   SELECT 1 FROM {$wpdb->postmeta} pmImg
+                   WHERE pmImg.post_id = p.ID AND pmImg.meta_key = '_thumbnail_id'
+               )
+               AND EXISTS (
+                   SELECT 1 FROM {$wpdb->postmeta} pmPrice
+                   WHERE pmPrice.post_id = p.ID AND pmPrice.meta_key = '_price' AND pmPrice.meta_value+0 > 0
+               )
+             ORDER BY p.menu_order ASC, p.post_title ASC
+             LIMIT %d",
+            array_merge($target_cat_slugs, [$limit - count($all_ids)])
+        );
+        $cat_ids = $wpdb->get_col($cat_sql);
+        if (!empty($cat_ids)) {
+            foreach ($cat_ids as $cid) {
+                if (!in_array($cid, $all_ids)) {
+                    $all_ids[] = $cid;
+                }
+            }
+        }
+    }
+
+    $products = [];
+    foreach (array_slice($all_ids, 0, $limit) as $id) {
+        $product = wc_get_product($id);
+        if ($product) {
+            $cats = wp_get_post_terms($id, 'product_cat', ['fields' => 'names']);
+            $brands = wp_get_post_terms($id, 'product_brand', ['fields' => 'names']);
+            $products[] = [
+                'name'   => $product->get_name(),
+                'price'  => html_entity_decode(strip_tags(wc_price($product->get_price()))),
+                'cat'    => !empty($cats) ? $cats[0] : '',
+                'brand'  => !empty($brands) ? $brands[0] : '',
+                'url'    => strtok(get_permalink($id), '?'), // [†] strtok quita ?v= parámetros que causan 404
+                'stock'  => $product->is_in_stock() ? 'Disponible' : 'Agotado',
+            ];
+        }
+    }
+
     return $products;
+}
+
+// Fallback products when search yields nothing — always give the AI something to work with
+function farmapaz_pastillin_fallback_products($count = 8) {
+    $products = [];
+    // [†] Exclude $0 products (productos sin precio asignado)
+    $ids = wc_get_products([
+        'limit'        => $count,
+        'status'       => 'publish',
+        'stock_status' => 'instock',
+        'meta_key'     => '_thumbnail_id',
+        'meta_query'   => [
+            ['key' => '_price', 'value' => 0, 'compare' => '>', 'type' => 'DECIMAL'],
+        ],
+        'orderby'      => 'total_sales',
+        'order'        => 'DESC',
+        'return'       => 'ids',
+    ]);
+    foreach ($ids as $id) {
+        $product = wc_get_product($id);
+        if ($product) {
+            $cats = wp_get_post_terms($id, 'product_cat', ['fields' => 'names']);
+            $brands = wp_get_post_terms($id, 'product_brand', ['fields' => 'names']);
+            $products[] = [
+                'name'   => $product->get_name(),
+                'price'  => html_entity_decode(strip_tags(wc_price($product->get_price()))),
+                'cat'    => !empty($cats) ? $cats[0] : '',
+                'brand'  => !empty($brands) ? $brands[0] : '',
+                'url'    => strtok(get_permalink($id), '?'), // [†] strtok quita ?v= parámetros que causan 404
+                'stock'  => 'Disponible',
+            ];
+        }
+    }
+    return $products;
+}
+
+/**
+ * Local chatbot engine — handles everything without Gemini.
+ * Returns a reply string, or null to continue to other handlers.
+ */
+function farmapaz_pastillin_local_reply($message) {
+    $msg = mb_strtolower(trim($message));
+    $msg = remove_accents($msg);
+
+    // ========== 1. COMPETITOR DETECTION ==========
+    $competitors = ['farmatodo', 'farmadon', 'farmatina', 'megafarma', 'locatel', 'farmashop'];
+    foreach ($competitors as $c) {
+        if (strpos($msg, $c) !== false) {
+            return "Lo siento, solo conozco Farmapaz. Quieres que te ayude con algo de Farmapaz?";
+        }
+    }
+
+    // ========== 2. GREETINGS ==========
+    $greetings = ['hola', 'buenas', 'buenos dias', 'buenas tardes', 'buenas noches', 'que tal', 'hello', 'hi', 'buen dia'];
+    foreach ($greetings as $g) {
+        if (strpos($msg, $g) !== false) {
+            return "Hola! Soy **Pastillín**, tu asistente de Farmapaz. Puedo ayudarte a buscar productos, informarte sobre horarios, formas de pago, delivery y mas. En que puedo servirte?";
+        }
+    }
+
+    // ========== 3. THANKS / FAREWELL ==========
+    $farewells = ['gracias', 'adios', 'bye', 'chao', 'hasta luego', 'nos vemos', 'muchas gracias', 'graciass'];
+    foreach ($farewells as $f) {
+        if (strpos($msg, $f) !== false) {
+            return "De nada! Cuando necesites algo, aqui estoy. Si quieres ver nuestros productos, visita la tienda: " . get_permalink(wc_get_page_id('shop'));
+        }
+    }
+
+    // ========== 4. HELP ==========
+    $help = ['que puedes hacer', 'ayuda', 'funciones', 'comandos', 'menu', 'opciones', 'que haces', 'como funciona'];
+    foreach ($help as $h) {
+        if (strpos($msg, $h) !== false) {
+            return "Puedo ayudarte con:\n- Buscar productos y medicamentos\n- Horarios de atencion (7am - 9:30pm)\n- Formas de pago (transferencia, pago movil, binance, efectivo)\n- Delivery gratis desde \$10\n- Sucursales en Maturin\n- Contacto por WhatsApp\n\nQue deseas saber?";
+        }
+    }
+
+    // ========== 5. BUSINESS INFO ==========
+    $intents = [
+        'horario' => ['horario', 'horarios', 'hora', 'horas', 'abierto', 'abren', 'cierran', 'atencion', 'atienden', 'cuando abren', 'cuando cierran'],
+        'sucursal' => ['sucursal', 'sucursales', 'direccion', 'direcciones', 'ubicacion', 'ubicaciones', 'donde quedan', 'maturin', 'tienda fisica'],
+        'pago' => ['pago', 'pagos', 'pagar', 'forma de pago', 'formas de pago', 'transferencia', 'pago movil', 'efectivo','binance', 'banco', 'cedula', 'tarjeta', 'divisas', 'dolares', '$'],
+        'delivery' => ['delivery', 'envio', 'envian', 'domicilio', 'llevan', 'despacho', 'gratis', 'costo envio', 'cuanto cobran por envio', 'envio nacional'],
+        'whatsapp' => ['whatsapp', 'whats', 'wp', 'contacto', 'telefono', 'llamar', 'asesor', 'hablar con', 'contactar', 'atencion al cliente'],
+        'instagram' => ['instagram', 'ig', 'redes', 'red social', 'facebook'],
+        'como_comprar' => ['como comprar', 'como compro', 'quiero comprar', 'hacer un pedido', 'hacer pedido', 'proceso de compra', 'ordenar'],
+    ];
+
+    $responses = [
+        'horario' => "Atendemos de **7:00 AM a 9:30 PM**, todos los dias (incluyendo delivery). Estamos en Maturin, Estado Monagas.",
+        'sucursal' => "Nuestras sucursales estan en **Maturin, Estado Monagas**. Para la direccion exacta contactanos por WhatsApp: https://wa.me/584128798885",
+        'pago' => "Aceptamos **transferencia bancaria, pago movil y efectivo** en tienda. Para transferencias necesitamos: numero de cedula, banco, telefono y referencia. Escribenos al WhatsApp para detalles: https://wa.me/584128798885",
+        'delivery' => "El delivery en Maturin es **GRATIS en compras desde \$10**. En compras menores el costo es de **\$2**. Para envios nacionales consulta por WhatsApp: https://wa.me/584128798885",
+        'whatsapp' => "Nuestro WhatsApp: **+58 412-8798885**. Escribenos directamente: https://wa.me/584128798885",
+        'instagram' => "Siguenos en Instagram: **@farmapazofficial**. Alli publicamos novedades, promociones y mas.",
+        'como_comprar' => "Para comprar en Farmapaz:\n1. Busca el producto que necesitas en nuestra tienda online.\n2. Agregalo al carrito.\n3. Ve al carrito y da click en 'Finalizar compra'.\n4. Llena tus datos y selecciona el metodo de pago.\n5. Te contactaremos por WhatsApp para confirmar.\n\nTambien puedes pedir directo por WhatsApp: https://wa.me/584128798885",
+    ];
+
+    foreach ($intents as $key => $keywords) {
+        foreach ($keywords as $kw) {
+            if (strpos($msg, $kw) !== false) {
+                return $responses[$key];
+            }
+        }
+    }
+
+    return null; // not handled locally — pass to AI or search
 }
 
 // AJAX handler for Pastillín
 add_action('wp_ajax_farmapaz_pastillin', 'farmapaz_pastillin_ajax');
 add_action('wp_ajax_nopriv_farmapaz_pastillin', 'farmapaz_pastillin_ajax');
 function farmapaz_pastillin_ajax() {
+    check_ajax_referer('farmapaz_nonce', 'nonce');
+
     $message = isset($_POST['message']) ? trim(sanitize_text_field($_POST['message'])) : '';
     if (!$message) {
-        wp_send_json(['reply' => '¡Hola! Soy Pastillín 💊 ¿En qué puedo ayudarte hoy?']);
+        wp_send_json(['reply' => 'Hola! Soy Pastillín, tu asistente de Farmapaz. En que puedo ayudarte?']);
     }
 
-    $api_key = get_option(FARMA_PASTILLIN_OPTION, '');
-    if (!$api_key && defined('FARMA_GEMINI_KEY')) {
-        $api_key = FARMA_GEMINI_KEY;
+    // Build conversation history from client
+    $history = [];
+    if (!empty($_POST['history'])) {
+        $decoded = json_decode(stripslashes($_POST['history']), true);
+        if (is_array($decoded)) {
+            $history = $decoded;
+        }
     }
-    $products = farmapaz_pastillin_search_products($message);
+    $history_str = farmapaz_pastillin_build_history($history);
 
-    if ($api_key) {
-        $system_prompt = farmapaz_pastillin_system_prompt();
-        $context = '';
-        if (!empty($products)) {
-            $context = "Productos de Farmapaz relacionados:\n";
-            foreach ($products as $p) {
-                $context .= "- {$p['name']} — {$p['price']} — {$p['cat']} — {$p['stock']}\n";
+    // 1. Local reply (only competitors, greetings, business info — not products)
+    $local = farmapaz_pastillin_local_reply($message);
+    if ($local) {
+        wp_send_json(['reply' => $local]);
+    }
+
+    // 2. Search products — use current message + last user message from history for context
+    $search_query = $message;
+    if (!empty($history)) {
+        // Find the last user message from history to enrich the search
+        for ($i = count($history) - 1; $i >= 0; $i--) {
+            if ($history[$i]['role'] === 'user') {
+                $search_query = $history[$i]['text'] . ' ' . $message;
+                break;
+            }
+        }
+    }
+    $products = farmapaz_pastillin_search_products($search_query);
+
+    // 3. If search found nothing, pull popular products so AI always has context
+    if (empty($products)) {
+        $products = farmapaz_pastillin_fallback_products(10);
+    }
+
+    // 4. Try AI always — feed it products and history as context
+    $reply = farmapaz_pastillin_try_ai($message, $products, $history_str);
+    if ($reply) {
+        wp_send_json(['reply' => $reply]);
+    }
+
+    // 5. Fallback: show products if AI failed but we have them
+    if (!empty($products)) {
+        $reply = "Encontre estos productos en Farmapaz:\n\n";
+        $count = 0;
+        foreach ($products as $p) {
+            if ($count >= 5) break;
+            $reply .= "[{$p['name']}]({$p['url']}) — {$p['price']}";
+            if ($p['brand']) $reply .= " ({$p['brand']})";
+            if ($p['cat']) $reply .= " — _{$p['cat']}_";
+            $reply .= "\n";
+            $count++;
+        }
+        $reply .= "\n\nTe interesa alguno en particular? Contactanos por WhatsApp: https://wa.me/584128798885";
+        wp_send_json(['reply' => $reply]);
+    }
+
+    // 6. Final fallback (should rarely reach here)
+    wp_send_json(['reply' => "Bienvenido a Farmapaz! Tenemos una gran variedad de productos para ti. Puedes visitar nuestra tienda: " . get_permalink(wc_get_page_id('shop')) . " o consultarme por algun producto en especial. Tambien estamos en WhatsApp: https://wa.me/584128798885"]);
+}
+
+/**
+ * Build conversation history string from messages array
+ */
+function farmapaz_pastillin_build_history($history) {
+    if (empty($history)) return '';
+    $lines = [];
+    foreach ($history as $msg) {
+        $role = $msg['role'] === 'user' ? 'Usuario' : 'Pastillín';
+        $text = isset($msg['text']) ? trim($msg['text']) : '';
+        if ($text) {
+            $lines[] = "$role: $text";
+        }
+    }
+    return implode("\n", $lines);
+}
+
+/**
+ * Try AI providers in order: Gemini → OpenRouter
+ * Passes product context when available for conversational answers.
+ */
+function farmapaz_pastillin_try_ai($message, $products = [], $history_str = '') {
+    $context = '';
+
+    // Prepnd conversation history so AI remembers context
+    if ($history_str) {
+        $context .= "Historial de la conversacion:\n{$history_str}\n\n";
+    }
+
+    if (!empty($products)) {
+        $context .= "Productos de Farmapaz disponibles relacionados con la consulta (usa estos enlaces exactos al mencionarlos):\n";
+        foreach ($products as $p) {
+            $context .= "- [{$p['name']}]({$p['url']}) — {$p['price']}";
+            if ($p['cat']) {
+                $cat_url = get_term_link($p['cat'], 'product_cat');
+                if (!is_wp_error($cat_url)) {
+                    $context .= " — Categoría: [{$p['cat']}]({$cat_url})";
+                } else {
+                    $context .= " — Categoría: {$p['cat']}";
+                }
+            }
+            if ($p['brand']) {
+                $brand_url = get_term_link($p['brand'], 'product_brand');
+                if (!is_wp_error($brand_url)) {
+                    $context .= " — Marca: [{$p['brand']}]({$brand_url})";
+                } else {
+                    $context .= " — Marca: {$p['brand']}";
+                }
             }
             $context .= "\n";
         }
+        $context .= "\n";
+    }
 
-        $contents = [
-            ['role' => 'user', 'parts' => [['text' => $system_prompt . "\n\n" . $context . "Usuario: " . $message]]],
-        ];
+    $system_info = farmapaz_pastillin_system_prompt();
 
-        $response = wp_remote_post('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' . $api_key, [
+    // ----- Gemini (gratis, 60 req/min, 1000 req/día) -----
+    $gemini_key = get_option(FARMA_PASTILLIN_OPTION, '');
+
+    if ($gemini_key) {
+        $system_content = "Eres Pastillín, asistente de Farmapaz Venezuela. Responde breve y amable, sin emojis.\n\n";
+        $system_content .= $system_info . "\n\n";
+        if ($context) {
+            $system_content .= $context . "\n";
+        }
+
+        $response = wp_remote_post('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' . $gemini_key, [
             'headers' => ['Content-Type' => 'application/json'],
-            'body'    => json_encode(['contents' => $contents]),
-            'timeout' => 15,
+            'body'    => json_encode([
+                'system_instruction' => ['parts' => [['text' => $system_content]]],
+                'contents' => [['role' => 'user', 'parts' => [['text' => $message]]]],
+            ]),
+            'timeout' => 10,
         ]);
 
         if (!is_wp_error($response)) {
             $body = json_decode(wp_remote_retrieve_body($response), true);
-            $reply = $body['candidates'][0]['content']['parts'][0]['text'] ?? '';
-            if ($reply) {
-                wp_send_json(['reply' => $reply]);
+            if (!isset($body['error']) && isset($body['candidates'][0]['content']['parts'][0]['text'])) {
+                $reply = trim($body['candidates'][0]['content']['parts'][0]['text']);
+                if ($reply) return $reply;
             }
         }
     }
 
-    // Fallback: local response
-    if (!empty($products)) {
-        $reply = "¡Claro! En Farmapaz tenemos:\n";
-        $count = 0;
-        foreach ($products as $p) {
-            if ($count >= 5) break;
-            $reply .= "🔹 {$p['name']} — {$p['price']}\n";
-            $count++;
+    // ----- OpenRouter (fallback, solo si hay key configurada) -----
+    $or_key = get_option(FARMA_OPENROUTER_KEY_OPTION, '');
+    $or_model = get_option(FARMA_OPENROUTER_MODEL_OPTION, 'openai/gpt-4o-mini');
+
+    if ($or_key) {
+        $system_msg = "Eres Pastillín, asistente de Farmapaz Venezuela. Responde breve y amable, sin emojis.\n\n";
+        $system_msg .= $system_info . "\n\n";
+        if ($context) {
+            $system_msg .= $context . "\n";
         }
-        $reply .= "\n¿Quieres ver más detalles de alguno? 😊";
-        wp_send_json(['reply' => $reply]);
+
+        $response = wp_remote_post('https://openrouter.ai/api/v1/chat/completions', [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $or_key,
+                'Content-Type'  => 'application/json',
+            ],
+            'body' => json_encode([
+                'model'    => $or_model,
+                'messages' => [
+                    ['role' => 'system', 'content' => $system_msg],
+                    ['role' => 'user',   'content' => $message],
+                ],
+                'max_tokens' => 400,
+            ]),
+            'timeout' => 10,
+        ]);
+
+        if (!is_wp_error($response)) {
+            $body = json_decode(wp_remote_retrieve_body($response), true);
+            if (!isset($body['error']) && isset($body['choices'][0]['message']['content'])) {
+                $reply = trim($body['choices'][0]['message']['content']);
+                if ($reply) return $reply;
+            }
+        }
     }
 
-    wp_send_json(['reply' => "No encontré \"{$message}\" en Farmapaz. ¿Pruebas con otra palabra o prefieres hablar con un asesor por WhatsApp? 🙏"]);
+    // ----- Groq (fallback final — recomendado, gratis y confiable) -----
+    $groq_key = get_option(FARMA_GROQ_KEY_OPTION, '');
+    $groq_model = get_option(FARMA_GROQ_MODEL_OPTION, 'llama-3.3-70b-versatile');
+
+    if ($groq_key) {
+        $system_msg = "Eres Pastillín, asistente de Farmapaz Venezuela. Responde breve y amable, sin emojis.\n\n";
+        $system_msg .= $system_info . "\n\n";
+        if ($context) {
+            $system_msg .= $context . "\n";
+        }
+
+        $response = wp_remote_post('https://api.groq.com/openai/v1/chat/completions', [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $groq_key,
+                'Content-Type'  => 'application/json',
+            ],
+            'body' => json_encode([
+                'model'    => $groq_model,
+                'messages' => [
+                    ['role' => 'system', 'content' => $system_msg],
+                    ['role' => 'user',   'content' => $message],
+                ],
+                'max_tokens' => 400,
+            ]),
+            'timeout' => 10,
+        ]);
+
+        if (!is_wp_error($response)) {
+            $body = json_decode(wp_remote_retrieve_body($response), true);
+            if (!isset($body['error']) && isset($body['choices'][0]['message']['content'])) {
+                $reply = trim($body['choices'][0]['message']['content']);
+                if ($reply) return $reply;
+            }
+        }
+    }
+
+    return null;
 }

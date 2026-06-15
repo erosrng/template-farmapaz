@@ -3,7 +3,7 @@ defined('ABSPATH') || exit;
 
 $current_user = wp_get_current_user();
 $orders       = wc_get_customer_order_count(get_current_user_id());
-$downloads    = wc_get_customer_download_count(get_current_user_id());
+$downloads    = function_exists('wc_get_customer_download_count') ? wc_get_customer_download_count(get_current_user_id()) : 0;
 $address      = WC()->countries->get_address_formats();
 ?>
 

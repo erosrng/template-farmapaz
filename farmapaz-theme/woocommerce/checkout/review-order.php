@@ -1,8 +1,4 @@
 <?php
-/**
- * Order review table
- */
-
 defined('ABSPATH') || exit;
 ?>
 <div class="checkout-review-table">
@@ -22,7 +18,8 @@ defined('ABSPATH') || exit;
         <div class="checkout-review-item-img">
             <?php if ($product_permalink): ?><a href="<?= esc_url($product_permalink); ?>"><?php endif; ?>
                 <img src="<?= esc_url($img_url); ?>" alt="<?= esc_attr($_product->get_name()); ?>"
-                     onerror="this.onerror=null;this.src='<?= $fallback; ?>'">
+                     onerror="this.onerror=null;this.src='<?= $fallback; ?>'"
+                     loading="lazy">
             <?php if ($product_permalink): ?></a><?php endif; ?>
         </div>
         <div class="checkout-review-item-info">
@@ -44,7 +41,6 @@ defined('ABSPATH') || exit;
     ?>
 </div>
 
-<!-- Totals -->
 <div class="checkout-review-totals">
     <div class="checkout-review-total-row">
         <span>Subtotal</span>
@@ -62,20 +58,20 @@ defined('ABSPATH') || exit;
         $is_shipping = stripos($fee->name, 'envío') !== false;
         $is_free = stripos($fee->name, 'gratis') !== false;
     ?>
-    <div class="checkout-review-total-row">
-        <?php if ($is_shipping): ?>
-        <span class="farmapaz-shipping-indicator <?= $is_free ? 'free' : 'paid'; ?>">
-            <?php if ($is_free): ?>
-            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+    <div class="checkout-review-total-row checkout-review-fee <?= $is_shipping ? 'checkout-review-shipping' : ''; ?>">
+        <span class="checkout-shipping-label">
+            <?php if ($is_shipping): ?>
+                <?php if ($is_free): ?>
+                <svg class="checkout-shipping-icon checkout-shipping-free-icon" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                <?php else: ?>
+                <svg class="checkout-shipping-icon checkout-shipping-paid-icon" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l2-1m4-1l-2 1m4-2l-2 1m6-5v5a1 1 0 001 1h3l2-4v-3a1 1 0 00-1-1h-4a1 1 0 00-1 1z"/></svg>
+                <?php endif; ?>
+                <span class="checkout-shipping-text"><?= esc_html($fee->name); ?></span>
             <?php else: ?>
-            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l2-1m4-1l-2 1m4-2l-2 1m6-5v5a1 1 0 001 1h3l2-4v-3a1 1 0 00-1-1h-4a1 1 0 00-1 1z"/></svg>
+                <span><?= esc_html($fee->name); ?></span>
             <?php endif; ?>
-            <span><?= esc_html($fee->name); ?></span>
         </span>
-        <?php else: ?>
-        <span><?= esc_html($fee->name); ?></span>
-        <?php endif; ?>
-        <span><?php wc_cart_totals_fee_html($fee); ?></span>
+        <span class="checkout-shipping-amount"><?php wc_cart_totals_fee_html($fee); ?></span>
     </div>
     <?php endforeach; ?>
 
@@ -94,5 +90,3 @@ defined('ABSPATH') || exit;
     </div>
 </div>
 
-<!-- Payment -->
-<?php wc_get_template('checkout/payment.php'); ?>

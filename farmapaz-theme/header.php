@@ -163,17 +163,43 @@
                                 if (!empty($all_cats) && !is_wp_error($all_cats)):
                                 ?>
                                 <div class="grid grid-cols-3 gap-2">
-                                    <?php foreach ($all_cats as $acat): ?>
-                                    <a href="<?= get_term_link($acat); ?>"
-                                       class="flex items-center gap-3 p-3 rounded-xl hover:bg-brand-green hover:bg-opacity-5 hover:text-brand-green transition-all group/cat">
-                                        <div class="w-9 h-9 rounded-lg flex items-center justify-center text-brand-green transition-all" style="background: rgba(90,125,67,0.1);">
-                                            <?= farmapaz_cat_icon($acat->slug); ?>
+                                    <?php foreach ($all_cats as $acat):
+                                        $acat_children = get_terms([
+                                            'taxonomy'   => 'product_cat',
+                                            'hide_empty' => true,
+                                            'parent'     => $acat->term_id,
+                                            'orderby'    => 'name',
+                                            'order'      => 'ASC',
+                                        ]);
+                                        $has_children = !empty($acat_children) && !is_wp_error($acat_children);
+                                    ?>
+                                    <div class="relative nav-cat-item<?= $has_children ? ' has-children' : ''; ?>">
+                                        <a href="<?= get_term_link($acat); ?>"
+                                           class="flex items-center gap-3 p-3 rounded-xl hover:bg-brand-green hover:bg-opacity-5 hover:text-brand-green transition-all group/cat">
+                                            <div class="w-9 h-9 rounded-lg flex items-center justify-center text-brand-green transition-all" style="background: rgba(90,125,67,0.1);">
+                                                <?= farmapaz_cat_icon($acat->slug); ?>
+                                            </div>
+                                            <div>
+                                                <span class="text-sm font-medium text-gray-700 group-hover/cat:text-brand-green transition-colors"><?= farmapaz_cat_display_name($acat->slug); ?></span>
+                                                <span class="text-xs text-gray-400 block"><?= $acat->count; ?> prod.</span>
+                                            </div>
+                                            <?php if ($has_children): ?>
+                                            <svg class="w-3 h-3 ml-auto flex-shrink-0 text-gray-300 nav-cat-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                            <?php endif; ?>
+                                        </a>
+                                        <?php if ($has_children): ?>
+                                        <div class="nav-cat-sub">
+                                            <div class="nav-cat-sub-inner">
+                                                <?php foreach ($acat_children as $achild): ?>
+                                                <a href="<?= get_term_link($achild); ?>" class="nav-cat-sub-link">
+                                                    <?= esc_html(farmapaz_cat_display_name($achild->slug)); ?>
+                                                    <span class="text-xs" style="color: rgba(9,20,110,0.3);"><?= $achild->count; ?></span>
+                                                </a>
+                                                <?php endforeach; ?>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <span class="text-sm font-medium text-gray-700 group-hover/cat:text-brand-green transition-colors"><?= farmapaz_cat_display_name($acat->slug); ?></span>
-                                            <span class="text-xs text-gray-400 block"><?= $acat->count; ?> prod.</span>
-                                        </div>
-                                    </a>
+                                        <?php endif; ?>
+                                    </div>
                                     <?php endforeach; ?>
                                 </div>
                                 <?php endif; ?>
@@ -234,7 +260,7 @@
                 </div>
 
                 <!-- Right: Quick Links + Primary Menu -->
-                <div class="flex items-center gap-1 min-w-0 overflow-x-auto scrollbar-hide" style="-webkit-overflow-scrolling: touch;">
+                <div class="flex items-center gap-1 min-w-0 scrollbar-hide" style="-webkit-overflow-scrolling: touch;">
 
                     <!-- Category Pills -->
                     <?php
@@ -252,13 +278,38 @@
                         foreach ($nav_cats as $nav_cat):
                             $color = $nav_cat_colors[$i % count($nav_cat_colors)];
                             $i++;
+                            $pills_children = get_terms([
+                                'taxonomy'   => 'product_cat',
+                                'hide_empty' => true,
+                                'parent'     => $nav_cat->term_id,
+                                'orderby'    => 'name',
+                                'order'      => 'ASC',
+                            ]);
+                            $pills_has_children = !empty($pills_children) && !is_wp_error($pills_children);
                     ?>
-                    <a href="<?= get_term_link($nav_cat); ?>"
-                       class="flex-shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-200 hover:scale-105 hover:brightness-110"
-                       style="background: <?= $color; ?>; color: #fff;">
-                        <?= farmapaz_cat_icon($nav_cat->slug); ?>
-                        <?= farmapaz_cat_display_name($nav_cat->slug); ?>
-                    </a>
+                    <div class="relative flex-shrink-0">
+                        <a href="<?= get_term_link($nav_cat); ?>"
+                           class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-200 hover:scale-105 hover:brightness-110"
+                           style="background: <?= $color; ?>; color: #fff;">
+                            <?= farmapaz_cat_icon($nav_cat->slug); ?>
+                            <?= farmapaz_cat_display_name($nav_cat->slug); ?>
+                            <?php if ($pills_has_children): ?>
+                            <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+                            <?php endif; ?>
+                        </a>
+                        <?php if ($pills_has_children): ?>
+                        <div class="nav-pill-sub">
+                            <div class="nav-pill-sub-inner">
+                                <?php foreach ($pills_children as $pchild): ?>
+                                <a href="<?= get_term_link($pchild); ?>" class="nav-cat-sub-link">
+                                    <?= esc_html(farmapaz_cat_display_name($pchild->slug)); ?>
+                                    <span class="text-xs" style="color: rgba(9,20,110,0.3);"><?= $pchild->count; ?></span>
+                                </a>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+                    </div>
                     <?php endforeach; endif; ?>
                 </div>
 
@@ -298,7 +349,7 @@
                     </span>
                     <svg id="mobile-cat-chevron" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                 </button>
-                <div id="mobile-cat-list" class="hidden mt-1 space-y-0.5">
+                <div id="mobile-cat-list" class="hidden mt-1">
                     <?php
                     $mobile_cats = get_terms([
                         'taxonomy'   => 'product_cat',
@@ -309,14 +360,37 @@
                     ]);
                     if (!empty($mobile_cats) && !is_wp_error($mobile_cats)):
                         foreach ($mobile_cats as $mcat):
+                            $mchildren = get_terms([
+                                'taxonomy'   => 'product_cat',
+                                'hide_empty' => true,
+                                'parent'     => $mcat->term_id,
+                                'orderby'    => 'name',
+                                'order'      => 'ASC',
+                            ]);
+                            $m_has_children = !empty($mchildren) && !is_wp_error($mchildren);
                     ?>
-                    <a href="<?= get_term_link($mcat); ?>" class="flex items-center gap-3 p-3 rounded-xl text-sm text-gray-600 hover:text-brand-green hover:bg-gray-50 transition-all">
-                        <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style="background: rgba(90,125,67,0.08); color: #5A7D43;">
-                            <?= farmapaz_cat_icon($mcat->slug); ?>
+                    <div>
+                        <a href="<?= get_term_link($mcat); ?>" class="flex items-center gap-3 p-3 rounded-xl text-sm text-gray-600 hover:text-brand-green hover:bg-gray-50 transition-all">
+                            <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style="background: rgba(90,125,67,0.08); color: #5A7D43;">
+                                <?= farmapaz_cat_icon($mcat->slug); ?>
+                            </div>
+                            <span style="font-weight: 600;"><?= farmapaz_cat_display_name($mcat->slug); ?></span>
+                            <span class="ml-auto text-xs text-gray-400"><?= $mcat->count; ?></span>
+                            <?php if ($m_has_children): ?>
+                            <svg class="w-3 h-3 text-gray-300 flex-shrink-0 mobile-cat-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            <?php endif; ?>
+                        </a>
+                        <?php if ($m_has_children): ?>
+                        <div class="ml-4 mt-0.5 mb-1 space-y-0.5 border-l-2 border-gray-100 pl-3">
+                            <?php foreach ($mchildren as $mchild): ?>
+                            <a href="<?= get_term_link($mchild); ?>" class="flex items-center gap-2 p-2.5 rounded-lg text-sm text-gray-500 hover:text-brand-green hover:bg-gray-50 transition-all">
+                                <span><?= esc_html(farmapaz_cat_display_name($mchild->slug)); ?></span>
+                                <span class="ml-auto text-xs text-gray-400"><?= $mchild->count; ?></span>
+                            </a>
+                            <?php endforeach; ?>
                         </div>
-                        <span><?= farmapaz_cat_display_name($mcat->slug); ?></span>
-                        <span class="ml-auto text-xs text-gray-400"><?= $mcat->count; ?></span>
-                    </a>
+                        <?php endif; ?>
+                    </div>
                     <?php endforeach; endif; ?>
                     <a href="<?= get_permalink(wc_get_page_id('shop')); ?>" class="flex items-center justify-center gap-1 p-3 text-sm font-medium text-brand-green hover:underline mt-1">
                         Ver todas las categorías

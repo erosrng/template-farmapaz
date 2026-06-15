@@ -19,6 +19,7 @@
             'meta_query'     => [
                 'relation' => 'AND',
                 ['key' => '_featured', 'value' => 'yes'],
+                ['key' => '_price', 'value' => 0, 'compare' => '>', 'type' => 'DECIMAL'], // [†] $0 excluded
                 ['key' => '_stock_status', 'value' => 'instock'],
             ],
             'orderby'        => 'date',

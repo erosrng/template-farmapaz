@@ -107,6 +107,7 @@ do_action('woocommerce_before_cart'); ?>
                         'posts_per_page' => 4,
                         'orderby'        => 'rand',
                         'meta_query'     => [
+                            ['key' => '_price', 'value' => 0, 'compare' => '>', 'type' => 'DECIMAL'], // [†] $0 excluded
                             ['key' => '_stock_status', 'value' => 'instock'],
                             ['key' => '_thumbnail_id', 'compare' => 'EXISTS'],
                         ],

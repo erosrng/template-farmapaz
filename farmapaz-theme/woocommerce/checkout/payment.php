@@ -1,8 +1,4 @@
 <?php
-/**
- * Payment methods
- */
-
 defined('ABSPATH') || exit;
 
 $available_gateways = WC()->payment_gateways()->get_available_payment_gateways();
@@ -11,7 +7,10 @@ if (!$chosen_gateway) $chosen_gateway = key($available_gateways);
 ?>
 
 <div class="checkout-payment-wrap">
+
     <?php do_action('woocommerce_review_order_before_payment'); ?>
+
+    <h3 class="checkout-payment-title">Metodo de pago</h3>
 
     <ul class="checkout-payment-methods">
         <?php if (!empty($available_gateways)): ?>
@@ -34,7 +33,7 @@ if (!$chosen_gateway) $chosen_gateway = key($available_gateways);
         <?php endforeach; ?>
         <?php else: ?>
         <li class="checkout-payment-method">
-            <p class="checkout-no-gateways">No hay métodos de pago disponibles.</p>
+            <p class="checkout-no-gateways">No hay metodos de pago disponibles.</p>
         </li>
         <?php endif; ?>
     </ul>
@@ -50,4 +49,5 @@ if (!$chosen_gateway) $chosen_gateway = key($available_gateways);
     </div>
 
     <?php do_action('woocommerce_review_order_after_payment'); ?>
+
 </div>

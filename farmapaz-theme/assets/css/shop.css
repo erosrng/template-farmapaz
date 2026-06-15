@@ -373,8 +373,19 @@
     opacity: 0;
 }
 .filter-list.open {
-    max-height: 600px;
+    max-height: 400px;   /* [†] Scroll vertical para categorías jerárquicas */
     opacity: 1;
+    overflow-y: auto;
+}
+.filter-list::-webkit-scrollbar {
+    width: 4px;
+}
+.filter-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+.filter-list::-webkit-scrollbar-thumb {
+    background: rgba(9,20,110,0.15);
+    border-radius: 4px;
 }
 .filter-search-wrap {
     position: relative;
@@ -468,6 +479,104 @@
     color: rgba(9,20,110,0.3);
     font-weight: 600;
     flex-shrink: 0;
+}
+/* [†] Categorías jerárquicas — hijas indentadas con línea vertical */
+.filter-children {
+    padding-left: 1.5rem;
+    border-left: 2px solid rgba(9,20,110,0.06);
+    margin: 0 0 0.25rem 0;
+}
+.filter-option-parent {
+    border-bottom: 1px solid rgba(9,20,110,0.04);
+    margin-top: 0.125rem;
+}
+.filter-option-child {
+    padding-left: 0;
+}
+.filter-option-child .filter-label-text {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+/* ---------- Navbar Category Submenu ---------- */
+.nav-cat-item {
+    position: relative;
+}
+.nav-cat-item.has-children {
+    cursor: default;
+}
+.nav-cat-item .nav-cat-chevron {
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.nav-cat-item:hover .nav-cat-chevron {
+    transform: rotate(90deg);
+}
+.nav-cat-sub {
+    position: absolute;
+    left: 100%;
+    top: 0;
+    margin-left: 0.25rem;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 60;
+    pointer-events: none;
+}
+.nav-cat-item:hover .nav-cat-sub {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+.nav-cat-sub-inner {
+    background: #fff;
+    border-radius: 0.75rem;
+    box-shadow: 0 8px 32px rgba(9,20,110,0.12);
+    border: 1px solid rgba(9,20,110,0.06);
+    padding: 0.5rem;
+    min-width: 200px;
+}
+.nav-cat-sub-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.8rem;
+    color: #374151;
+    text-decoration: none;
+    transition: all 0.15s ease;
+}
+.nav-cat-sub-link:hover {
+    background: rgba(90,125,67,0.06);
+    color: #5A7D43;
+}
+
+/* ---------- Navbar Pill Submenu ---------- */
+.nav-pill-sub {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 0.375rem;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 60;
+    pointer-events: none;
+}
+.nav-pill-sub-inner {
+    background: #fff;
+    border-radius: 0.75rem;
+    box-shadow: 0 8px 32px rgba(9,20,110,0.12);
+    border: 1px solid rgba(9,20,110,0.06);
+    padding: 0.5rem;
+    min-width: 180px;
+}
+.relative:hover > .nav-pill-sub {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
 }
 .filter-price-row {
     display: flex;
@@ -1053,7 +1162,12 @@
         padding: 1.25rem;
     }
     .shop-sidebar-header {
-        margin-top: 0;
+        position: sticky;  /* [†] Fijo en móvil al hacer scroll en filtros */
+        top: 0;
+        z-index: 10;
+        background: #fff;
+        padding-top: 0.25rem;
+        margin: -0.5rem 0 0.75rem 0;
     }
     .shop-sidebar-close {
         display: inline-flex;
@@ -1941,19 +2055,20 @@
     border-bottom: none;
 }
 .checkout-review-item-img {
-    width: 48px;
-    height: 48px;
+    width: 56px;
+    height: 56px;
     flex-shrink: 0;
-    border-radius: 0.5rem;
+    border-radius: 0.625rem;
     overflow: hidden;
-    background: rgba(9,20,110,0.02);
-    border: 1px solid rgba(9,20,110,0.06);
+    background: #fff;
+    border: 1px solid rgba(9,20,110,0.08);
+    box-shadow: 0 1px 4px rgba(9,20,110,0.04);
 }
 .checkout-review-item-img img {
     width: 100%;
     height: 100%;
     object-fit: contain;
-    padding: 0.125rem;
+    padding: 0.25rem;
 }
 .checkout-review-item-info {
     flex: 1;
@@ -2017,9 +2132,55 @@
     font-size: 1.15rem;
 }
 
+/* Shipping fee highlight */
+.checkout-review-fee.checkout-review-shipping {
+    margin: 0.5rem 0;
+    padding: 0.625rem 0.75rem;
+    border-radius: 0.75rem;
+    background: #fff;
+    border: 1px solid rgba(9,20,110,0.06);
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+}
+.checkout-shipping-label {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+.checkout-shipping-icon {
+    flex-shrink: 0;
+}
+.checkout-shipping-free-icon {
+    color: #5A7D43;
+}
+.checkout-shipping-paid-icon {
+    color: #F97316;
+}
+.checkout-shipping-text {
+    font-weight: 600;
+}
+.checkout-shipping-amount {
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+.checkout-review-shipping .checkout-shipping-amount {
+    color: #09146E;
+}
+
 /* Payment */
 .checkout-payment-wrap {
     margin-top: 1.5rem;
+}
+.checkout-payment-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #09146E;
+    margin: 0 0 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(9,20,110,0.06);
 }
 .checkout-payment-methods {
     list-style: none;
@@ -2072,6 +2233,7 @@
     font-size: 0.8rem;
     color: rgba(9,20,110,0.6);
     background: rgba(9,20,110,0.02);
+    border-top: 1px solid rgba(9,20,110,0.04);
 }
 .checkout-payment-box p {
     margin: 0 0 0.5rem;
@@ -2522,6 +2684,22 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     max-width: 200px;
+}
+.farmapaz-capture-preview {
+    display: none;
+    width: 72px;
+    height: 72px;
+    border-radius: 0.625rem;
+    overflow: hidden;
+    border: 1px solid rgba(9,20,110,0.08);
+    background: #fff;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(9,20,110,0.06);
+}
+.farmapaz-capture-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 .farmapaz-capture-hint {
     display: block;
@@ -3145,26 +3323,65 @@
 }
 
 /* ====== PASTILLÍN — CHATBOT FRUTIGER AERO ====== */
+
+/* [†] Animaciones futuristas — glow, ping, saludo */
+@keyframes pastillin-ping {
+    0%   { transform: scale(1);   opacity: 0.5; }
+    100% { transform: scale(1.8); opacity: 0;   }
+}
+@keyframes pastillin-greeting {
+    0%, 55% { opacity: 0; transform: translateY(8px) scale(0.85); }
+    8%, 45% { opacity: 1; transform: translateY(0)   scale(1);   }
+}
+
 #pastillin-btn {
     position: fixed;
     bottom: 24px;
     right: 24px;
     z-index: 9999;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
     border: none;
     cursor: pointer;
-    background: linear-gradient(135deg, #09146E, #0c1fa0);
+    background: linear-gradient(135deg, #09146E 0%, #0c1fa0 50%, #1527b5 100%);
     color: #fff;
     box-shadow: 0 4px 24px rgba(9,20,110,0.25);
     transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 8px;
+    padding: 6px 16px 6px 6px;
+    border-radius: 9999px;
+    overflow: visible;
+}
+#pastillin-btn::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: inherit;
+    border: 2px solid rgba(254,171,13,0.35);
+    animation: pastillin-ping 4s ease-out infinite;
+    pointer-events: none;
+}
+#pastillin-btn::after {
+    content: '\00A1Hola!';
+    position: absolute;
+    bottom: calc(100% + 14px);
+    right: 0;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: #09146E;
+    padding: 5px 14px;
+    border-radius: 10px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+    box-shadow: 0 4px 20px rgba(9,20,110,0.10);
+    pointer-events: none;
+    animation: pastillin-greeting 6s ease-in-out infinite;
 }
 #pastillin-btn:hover {
-    transform: scale(1.1);
+    transform: scale(1.08);
     box-shadow: 0 8px 40px rgba(9,20,110,0.35);
 }
 #pastillin-btn.active {
@@ -3172,9 +3389,25 @@
     opacity: 0;
     pointer-events: none;
 }
+#pastillin-btn.active::before,
+#pastillin-btn.active::after {
+    display: none;
+}
 #pastillin-btn svg {
     width: 28px;
     height: 28px;
+}
+.past-btn-img {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+.past-btn-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    white-space: nowrap;
 }
 
 #pastillin-box {
@@ -3225,10 +3458,16 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    overflow: hidden;
 }
 .past-header-avatar svg {
     width: 22px;
     height: 22px;
+}
+.past-header-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 .past-header-info {
     flex: 1;
@@ -3305,6 +3544,16 @@
     flex-shrink: 0;
     color: #09146E;
     margin-top: 2px;
+    overflow: hidden;
+}
+.past-msg-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.past-msg-avatar svg {
+    width: 16px;
+    height: 16px;
 }
 .past-msg-user .past-msg-avatar {
     display: none;
@@ -3329,6 +3578,14 @@
 }
 .past-msg-text strong {
     font-weight: 700;
+}
+.past-link {
+    color: #09146E;
+    text-decoration: underline;
+    font-weight: 600;
+}
+.past-link:hover {
+    color: #FEAB0D;
 }
 
 /* Quick replies */
@@ -3377,6 +3634,56 @@
 @keyframes pastDotBounce {
     0%, 60%, 100% { transform: translateY(0); }
     30% { transform: translateY(-6px); background: rgba(9,20,110,0.4); }
+}
+
+/* Quick bar — Frutiger Aero */
+.past-quick-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    padding: 0.5rem 1.25rem 0;
+    flex-shrink: 0;
+    overflow-y: auto;
+    max-height: 80px;
+    scrollbar-width: none;
+}
+.past-quick-bar::-webkit-scrollbar { display: none; }
+.past-quick-bar-btn {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.3rem 0.7rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(9,20,110,0.1);
+    background: rgba(255,255,255,0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: #09146E;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+    line-height: 1.3;
+}
+.past-quick-bar-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(254,171,13,0.08), rgba(90,125,67,0.06));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    border-radius: inherit;
+}
+.past-quick-bar-btn:hover {
+    border-color: rgba(9,20,110,0.2);
+    box-shadow: 0 4px 16px rgba(9,20,110,0.08), 0 0 0 1px rgba(9,20,110,0.04);
+    transform: translateY(-1px) scale(1.02);
+    background: rgba(255,255,255,0.75);
+}
+.past-quick-bar-btn:hover::before { opacity: 1; }
+.past-quick-bar-btn:active {
+    transform: translateY(0) scale(0.97);
+    transition-duration: 0.1s;
 }
 
 /* Input */
@@ -3443,7 +3750,761 @@
     #pastillin-btn {
         bottom: 16px;
         right: 16px;
-        width: 54px;
-        height: 54px;
+        padding: 4px;
+        gap: 4px;
     }
+    .past-btn-img {
+        width: 40px;
+        height: 40px;
+    }
+    .past-btn-label {
+        display: none;
+    }
+}
+
+/* ===== My Account - Orders ===== */
+.farmapaz-orders-wrap {
+    padding: 0;
+}
+.farmapaz-orders-header {
+    margin-bottom: 1.5rem;
+}
+.farmapaz-orders-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #09146E;
+    margin: 0 0 0.25rem;
+    line-height: 1.2;
+}
+.farmapaz-orders-subtitle {
+    font-size: 0.875rem;
+    color: rgba(9,20,110,0.45);
+    margin: 0;
+}
+.farmapaz-orders-table-wrap {
+    overflow-x: auto;
+    border-radius: 0.85rem;
+    border: 1px solid rgba(9,20,110,0.06);
+    background: rgba(255,255,255,0.8);
+}
+.farmapaz-orders-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+.farmapaz-orders-table th {
+    background: rgba(9,20,110,0.03);
+    color: rgba(9,20,110,0.5);
+    font-weight: 600;
+    text-align: left;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(9,20,110,0.06);
+    white-space: nowrap;
+}
+.farmapaz-orders-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(9,20,110,0.04);
+    color: rgba(9,20,110,0.7);
+}
+.farmapaz-orders-table tr:last-child td {
+    border-bottom: none;
+}
+.farmapaz-orders-number {
+    font-weight: 700;
+    color: #09146E;
+}
+.farmapaz-orders-date {
+    color: rgba(9,20,110,0.5);
+}
+.farmapaz-orders-total {
+    font-weight: 600;
+}
+.farmapaz-orders-view-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.85rem;
+    border-radius: 0.6rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #fff;
+    background: #5A7D43;
+    text-decoration: none;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.farmapaz-orders-view-btn:hover {
+    background: #4a6a36;
+    transform: translateY(-1px);
+}
+.farmapaz-orders-empty {
+    text-align: center;
+    padding: 3rem 1rem;
+}
+.farmapaz-orders-empty-icon {
+    margin-bottom: 1rem;
+}
+.farmapaz-orders-empty-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #09146E;
+    margin: 0 0 0.5rem;
+}
+.farmapaz-orders-empty-text {
+    font-size: 0.875rem;
+    color: rgba(9,20,110,0.45);
+    margin: 0 0 1.5rem;
+}
+.farmapaz-orders-shop-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.5rem;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #fff;
+    background: #09146E;
+    text-decoration: none;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.farmapaz-orders-shop-btn:hover {
+    background: #0c1fa0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(9,20,110,0.2);
+}
+
+/* ===== My Account - Downloads ===== */
+.farmapaz-downloads-wrap {
+    padding: 0;
+}
+.farmapaz-downloads-header {
+    margin-bottom: 1.5rem;
+}
+.farmapaz-downloads-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #09146E;
+    margin: 0 0 0.25rem;
+    line-height: 1.2;
+}
+.farmapaz-downloads-subtitle {
+    font-size: 0.875rem;
+    color: rgba(9,20,110,0.45);
+    margin: 0;
+}
+.farmapaz-downloads-table-wrap {
+    overflow-x: auto;
+    border-radius: 0.85rem;
+    border: 1px solid rgba(9,20,110,0.06);
+    background: rgba(255,255,255,0.8);
+}
+.farmapaz-downloads-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+.farmapaz-downloads-table th {
+    background: rgba(9,20,110,0.03);
+    color: rgba(9,20,110,0.5);
+    font-weight: 600;
+    text-align: left;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(9,20,110,0.06);
+    white-space: nowrap;
+}
+.farmapaz-downloads-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(9,20,110,0.04);
+    color: rgba(9,20,110,0.7);
+}
+.farmapaz-downloads-table tr:last-child td {
+    border-bottom: none;
+}
+.farmapaz-downloads-product {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+.farmapaz-downloads-product-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: rgba(90,125,67,0.1);
+    color: #5A7D43;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.farmapaz-downloads-product-name {
+    font-weight: 600;
+    color: #09146E;
+}
+.farmapaz-downloads-count {
+    color: rgba(9,20,110,0.5);
+}
+.farmapaz-downloads-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.85rem;
+    border-radius: 0.6rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #5A7D43;
+    background: rgba(90,125,67,0.08);
+    text-decoration: none;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.farmapaz-downloads-btn:hover {
+    background: #5A7D43;
+    color: #fff;
+    transform: translateY(-1px);
+}
+.farmapaz-downloads-empty {
+    text-align: center;
+    padding: 3rem 1rem;
+}
+.farmapaz-downloads-empty-icon {
+    margin-bottom: 1rem;
+}
+.farmapaz-downloads-empty-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #09146E;
+    margin: 0 0 0.5rem;
+}
+.farmapaz-downloads-empty-text {
+    font-size: 0.875rem;
+    color: rgba(9,20,110,0.45);
+    margin: 0 0 1.5rem;
+}
+.farmapaz-downloads-shop-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.5rem;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #fff;
+    background: #09146E;
+    text-decoration: none;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.farmapaz-downloads-shop-btn:hover {
+    background: #0c1fa0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(9,20,110,0.2);
+}
+
+/* ===== My Account - View Order ===== */
+.farmapaz-view-order-wrap {
+    padding: 0;
+}
+.farmapaz-view-order-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+.farmapaz-view-order-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #09146E;
+    margin: 0;
+    line-height: 1.2;
+}
+.farmapaz-view-order-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #5A7D43;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+.farmapaz-view-order-back:hover {
+    color: #4a6a36;
+}
+.farmapaz-view-order-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem 1.25rem;
+    background: rgba(255,255,255,0.6);
+    border-radius: 0.85rem;
+    border: 1px solid rgba(9,20,110,0.06);
+}
+.farmapaz-view-order-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+.farmapaz-view-order-meta-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: rgba(9,20,110,0.4);
+}
+.farmapaz-view-order-meta-value {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: #09146E;
+}
+.farmapaz-view-order-section-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #09146E;
+    margin: 0 0 0.75rem;
+}
+.farmapaz-view-order-table-wrap {
+    overflow-x: auto;
+    border-radius: 0.85rem;
+    border: 1px solid rgba(9,20,110,0.06);
+    background: rgba(255,255,255,0.8);
+    margin-bottom: 1.5rem;
+}
+.farmapaz-view-order-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+.farmapaz-view-order-table th {
+    background: rgba(9,20,110,0.03);
+    color: rgba(9,20,110,0.5);
+    font-weight: 600;
+    text-align: left;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(9,20,110,0.06);
+    white-space: nowrap;
+}
+.farmapaz-view-order-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(9,20,110,0.04);
+    color: rgba(9,20,110,0.7);
+    vertical-align: middle;
+}
+.farmapaz-view-order-table tfoot th {
+    background: none;
+    border-bottom: 1px solid rgba(9,20,110,0.04);
+    font-weight: 600;
+    color: rgba(9,20,110,0.5);
+    text-align: right;
+}
+.farmapaz-view-order-table tfoot td {
+    font-weight: 700;
+    color: #09146E;
+}
+.farmapaz-view-order-table tr:last-child td,
+.farmapaz-view-order-table tfoot tr:last-child th,
+.farmapaz-view-order-table tfoot tr:last-child td {
+    border-bottom: none;
+}
+.farmapaz-view-order-product {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+.farmapaz-view-order-product-img {
+    width: 48px;
+    height: 48px;
+    border-radius: 0.6rem;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: #f1f5f9;
+}
+.farmapaz-view-order-product-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.farmapaz-view-order-product-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+.farmapaz-view-order-product-name {
+    font-weight: 600;
+    color: #09146E;
+}
+.farmapaz-view-order-product-note {
+    font-size: 0.8125rem;
+    color: rgba(9,20,110,0.45);
+}
+.farmapaz-view-order-addresses {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.25rem;
+}
+.farmapaz-view-order-address {
+    background: rgba(255,255,255,0.6);
+    border-radius: 0.85rem;
+    padding: 1rem 1.25rem;
+    border: 1px solid rgba(9,20,110,0.06);
+}
+.farmapaz-view-order-address address {
+    font-style: normal;
+    font-size: 0.875rem;
+    color: rgba(9,20,110,0.6);
+    line-height: 1.6;
+}
+
+/* ===== My Account - Edit Account ===== */
+.farmapaz-edit-account-wrap {
+    padding: 0;
+}
+.farmapaz-edit-account-header {
+    margin-bottom: 1.5rem;
+}
+.farmapaz-edit-account-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #09146E;
+    margin: 0 0 0.25rem;
+    line-height: 1.2;
+}
+.farmapaz-edit-account-subtitle {
+    font-size: 0.875rem;
+    color: rgba(9,20,110,0.45);
+    margin: 0;
+}
+.farmapaz-edit-account-form {
+    max-width: 600px;
+}
+.farmapaz-edit-account-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.farmapaz-edit-account-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+@media (max-width: 480px) {
+    .farmapaz-edit-account-row {
+        grid-template-columns: 1fr;
+    }
+}
+.farmapaz-edit-account-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+.farmapaz-edit-account-label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: rgba(9,20,110,0.7);
+}
+.farmapaz-edit-account-input-wrap {
+    position: relative;
+}
+.farmapaz-edit-account-input {
+    width: 100%;
+    padding: 0.65rem 0.85rem;
+    border: 1.5px solid rgba(9,20,110,0.1);
+    border-radius: 0.75rem;
+    font-size: 0.9375rem;
+    background: #fff;
+    color: #09146E;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    outline: none;
+}
+.farmapaz-edit-account-input:focus {
+    border-color: rgba(9,20,110,0.3);
+    box-shadow: 0 0 0 3px rgba(9,20,110,0.04);
+}
+.farmapaz-edit-account-hint {
+    font-size: 0.75rem;
+    color: rgba(9,20,110,0.4);
+    margin: 0.25rem 0 0;
+}
+.farmapaz-edit-account-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 1.5rem 0;
+}
+.farmapaz-edit-account-divider::before,
+.farmapaz-edit-account-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(9,20,110,0.06);
+}
+.farmapaz-edit-account-divider span {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: rgba(9,20,110,0.4);
+    white-space: nowrap;
+}
+.farmapaz-edit-account-submit {
+    margin-top: 1.5rem;
+}
+.farmapaz-edit-account-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.7rem 1.75rem;
+    border: none;
+    border-radius: 0.75rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #fff;
+    background: #09146E;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.farmapaz-edit-account-btn:hover {
+    background: #0c1fa0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(9,20,110,0.2);
+}
+
+/* ===== My Account - Edit Address ===== */
+.farmapaz-edit-address-wrap {
+    padding: 0;
+}
+.farmapaz-edit-address-header {
+    margin-bottom: 1.5rem;
+}
+.farmapaz-edit-address-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #09146E;
+    margin: 0 0 0.25rem;
+    line-height: 1.2;
+}
+.farmapaz-edit-address-subtitle {
+    font-size: 0.875rem;
+    color: rgba(9,20,110,0.45);
+    margin: 0;
+}
+.farmapaz-edit-address-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #5A7D43;
+    text-decoration: none;
+    transition: color 0.2s;
+    margin-bottom: 0.75rem;
+}
+.farmapaz-edit-address-back:hover {
+    color: #4a6a36;
+}
+.farmapaz-edit-address-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1.25rem;
+}
+.farmapaz-edit-address-card {
+    background: rgba(255,255,255,0.6);
+    border-radius: 1rem;
+    border: 1px solid rgba(9,20,110,0.06);
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.farmapaz-edit-address-card:hover {
+    border-color: rgba(9,20,110,0.12);
+    box-shadow: 0 4px 16px rgba(9,20,110,0.06);
+}
+.farmapaz-edit-address-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid rgba(9,20,110,0.04);
+}
+.farmapaz-edit-address-card-title {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: #09146E;
+    margin: 0;
+}
+.farmapaz-edit-address-card-edit {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #5A7D43;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+.farmapaz-edit-address-card-edit:hover {
+    color: #4a6a36;
+}
+.farmapaz-edit-address-card-body {
+    padding: 1rem 1.25rem;
+}
+.farmapaz-edit-address-card-body address {
+    font-style: normal;
+    font-size: 0.875rem;
+    color: rgba(9,20,110,0.6);
+    line-height: 1.6;
+}
+.farmapaz-edit-address-form {
+    max-width: 600px;
+}
+.farmapaz-edit-address-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+.farmapaz-edit-address-submit {
+    margin-top: 1.5rem;
+}
+.farmapaz-edit-address-save-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.7rem 1.75rem;
+    border: none;
+    border-radius: 0.75rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #fff;
+    background: #09146E;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.farmapaz-edit-address-save-btn:hover {
+    background: #0c1fa0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(9,20,110,0.2);
+}
+
+/* ===== My Account - Payment Methods ===== */
+.farmapaz-payment-wrap {
+    padding: 0;
+}
+.farmapaz-payment-header {
+    margin-bottom: 1.5rem;
+}
+.farmapaz-payment-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #09146E;
+    margin: 0 0 0.25rem;
+    line-height: 1.2;
+}
+.farmapaz-payment-subtitle {
+    font-size: 0.875rem;
+    color: rgba(9,20,110,0.45);
+    margin: 0;
+}
+.farmapaz-payment-table-wrap {
+    overflow-x: auto;
+    border-radius: 0.85rem;
+    border: 1px solid rgba(9,20,110,0.06);
+    background: rgba(255,255,255,0.8);
+}
+.farmapaz-payment-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+.farmapaz-payment-table th {
+    background: rgba(9,20,110,0.03);
+    color: rgba(9,20,110,0.5);
+    font-weight: 600;
+    text-align: left;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(9,20,110,0.06);
+    white-space: nowrap;
+}
+.farmapaz-payment-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(9,20,110,0.04);
+    color: rgba(9,20,110,0.7);
+}
+.farmapaz-payment-table tr:last-child td {
+    border-bottom: none;
+}
+.farmapaz-payment-expiry {
+    color: rgba(9,20,110,0.4);
+    font-size: 0.8125rem;
+}
+.farmapaz-payment-delete-btn {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #dc2626;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+.farmapaz-payment-delete-btn:hover {
+    color: #b91c1c;
+    text-decoration: underline;
+}
+.farmapaz-payment-empty {
+    text-align: center;
+    padding: 3rem 1rem;
+}
+.farmapaz-payment-empty-icon {
+    margin-bottom: 1rem;
+}
+.farmapaz-payment-empty-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #09146E;
+    margin: 0 0 0.5rem;
+}
+.farmapaz-payment-empty-text {
+    font-size: 0.875rem;
+    color: rgba(9,20,110,0.45);
+    margin: 0;
+}
+
+/* ===== Add Payment Method page ===== */
+.farmapaz-account-content .woocommerce-AddPaymentMethod {
+    max-width: 500px;
+}
+.farmapaz-account-content .woocommerce-AddPaymentMethod .payment_methods {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.5rem;
+}
+.farmapaz-account-content .woocommerce-AddPaymentMethod .payment_methods li {
+    padding: 0.75rem 1rem;
+    background: rgba(255,255,255,0.6);
+    border-radius: 0.75rem;
+    border: 1px solid rgba(9,20,110,0.06);
+    margin-bottom: 0.5rem;
+}
+.farmapaz-account-content .woocommerce-AddPaymentMethod .payment_methods li label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #09146E;
+}
+.farmapaz-account-content .woocommerce-AddPaymentMethod .payment_box {
+    font-size: 0.8125rem;
+    color: rgba(9,20,110,0.55);
+    margin-top: 0.5rem;
+}
+.farmapaz-account-content .woocommerce-AddPaymentMethod .button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.7rem 1.75rem;
+    border: none;
+    border-radius: 0.75rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #fff;
+    background: #09146E;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.farmapaz-account-content .woocommerce-AddPaymentMethod .button:hover {
+    background: #0c1fa0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(9,20,110,0.2);
 }

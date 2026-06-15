@@ -12,7 +12,16 @@
         ?>
 
         <!-- ===== MOBILE: Single merged carousel with ALL banners ===== -->
-        <div class="hero-slider lg:hidden relative w-full overflow-hidden" style="min-height: 280px; height: 65vw; max-height: 450px;">
+        <?php
+        $banner_aspect = '2.5'; // fallback
+        if (!empty($banner_files)) {
+            $size = @getimagesize($banner_files[0]);
+            if ($size && $size[0] > 0) {
+                $banner_aspect = round($size[0] / $size[1], 4);
+            }
+        }
+        ?>
+        <div class="hero-slider lg:hidden relative w-full overflow-hidden" style="background: #293683; aspect-ratio: <?= $banner_aspect; ?>;">
             <?php
             $all_banners = $banner_files;
             shuffle($all_banners);
@@ -22,7 +31,7 @@
                 $mi++;
             ?>
             <div class="hero-slide absolute inset-0 w-full h-full <?= $mi === 1 ? 'active' : ''; ?>">
-                <img src="<?= $url; ?>" alt="" class="w-full h-full object-contain" style="background: #09146E;" <?= $mi === 1 ? 'fetchpriority="high"' : 'loading="lazy"'; ?>>
+                <img src="<?= $url; ?>" alt="" class="w-full h-full object-contain" style="background: #293683;" <?= $mi === 1 ? 'fetchpriority="high"' : 'loading="lazy"'; ?>>
             </div>
             <?php endforeach; ?>
             <?php if ($mi > 1): ?>
