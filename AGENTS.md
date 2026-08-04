@@ -50,3 +50,105 @@ No test/lint/typecheck commands exist.
 - `/?wc-ajax=update_cart` broken for guests — use remove+add combo instead.
 - Empty cart after removing last item: totals show `$0` but empty-state message not shown until reload.
 - Card stepper buttons not synced on `wc_fragment_refresh` — manual page reload needed.
+
+## Scraper de imágenes (farmadon.com.ve → WooCommerce)
+
+### Estado actual (14-Jul, último sync)
+| Métrica | Inicio | Ahora | Δ |
+|---|---|---|---|
+| Productos publicados | 8,504 | 8,501 | — |
+| Con thumbnail | 6,165 (72%) | 6,453 (76%) | +288 |
+| Sin thumbnail | 2,534 (28%) | 2,240 (24%) | -294 |
+| Imágenes en VPS | 2,452 | 2,679 | +227 |
+
+### Pipeline completo
+```
+extractor.py → sync_incremental.sh → asignar_rapido.sh (en VPS)
+```
+
+### Scripts en `~/Escritorio/robador/`
+| Script | Descripción |
+|---|---|
+| `extractor.py` | Scraper principal (root). Timeout 15s, 5 hilos, sin sleep. Procesa `lista_links.txt` |
+| `sync_incremental.sh` | Flatten → filtrar SKU → tar → SCP → extraer en VPS |
+| `progreso.txt` | Progreso del scraper (categoría,página) |
+| `progreso_express.txt` | Progreso de intentos rápidos (no prioritario) |
+| `imagenes_farmadon/` | Raw output (root-owned: `drwxr-xr-x root root`) |
+| `imagenes_planas/` | Flattened únicos por SKU (4184 archivos) |
+
+### Comandos rápidos
+```sh
+# 1. Scrapear categorías pendientes (correr como root)
+cd ~/Escritorio/robador && python3 extractor.py
+
+# 2. Sincronizar al VPS (filtra SKU, upload, import)
+bash sync_incremental.sh
+
+# 3. Ver progreso del scraper
+cat ~/Escritorio/robador/progreso.txt
+
+# 4. Ver estado en VPS (thumbnail count)
+ssh farmapaz@185.27.135.252 "~/.local/bin/wp --path=/home/farmapaz/web/farmapazvenezuela.com/public_html db query \"SELECT COUNT(*) FROM Q0i1dfcrc_posts p LEFT JOIN Q0i1dfcrc_postmeta pm ON p.ID=pm.post_id AND pm.meta_key='_thumbnail_id' WHERE p.post_type='product' AND p.post_status='publish' AND (pm.meta_value IS NULL OR pm.meta_value='')\" --skip-column-names"
+```
+
+### Flujo de trabajo
+1. **Scrapear**: `python3 extractor.py` (como root). Procesa todas las categorías de `lista_links.txt`. Script optimizado con timeout 15s, 5 hilos paralelos.
+2. **Sync**: `bash sync_incremental.sh` — aplana (SKU único), filtra imágenes cuyo SKU existe en WooCommerce, comprime, SCP al VPS, extrae.
+3. **Asignar**: En el VPS, el script sube cada imagen como attachment y asigna `_thumbnail_id` al producto correspondiente. Usa SQL para pre-filtrar solo productos sin thumbnail + con imagen disponible.
+4. **Verificar**: Consultar estado en VPS (comando #4 arriba).
+
+### Detalles técnicos
+- **SKU mismatch**: El scraper extrae el SKU que muestra farmadon.com.ve (puede ser ID interno como `0000000002073` o barcode como `7591519051698`). Las imágenes se guardan con ese nombre. WooCommerce en farmapaz tiene ambos formatos de SKU. El script de asignación matchea por nombre de archivo vs `_sku` en BD.
+- **Permisos root**: `imagenes_farmadon/` es root-owned. Cualquier script que escriba ahí debe correr como root.
+- **Import en paralelo**: El VPS usa background jobs (4 simultáneos) con `wp media import --porcelain` + `wp post meta update`.
+- **Log de importación**: `/tmp/import_rapido.log` en VPS (293 OK, 0 FAIL en última corrida).
+
+### Categorías pendientes (16)
+```
+salud-cardiovascular, salud-digestiva, salud-respiratoria, salud-sexual
+jeringas, alimentos-infantiles, cosmeticos, dermocosmeticos
+alimentos, bebidas, confiteria, electronicos, fitness-y-dietetica, hogar-y-mas, mascotas, papeleria
+```
+El scraper las procesa automáticamente al llegar a ellas en `lista_links.txt`.
+
+### Asignación directa en VPS (si ya hay imágenes)
+```sh
+ssh farmapaz@185.27.135.252 "export WP_CLI_ALLOW_ROOT=1 && bash /tmp/asignar_rapido.sh"
+```
+Script en VPS en `/tmp/asignar_rapido.sh` (necesita recrearse si se pierde).
+
+## Push Notifications (OneSignal)
+
+**Integración OneSignal Web Push** — sin plugin externo, todo en el theme.
+
+### Archivos
+- `onesignal/OneSignalSDKWorker.js` / `OneSignalSDKUpdaterWorker.js` — service workers (proxy via WordPress rewrite rules, `functions.php:2576-2603`).
+- `onesignal/manifest.json` — PWA manifest para iOS Safari.
+- `assets/js/notifications.js` — modal custom con branding Farmapaz, init de OneSignal, manejo de cookies.
+- `functions.php:103-117` — enqueue condicional (solo si hay App ID configurado).
+- `functions.php:2567-2823` — admin page, rewrite rules, AJAX tagging, test notification.
+
+### Admin
+`Ajustes > Notificaciones Push` — campos: App ID, REST API Key, retraso del modal (ms).
+
+### Comportamiento
+1. Modal aparece tras N ms (`notif_delay`, default 8000) en la primera interacción del usuario.
+2. Botón "Sí, quiero recibir ofertas" → OneSignal subscribe + envía tags al servidor.
+3. Tags: `has_purchased`, `order_count`, `purchased_categories`, `last_purchase`, `subscribed_date`.
+4. "Ahora no" → cookie 7 días; "No volver a preguntar" → cookie 365 días.
+5. Si ya aceptó antes o el permiso está concedido, no muestra modal.
+
+### Segmentación en OneSignal Dashboard
+Usar tags para campañas:
+- `has_purchased = yes` → clientes recurrentes
+- `purchased_categories` → filtrar por categorías compradas
+- `order_count > 5` → clientes frecuentes
+
+### Test
+En `Ajustes > Notificaciones Push` hay un formulario para enviar notificación de prueba a "Todos los suscriptores" o "Subscribed Users".
+
+### Setup inicial
+1. Crear cuenta en https://onesignal.com
+2. Crear app Web → copiar **App ID** y **REST API Key**
+3. Ir a `Ajustes > Notificaciones Push` en WordPress y pegarlos
+4. Ir a `Ajustes > Enlaces Permamentes` y dar clic en "Guardar cambios" (flush rewrite rules)

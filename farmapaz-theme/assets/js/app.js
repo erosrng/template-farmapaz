@@ -166,10 +166,11 @@
                 track.style.userSelect = '';
             });
 
-            // Auto-scroll
+            // Auto-scroll (respetar toggle de Ajustes > Portada)
             let autoScrollTimer;
             function startAutoScroll() {
                 stopAutoScroll();
+                if (typeof farmapazData !== 'undefined' && farmapazData.autoscroll === '0') return;
                 const hasOverflow = track.scrollWidth > track.clientWidth + 5;
                 if (!hasOverflow) return;
                 autoScrollTimer = setInterval(() => {
@@ -639,4 +640,8 @@
             return d.innerHTML;
         }
     });
+
+    // ====== CARDS WITH MISSING IMAGES ======
+    // Ya no se ocultan: las tarjetas muestran el placeholder ligero (producto.svg).
+    // El fallback visual lo maneja el onerror de cada <img>.
 })();

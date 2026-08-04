@@ -1,0 +1,85 @@
+INSTRUCCIONES: PORTADA (PÁGINA DE INICIO)
+==========================================
+
+TODO lo de la portada (secciones de productos, banners y bloques)
+se maneja desde el panel de WordPress, SIN tocar código.
+
+DÓNDE ESTÁ
+----------
+Ajustes > Portada
+
+(En el menú de la izquierda de WordPress, dentro de "Ajustes",
+la opción se llama "Portada".)
+
+
+1) SECCIONES DE PRODUCTOS
+--------------------------
+Aquí defines qué carruseles/grillas aparecen en el inicio y con
+qué productos.
+
+Botones:
+  - "+ Añadir sección"  → crea una sección nueva (cópiala y edítala).
+  - "Eliminar sección"  → borra la sección.
+  - Casilla "Activa"    → mostrarla u ocultarla sin borrarla.
+
+Campos de cada sección:
+  - Título            : el encabezado grande (ej: "Ofertas de verano").
+  - Subtítulo         : texto pequeño debajo del título.
+  - Categoría         : de qué categoría salen los productos
+                        (elegir del listado; "— Todas —" = de todo el catálogo).
+  - Formato           : "Carrusel" (desliza horizontal) o "Grilla" (cuadrícula).
+  - Nº de productos   : cuántos productos mostrar (recomendado 8-10
+                        para que cargue rápido y se vea como "previa").
+  - Orden             : recientes, aleatorio, título, etc.
+  - Fondo             : color de fondo de la sección.
+  - Extras            : sello "Oferta" / solo productos en oferta.
+
+Consejos:
+  - Menos productos por sección = página más rápida.
+  - Si una categoría está vacía, la sección no se muestra.
+  - Guarda con el botón "Guardar Portada" al final de la página.
+
+
+2) BANNERS DEL HERO (arriba de la página)
+-----------------------------------------
+Son las imágenes grandes del carrusel superior.
+
+  - Escribe la URL de la imagen (o usa "Subir / Elegir" para subirla
+    desde la biblioteca de medios).
+  - "+ Añadir banner"  → agregar más.
+  - "Quitar"           → eliminar.
+  - Si dejas la lista VACÍA, se usan los banners que ya están en la
+    carpeta del theme (no toques nada y seguirá como está ahora).
+
+Recomendación: imágenes en formato JPG/WebP, de ancho 1200px o más.
+
+
+3) BLOQUES DE LA PORTADA
+-------------------------
+  - "Auto-desplazamiento de carruseles": si lo desactivas, los
+    carruseles dejan de moverse solos y solo se deslizan con la mano.
+  - "Carrusel de categorías": muestra las tarjetas de categorías.
+  - "Bloque de confianza": envíos, pagos seguros, etc.
+  - "Banners promocionales": los banners del pie de la página.
+
+Desmarca cualquiera para ocultarlo y guarda.
+
+
+GUARDAR
+-------
+Siempre usa el botón "Guardar Portada" (abajo del todo).
+Al guardar, la página de inicio se actualiza al instante.
+
+NOTA: si usas caché (plugin de caché o CDN), recuerda limpiarla
+después de guardar para ver los cambios de inmediato.
+
+
+CÓMO SE COMPORTAN LOS PRODUCTOS SIN IMAGEN
+------------------------------------------
+Antes las tarjetas con imagen rota "desaparecían". Ahora NO se ocultan:
+muestran un placeholder ligero (producto.svg) con el ícono de Farmapaz,
+así la sección siempre se ve completa y estética.
+
+Los carruseles y grillas ya no incluyen productos sin imagen, sin
+precio o con stock bajo (≤5). Si quieres quitar ese filtro, es tarea
+de programación (no está en el panel).

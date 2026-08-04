@@ -140,7 +140,8 @@
     <div class="past-messages" id="pastillin-msgs"></div>
     <div class="past-quick-bar" id="pastillin-quick-bar"></div>
     <div class="past-input-wrap">
-        <textarea id="pastillin-input" placeholder="Escribe tu mensaje..." rows="1"></textarea>
+        <textarea id="pastillin-input" placeholder="Escribe tu mensaje..." rows="1" maxlength="500"></textarea>
+        <span id="pastillin-counter" class="past-counter">0/500</span>
         <button id="pastillin-send" aria-label="Enviar">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
         </button>

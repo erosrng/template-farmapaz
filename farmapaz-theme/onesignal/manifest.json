@@ -1,0 +1,15 @@
+{
+  "name": "Farmapaz",
+  "short_name": "Farmapaz",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#5A7D43",
+  "icons": [
+    {
+      "src": "/wp-content/themes/farmapaz-theme/assets/images/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}

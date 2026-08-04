@@ -334,7 +334,7 @@
 
     // ====== IMAGE FALLBACK ======
     function bindImageFallback() {
-        var fallbackSrc = typeof farmapazData !== 'undefined' ? farmapazData.themeUri + '/assets/images/producto.png' : '/wp-content/themes/farmapaz-theme/assets/images/producto.png';
+        var fallbackSrc = typeof farmapazData !== 'undefined' ? farmapazData.themeUri + '/assets/images/producto.svg' : '/wp-content/themes/farmapaz-theme/assets/images/producto.svg';
         document.querySelectorAll('.sp-card-img').forEach(function(img) {
             if (img.dataset.fallbackBound) return;
             img.dataset.fallbackBound = '1';
@@ -349,7 +349,7 @@
         var target = e.target;
         if (target.tagName === 'IMG' && target.classList.contains('sp-card-img') && !target.dataset.fallbackTried) {
             target.dataset.fallbackTried = '1';
-            var fallbackSrc = typeof farmapazData !== 'undefined' ? farmapazData.themeUri + '/assets/images/producto.png' : '/wp-content/themes/farmapaz-theme/assets/images/producto.png';
+            var fallbackSrc = typeof farmapazData !== 'undefined' ? farmapazData.themeUri + '/assets/images/producto.svg' : '/wp-content/themes/farmapaz-theme/assets/images/producto.svg';
             target.src = fallbackSrc;
         }
     }, true);

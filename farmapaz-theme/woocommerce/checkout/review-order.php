@@ -12,7 +12,7 @@ defined('ABSPATH') || exit;
         if ($_product && $_product->exists() && $cart_item['quantity'] > 0 && apply_filters('woocommerce_checkout_cart_item_visible', true, $cart_item, $cart_item_key)):
             $product_permalink = apply_filters('woocommerce_cart_item_permalink', $_product->is_visible() ? $_product->get_permalink($cart_item) : '', $cart_item, $cart_item_key);
             $img_url = farmapaz_product_img_fallback(get_the_post_thumbnail_url($product_id, 'thumbnail'));
-            $fallback = get_template_directory_uri() . '/assets/images/producto.png';
+            $fallback = get_template_directory_uri() . '/assets/images/producto.svg';
     ?>
     <div class="checkout-review-item">
         <div class="checkout-review-item-img">

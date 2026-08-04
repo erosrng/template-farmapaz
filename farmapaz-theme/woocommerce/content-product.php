@@ -14,7 +14,7 @@ $in_stock     = $product->is_in_stock();
 if (!$in_stock) return;
 
 $image   = farmapaz_product_img_fallback(get_the_post_thumbnail_url(get_the_ID(), 'woocommerce_thumbnail'));
-$fallback = get_template_directory_uri() . '/assets/images/producto.png';
+$fallback = get_template_directory_uri() . '/assets/images/producto.svg';
 $is_sale = $product->is_on_sale() && $product->get_regular_price() > 0;
 $regular = $product->get_regular_price();
 $sale    = $product->get_sale_price();

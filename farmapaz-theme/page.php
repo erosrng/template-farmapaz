@@ -124,7 +124,7 @@ if (is_page('sucursales')):
                 ?>
                 <div class="rounded-2xl transition-all duration-500 hover:-translate-y-1 hover:shadow-xl overflow-hidden" style="background: rgba(255,255,255,0.85); backdrop-filter: blur(20px); border: 1px solid rgba(9,20,110,0.06); box-shadow: 0 4px 24px rgba(9,20,110,0.06); animation: slideUp 0.6s ease-out <?= $delay; ?>s both;">
                     <div class="w-full" style="height: 180px; overflow: hidden; background: #e2e8f0;">
-                        <img src="<?= get_template_directory_uri(); ?>/assets/images/producto.png"
+                        <img src="<?= get_template_directory_uri(); ?>/assets/images/producto.svg"
                              alt="Farmapaz <?= $nombre; ?>"
                              class="w-full h-full" style="object-fit: cover;"
                              loading="lazy">
@@ -185,11 +185,22 @@ endif;
 
 get_header(); ?>
 
+<?php
+$is_iframe_page = is_page([296222, 363]);
+$page_modifier  = $is_iframe_page ? 'page-content' : 'prose prose-lg max-w-none';
+$width_class    = $is_iframe_page ? 'max-w-5xl' : 'max-w-3xl';
+?>
+
 <div class="container-farmapaz py-16 lg:py-24">
     <?php if (have_posts()): while (have_posts()): the_post(); ?>
-        <div class="max-w-3xl mx-auto">
+        <div class="<?= $width_class; ?> mx-auto">
+            <?php if (has_post_thumbnail() && !$is_iframe_page): ?>
+                <div class="mb-8 rounded-2xl overflow-hidden">
+                    <?php the_post_thumbnail('full', ['class' => 'w-full h-auto']); ?>
+                </div>
+            <?php endif; ?>
             <h1 class="text-4xl lg:text-5xl font-bold text-brand-blue mb-6"><?php the_title(); ?></h1>
-            <div class="prose prose-lg max-w-none text-gray-600 leading-relaxed">
+            <div class="text-gray-600 leading-relaxed <?= $page_modifier; ?>">
                 <?php the_content(); ?>
             </div>
         </div>

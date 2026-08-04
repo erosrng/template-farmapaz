@@ -51,7 +51,7 @@ get_header(); ?>
                     <img src="<?= farmapaz_product_img_fallback(get_the_post_thumbnail_url(get_the_ID(), 'full')); ?>"
                          alt="<?php the_title(); ?>"
                          class="product-gallery-main w-full h-auto object-cover transition-transform duration-500 group-hover:scale-[1.02]"
-                         onerror="this.onerror=null;this.src='<?= get_template_directory_uri(); ?>/assets/images/producto.png'">
+                         onerror="this.onerror=null;this.src='<?= get_template_directory_uri(); ?>/assets/images/producto.svg'">
                 </div>
             </div>
             <?php
@@ -68,7 +68,7 @@ get_header(); ?>
                         data-src="<?= esc_attr($main_full); ?>">
                     <img src="<?= esc_attr($main_thumb); ?>" alt=""
                          class="w-full h-full object-cover bg-gray-50"
-                         onerror="this.onerror=null;this.src='<?= get_template_directory_uri(); ?>/assets/images/producto.png'">
+                         onerror="this.onerror=null;this.src='<?= get_template_directory_uri(); ?>/assets/images/producto.svg'">
                 </button>
                 <?php foreach ($attachment_ids as $attachment_id):
                     $thumb = farmapaz_product_img_fallback(wp_get_attachment_image_url($attachment_id, 'thumbnail'));
@@ -79,7 +79,7 @@ get_header(); ?>
                             data-src="<?= esc_attr($full); ?>">
                         <img src="<?= esc_attr($thumb); ?>" alt=""
                              class="w-full h-full object-cover bg-gray-50"
-                             onerror="this.onerror=null;this.src='<?= get_template_directory_uri(); ?>/assets/images/producto.png'">
+                             onerror="this.onerror=null;this.src='<?= get_template_directory_uri(); ?>/assets/images/producto.svg'">
                     </button>
                 <?php endforeach; ?>
             </div>

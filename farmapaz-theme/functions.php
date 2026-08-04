@@ -88,11 +88,13 @@ function farmapaz_enqueue() {
         wp_enqueue_style('farmapaz-shop', get_template_directory_uri() . '/assets/css/shop.css', ['farmapaz-style'], FARMA_VERSION);
     }
 
-    // Pastillín chatbot — always available
-    wp_enqueue_script('farmapaz-pastillin', get_template_directory_uri() . '/assets/js/pastillin.js', ['farmapaz-app'], FARMA_VERSION, true);
-    // Pastillín needs shop.css styles everywhere
-    if (!is_shop() && !is_product_category() && !is_product_tag() && !is_product_taxonomy() && !is_front_page() && !is_home() && !is_cart() && !is_checkout() && !is_account_page()) {
-        wp_enqueue_style('farmapaz-shop', get_template_directory_uri() . '/assets/css/shop.css', ['farmapaz-style'], FARMA_VERSION);
+    $pastillin_gemini = get_option(FARMA_PASTILLIN_OPTION, '');
+    $pastillin_or     = get_option(FARMA_OPENROUTER_KEY_OPTION, '');
+    if ($pastillin_gemini || $pastillin_or) {
+        wp_enqueue_script('farmapaz-pastillin', get_template_directory_uri() . '/assets/js/pastillin.js', ['farmapaz-app'], FARMA_VERSION, true);
+        if (!is_shop() && !is_product_category() && !is_product_tag() && !is_product_taxonomy() && !is_front_page() && !is_home() && !is_cart() && !is_checkout() && !is_account_page()) {
+            wp_enqueue_style('farmapaz-shop', get_template_directory_uri() . '/assets/css/shop.css', ['farmapaz-style'], FARMA_VERSION);
+        }
     }
 
     if (is_cart() || is_checkout() || is_account_page()) {
@@ -100,14 +102,25 @@ function farmapaz_enqueue() {
         wp_enqueue_script('farmapaz-cart', get_template_directory_uri() . '/assets/js/cart.js', ['farmapaz-app', 'wc-cart'], FARMA_VERSION, true);
     }
 
-    wp_localize_script('farmapaz-app', 'farmapazData', [
-        'ajaxUrl'   => admin_url('admin-ajax.php'),
-        'themeUri'  => get_template_directory_uri(),
-        'homeUrl'   => home_url(),
-        'shopUrl'   => get_permalink(wc_get_page_id('shop')),
-        'cartUrl'   => wc_get_cart_url(),
+	$farmapaz_data = [
+		'ajaxUrl'   => admin_url('admin-ajax.php'),
+		'themeUri'  => get_template_directory_uri(),
+		'homeUrl'   => home_url(),
+		'shopUrl'   => get_permalink(wc_get_page_id('shop')),
+		'cartUrl'   => wc_get_cart_url(),
         'nonce'     => wp_create_nonce('farmapaz_nonce'),
-    ]);
+    ];
+
+    $onesignal_id = get_option('farmapaz_onesignal_app_id', '');
+    if ($onesignal_id) {
+        wp_enqueue_script('farmapaz-notifications', get_template_directory_uri() . '/assets/js/notifications.js', ['farmapaz-app'], FARMA_VERSION, true);
+        $farmapaz_data['onesignalAppId'] = $onesignal_id;
+        $farmapaz_data['notifDelay'] = get_option('farmapaz_notif_delay', '8000');
+    }
+
+    $farmapaz_data['autoscroll'] = !empty(farmapaz_home_config()['autoscroll']) ? '1' : '0';
+
+    wp_localize_script('farmapaz-app', 'farmapazData', $farmapaz_data);
 }
 
 // Register widget areas
@@ -235,7 +248,7 @@ function farmapaz_render_cart_items() {
     if ($cart->is_empty()): ?>
         <p class="cart-empty-msg">Tu carrito está vacío.</p>
     <?php else:
-        $fallback = get_template_directory_uri() . '/assets/images/producto.png';
+        $fallback = get_template_directory_uri() . '/assets/images/producto.svg';
         foreach ($cart->get_cart() as $cart_item_key => $cart_item):
             $_product = apply_filters('woocommerce_cart_item_product', $cart_item['data'], $cart_item, $cart_item_key);
             $product_id = apply_filters('woocommerce_cart_item_product_id', $cart_item['product_id'], $cart_item, $cart_item_key);
@@ -629,9 +642,9 @@ function farmapaz_render_capture_pago_field($checkout) {
 add_filter('woocommerce_create_account_default_checked', '__return_true');
 
 // Remove default empty cart message (we have our own in cart-empty.php)
-remove_action('woocommerce_cart_is_empty', 'wc_empty_cart_message', 10);
+remove_action('woocommerce_cart_is_empty', 'wc_empty_cart_message', 20);
 
-// Dynamic shipping fee: $2 for orders < $10, free for orders >= $10
+// Dynamic shipping fee: $2 for orders < $20, free for orders >= $20
 add_action('woocommerce_cart_calculate_fees', 'farmapaz_shipping_fee');
 function farmapaz_shipping_fee($cart) {
     if (is_admin() && !defined('DOING_AJAX')) return;
@@ -647,7 +660,7 @@ function farmapaz_shipping_fee($cart) {
         }
     }
 
-    if ($subtotal >= 10) {
+    if ($subtotal >= 20) {
         $cart->add_fee('Envío gratis', 0, false);
     } else {
         $cart->add_fee($fee_name, 2, false);
@@ -720,23 +733,52 @@ function farmapaz_product_carousel($args = []) {
     $meta_query[] = ['key' => '_price', 'value' => 0, 'compare' => '>', 'type' => 'DECIMAL'];
 
     $meta_query[] = ['key' => '_stock_status', 'value' => 'instock'];
-    $meta_query[] = ['key' => '_thumbnail_id', 'compare' => 'EXISTS'];
+
+    // [†] Excluir stock bajo (≤5) a nivel SQL para no depender del *3 en posts_per_page.
+    // Solo aplica si hay _stock_quantity definido; la mayoría de productos no lo tienen.
+    $meta_query[] = [
+        'relation' => 'OR',
+        ['key' => '_stock_quantity', 'compare' => 'NOT EXISTS'],
+        ['key' => '_stock_quantity', 'value' => 5, 'compare' => '>', 'type' => 'NUMERIC'],
+    ];
 
     $query_args = [
         'post_type'      => 'product',
         'post_status'    => 'publish',
         'meta_query'     => $meta_query,
-        'posts_per_page' => $atts['limit'] * 3,
+        'posts_per_page' => $atts['limit'] + 10,
         'orderby'        => $atts['orderby'],
         'order'          => $atts['order'],
         'post__not_in'   => $atts['exclude'],
+        'no_found_rows'  => true,
     ];
 
     if ($atts['category']) {
+        $exclude_slugs = ['medicamentos-controlados', 'cuidado-facial'];
+        $parent_term = get_term_by('slug', $atts['category'], 'product_cat');
+        if ($parent_term && $parent_term->parent > 0) {
+            $query_args['tax_query'][] = [
+                'taxonomy' => 'product_cat',
+                'field'    => 'slug',
+                'terms'    => $atts['category'],
+            ];
+        } else {
+            $children = get_terms(['taxonomy' => 'product_cat', 'parent' => $parent_term ? $parent_term->term_id : 0, 'hide_empty' => false, 'fields' => 'slugs']);
+            $children = is_array($children) ? array_diff($children, $exclude_slugs) : [];
+            $children[] = $atts['category'];
+            $query_args['tax_query'][] = [
+                'taxonomy'         => 'product_cat',
+                'field'            => 'slug',
+                'terms'            => array_values($children),
+                'include_children' => 0,
+            ];
+        }
+    } else {
         $query_args['tax_query'][] = [
             'taxonomy' => 'product_cat',
             'field'    => 'slug',
-            'terms'    => $atts['category'],
+            'terms'    => ['medicamentos-controlados', 'cuidado-facial'],
+            'operator' => 'NOT IN',
         ];
     }
 
@@ -744,6 +786,9 @@ function farmapaz_product_carousel($args = []) {
     if (!$products->have_posts()) return;
 
     $section_id = 'section-' . sanitize_title($atts['title']);
+    static $section_counter = 0;
+    $section_counter++;
+    $section_id .= '-' . $section_counter;
     $is_grid = $atts['layout'] === 'grid' || $atts['layout'] === 'compact';
     $is_compact = $atts['layout'] === 'compact';
     $bg_tone = $atts['bg_tone'];
@@ -789,13 +834,20 @@ function farmapaz_product_carousel($args = []) {
                      style="padding-left: calc((100vw - min(100vw - 2rem, 1280px)) / 2 + 24px); padding-right: calc((100vw - min(100vw - 2rem, 1280px)) / 2 + 24px);">
                 <?php endif; ?>
                     <?php
+                    // [†] Precomputar carrito una sola vez (O(1) por producto)
+                    $cart_map = [];
+                    if (function_exists('WC') && WC() && WC()->cart && !WC()->cart->is_empty()) {
+                        foreach (WC()->cart->get_cart() as $ckey => $cit) {
+                            $cart_map[(int)$cit['product_id']] = ['key' => $ckey, 'qty' => (int)$cit['quantity']];
+                        }
+                    }
                     $shown = 0;
                     while ($products->have_posts() && $shown < $atts['limit']):
                         $products->the_post();
                         global $product;
                         if (!$product) continue;
-                        $image_url = get_the_post_thumbnail_url(get_the_ID(), 'medium_large');
-                        if (!$image_url || strpos($image_url, 'Gemini_Generated') !== false) continue;
+                        $image_url = farmapaz_product_img_fallback(get_the_post_thumbnail_url(get_the_ID(), 'woocommerce_thumbnail'));
+                        if (!$image_url || strpos($image_url, 'producto.svg') !== false) continue;
                         $stock_qty = $product->get_stock_quantity();
                         $managing = $product->managing_stock();
                         if ($managing && $stock_qty !== null && $stock_qty <= 5) continue;
@@ -807,19 +859,10 @@ function farmapaz_product_carousel($args = []) {
                         if ($has_real_sale && $regular > 0) {
                             $percent = round((($regular - $sale) / $regular) * 100);
                         }
-                        $cart_item_key = null;
-                        $cart_qty = 0;
-                        $in_cart = false;
-                        if (function_exists('WC') && WC() && WC()->cart && !WC()->cart->is_empty()) {
-                            foreach (WC()->cart->get_cart() as $ckey => $cart_item) {
-                                if ((int)$cart_item['product_id'] === (int)$product->get_id()) {
-                                    $cart_item_key = $ckey;
-                                    $cart_qty = (int)$cart_item['quantity'];
-                                    $in_cart = true;
-                                    break;
-                                }
-                            }
-                        }
+                        $pid = (int)$product->get_id();
+                        $in_cart = isset($cart_map[$pid]);
+                        $cart_item_key = $in_cart ? $cart_map[$pid]['key'] : null;
+                        $cart_qty = $in_cart ? $cart_map[$pid]['qty'] : 0;
                     ?>
                     <div class="<?= $is_grid ? '' : 'flex-none snap-start '; ?>product-card-group stagger-item" style="<?= $is_grid ? '' : 'width: 230px;'; ?>">
                         <div class="group relative h-full flex flex-col <?= $is_compact ? 'rounded-xl' : 'rounded-2xl'; ?> transition-all duration-500 overflow-hidden glass-card glow-card"
@@ -843,7 +886,8 @@ function farmapaz_product_carousel($args = []) {
                                 <img src="<?= $image_url; ?>" alt="<?php the_title(); ?>"
                                      class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
                                      loading="lazy"
-                                     <?= $shown === 1 ? 'fetchpriority="high"' : ''; ?>>
+                                     <?= $shown === 1 ? 'fetchpriority="high"' : ''; ?>
+                                     onerror="this.onerror=null;this.src='<?= get_template_directory_uri(); ?>/assets/images/producto.svg'">
                                 <div class="absolute inset-0 bg-gradient-to-t from-white/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                             </a>
                             <div class="<?= $is_compact ? 'p-2.5' : 'p-4'; ?> flex flex-col flex-1" style="position: relative; z-index: 1;">
@@ -877,12 +921,12 @@ function farmapaz_product_carousel($args = []) {
                                             <span class="<?= $is_compact ? 'text-sm' : 'text-lg'; ?> price-futuristic" style="color: #09146E;"><?= $product->get_price_html(); ?></span>
                                         <?php endif; ?>
                                     </div>
-                                    <div class="cart-card-actions" data-product_id="<?= $product->get_id(); ?>">
+                                    <div class="cart-card-actions" data-product_id="<?= $pid; ?>">
                                     <?php if ($in_cart): ?>
-                                    <div class="cart-card-stepper <?= $is_compact ? 'cart-card-stepper-sm' : ''; ?>" data-product_id="<?= $product->get_id(); ?>">
-                                        <button class="cart-card-stepper-btn cart-card-stepper-minus" data-product_id="<?= $product->get_id(); ?>">−</button>
+                                    <div class="cart-card-stepper <?= $is_compact ? 'cart-card-stepper-sm' : ''; ?>" data-product_id="<?= $pid; ?>">
+                                        <button class="cart-card-stepper-btn cart-card-stepper-minus" data-product_id="<?= $pid; ?>">−</button>
                                         <span class="cart-card-stepper-value"><?= $cart_qty; ?></span>
-                                        <button class="cart-card-stepper-btn cart-card-stepper-plus" data-product_id="<?= $product->get_id(); ?>">+</button>
+                                        <button class="cart-card-stepper-btn cart-card-stepper-plus" data-product_id="<?= $pid; ?>">+</button>
                                     </div>
                                     <?php else: ?>
                                     <a href="<?= $product->add_to_cart_url(); ?>"
@@ -890,7 +934,7 @@ function farmapaz_product_carousel($args = []) {
                                        style="background: linear-gradient(135deg, #09146E 0%, #0a1a7a 100%); color: white;"
                                        onmouseover="this.style.background='linear-gradient(135deg, #5A7D43 0%, #4a6a36 100%)'; this.style.boxShadow='0 4px 16px rgba(90,125,67,0.3)'"
                                        onmouseout="this.style.background='linear-gradient(135deg, #09146E 0%, #0a1a7a 100%)'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.1)'"
-                                       data-product_id="<?= $product->get_id(); ?>">
+                                       data-product_id="<?= $pid; ?>">
                                         <svg class="<?= $is_compact ? 'w-3 h-3' : 'w-4 h-4'; ?>" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
                                         Comprar
                                     </a>
@@ -921,6 +965,41 @@ function farmapaz_product_carousel($args = []) {
     <?php
 }
 
+// [†] Fallback para [et_woo_products] (propharm theme WPBakery widget)
+add_shortcode('et_woo_products', 'farmapaz_et_woo_products');
+function farmapaz_et_woo_products($atts = []) {
+    $a = shortcode_atts([
+        'category'    => '',
+        'quantity'    => 8,
+        'orderby'     => 'date',
+        'order'       => 'DESC',
+        'carousel'    => 'false',
+        'ajax'        => 'true',
+        'title'       => '',
+    ], $atts);
+
+    if (!$a['category']) return '';
+
+    // Use category name as title fallback
+    $cat_name = '';
+    $term = get_term_by('slug', $a['category'], 'product_cat');
+    if ($term) {
+        $cat_name = $term->name;
+    }
+    $title = $a['title'] ?: $cat_name;
+
+    ob_start();
+    farmapaz_product_carousel([
+        'title'    => $title,
+        'category' => $a['category'],
+        'limit'    => (int)$a['quantity'],
+        'orderby'  => $a['orderby'],
+        'order'    => $a['order'],
+        'layout'   => $a['carousel'] === 'true' ? 'carousel' : 'grid',
+    ]);
+    return ob_get_clean();
+}
+
 // WhatsApp button - shortcode
 add_shortcode('farmapaz_whatsapp', 'farmapaz_whatsapp_btn');
 function farmapaz_whatsapp_btn() {
@@ -934,49 +1013,14 @@ function farmapaz_whatsapp_btn() {
     );
 }
 
-// Proxy product images through local server (bypass Cloudflare hotlink protection)
-$proxy_base = home_url('/wp-content/themes/farmapaz-theme/proxy-image.php?url=');
-
-add_filter('wp_get_attachment_url', function($url) use ($proxy_base) {
-    if (strpos($url, 'localhost') !== false) {
-        $path = parse_url($url, PHP_URL_PATH);
-        $url = $proxy_base . 'wp-content/uploads/' . ltrim(basename($path), '/');
-    }
-    return $url;
-});
-add_filter('wp_calculate_image_srcset', function($sources) use ($proxy_base) {
-    foreach ($sources as &$source) {
-        if (strpos($source['url'], 'localhost') !== false) {
-            $path = parse_url($source['url'], PHP_URL_PATH);
-            $source['url'] = $proxy_base . 'wp-content/uploads/' . ltrim(basename($path), '/');
-        }
-    }
-    return $sources;
-});
-add_filter('woocommerce_get_product_image', function($html) use ($proxy_base) {
-    return preg_replace_callback('/https?:\/\/localhost[^\s"\'<>]+/', function($m) use ($proxy_base) {
-        $path = parse_url($m[0], PHP_URL_PATH);
-        return $proxy_base . 'wp-content/uploads/' . ltrim(basename($path), '/');
-    }, $html);
-});
-
 // Product image fallback
 add_filter('woocommerce_placeholder_img_src', 'farmapaz_placeholder_img');
 function farmapaz_placeholder_img() {
-    return get_template_directory_uri() . '/assets/images/producto.png';
+    return get_template_directory_uri() . '/assets/images/producto.svg';
 }
 function farmapaz_product_img_fallback($url) {
     if (!$url || strpos($url, 'Gemini_Generated') !== false) {
-        return get_template_directory_uri() . '/assets/images/producto.png';
-    }
-    // Already proxied — return as-is
-    if (strpos($url, 'proxy-image.php') !== false) {
-        return $url;
-    }
-    if (strpos($url, 'localhost') !== false) {
-        $proxy = home_url('/wp-content/themes/farmapaz-theme/proxy-image.php?url=');
-        $path = parse_url($url, PHP_URL_PATH);
-        return $proxy . 'wp-content/uploads/' . ltrim(basename($path), '/');
+        return get_template_directory_uri() . '/assets/images/producto.svg';
     }
     return $url;
 }
@@ -1058,7 +1102,6 @@ function farmapaz_search_suggest(WP_REST_Request $request) {
         'meta_query'     => [
             ['key' => '_price', 'value' => 0, 'compare' => '>', 'type' => 'DECIMAL'], // [†] $0 excluded
             ['key' => '_stock_status', 'value' => 'instock'],
-            ['key' => '_thumbnail_id', 'compare' => 'EXISTS'],
         ],
         'tax_query'      => [[
             'taxonomy' => 'product_visibility',
@@ -1126,113 +1169,82 @@ function farmapaz_search_suggest(WP_REST_Request $request) {
 
 // ===================== SHOP PAGE — AJAX FILTERS =====================
 
-// Pre-get-posts: apply URL filters to initial shop query
+// Pre-get-posts: apply URL filters only to the main shop/archive query
 add_action('pre_get_posts', 'farmapaz_pre_get_products');
 function farmapaz_pre_get_products($q) {
-    if (!is_admin() && $q->is_main_query() && (is_shop() || is_product_category() || is_product_tag())) {
-        // Stock status filter
+    if (is_admin() && !wp_doing_ajax()) return;
+    if ($q->get('post_type') !== 'product') return;
+    if (!$q->is_main_query() && !wp_doing_ajax()) return;
+
+    $existing_mq = $q->get('meta_query');
+    if (is_array($existing_mq)) {
+        foreach ($existing_mq as $clause) {
+            if (is_array($clause) && isset($clause['key']) && $clause['key'] === '_price') return;
+        }
+    }
+
+    $meta_q = $existing_mq ?: [];
+    $meta_q[] = ['key' => '_price', 'value' => 0, 'compare' => '>', 'type' => 'DECIMAL'];
+    $meta_q[] = ['key' => '_stock_status', 'value' => 'instock'];
+    $q->set('meta_query', $meta_q);
+
+    $cats = isset($_GET['cat']) ? array_map('sanitize_title', (array)$_GET['cat']) : [];
+    if (!empty($cats)) {
+        $tax_q = $q->get('tax_query');
+        if (!is_array($tax_q)) $tax_q = [];
+        $tax_q[] = ['taxonomy' => 'product_cat', 'field' => 'slug', 'terms' => $cats, 'operator' => 'IN'];
+        $q->set('tax_query', $tax_q);
+    }
+
+    $brands = isset($_GET['brand']) ? array_map('sanitize_title', (array)$_GET['brand']) : [];
+    if (!empty($brands)) {
+        $tax_q = $q->get('tax_query');
+        if (!is_array($tax_q)) $tax_q = [];
+        $tax_q[] = ['taxonomy' => 'product_brand', 'field' => 'slug', 'terms' => $brands, 'operator' => 'IN'];
+        $q->set('tax_query', $tax_q);
+    }
+
+    if (!empty($cats) && !empty($brands)) {
+        $tax_q = $q->get('tax_query');
+        if (is_array($tax_q)) { $tax_q['relation'] = 'AND'; $q->set('tax_query', $tax_q); }
+    }
+
+    $min_price = isset($_GET['min_price']) ? floatval($_GET['min_price']) : 0;
+    $max_price = isset($_GET['max_price']) ? floatval($_GET['max_price']) : 0;
+    if ($min_price > 0 || $max_price > 0) {
+        $price_q = ['key' => '_price', 'type' => 'DECIMAL'];
+        if ($min_price > 0 && $max_price > 0) {
+            $price_q['value'] = [$min_price, $max_price];
+            $price_q['compare'] = 'BETWEEN';
+        } elseif ($min_price > 0) {
+            $price_q['value'] = $min_price;
+            $price_q['compare'] = '>=';
+        } else {
+            $price_q['value'] = $max_price;
+            $price_q['compare'] = '<=';
+        }
         $meta_q = $q->get('meta_query');
         if (!is_array($meta_q)) $meta_q = [];
-        $meta_q[] = ['key' => '_price', 'value' => 0, 'compare' => '>', 'type' => 'DECIMAL']; // [†] $0 excluded
-        $meta_q[] = ['key' => '_stock_status', 'value' => 'instock'];
-        $meta_q[] = ['key' => '_thumbnail_id', 'compare' => 'EXISTS'];
+        $meta_q[] = $price_q;
         $q->set('meta_query', $meta_q);
-
-        // Category filter from URL
-        $cats = isset($_GET['cat']) ? array_map('sanitize_title', (array)$_GET['cat']) : [];
-        if (!empty($cats)) {
-            $tax_q = $q->get('tax_query');
-            if (!is_array($tax_q)) $tax_q = [];
-            $tax_q[] = [
-                'taxonomy' => 'product_cat',
-                'field'    => 'slug',
-                'terms'    => $cats,
-                'operator' => 'IN',
-            ];
-            $q->set('tax_query', $tax_q);
-        }
-
-        // Brand filter from URL
-        $brands = isset($_GET['brand']) ? array_map('sanitize_title', (array)$_GET['brand']) : [];
-        if (!empty($brands)) {
-            $tax_q = $q->get('tax_query');
-            if (!is_array($tax_q)) $tax_q = [];
-            $tax_q[] = [
-                'taxonomy' => 'product_brand',
-                'field'    => 'slug',
-                'terms'    => $brands,
-                'operator' => 'IN',
-            ];
-            $q->set('tax_query', $tax_q);
-        }
-
-        // Relation AND if both
-        if (!empty($cats) && !empty($brands)) {
-            $tax_q = $q->get('tax_query');
-            if (is_array($tax_q)) {
-                $tax_q['relation'] = 'AND';
-                $q->set('tax_query', $tax_q);
-            }
-        }
-
-        // Price range
-        $min_price = isset($_GET['min_price']) ? floatval($_GET['min_price']) : 0;
-        $max_price = isset($_GET['max_price']) ? floatval($_GET['max_price']) : 0;
-        if ($min_price > 0 || $max_price > 0) {
-            $price_q = ['key' => '_price', 'type' => 'DECIMAL'];
-            if ($min_price > 0 && $max_price > 0) {
-                $price_q['value'] = [$min_price, $max_price];
-                $price_q['compare'] = 'BETWEEN';
-            } elseif ($min_price > 0) {
-                $price_q['value'] = $min_price;
-                $price_q['compare'] = '>=';
-            } else {
-                $price_q['value'] = $max_price;
-                $price_q['compare'] = '<=';
-            }
-            $meta_q = $q->get('meta_query');
-            if (!is_array($meta_q)) $meta_q = [];
-            $meta_q[] = $price_q;
-            $q->set('meta_query', $meta_q);
-        }
-
-        // Search
-        $s = isset($_GET['s']) ? trim(sanitize_text_field($_GET['s'])) : '';
-        if ($s) {
-            $q->set('s', $s);
-        }
-
-        // Orderby
-        $orderby = isset($_GET['orderby']) ? sanitize_text_field($_GET['orderby']) : '';
-        if ($orderby) {
-            switch ($orderby) {
-                case 'price':
-                    $q->set('orderby', 'meta_value_num');
-                    $q->set('meta_key', '_price');
-                    $q->set('order', 'ASC');
-                    break;
-                case 'price-desc':
-                    $q->set('orderby', 'meta_value_num');
-                    $q->set('meta_key', '_price');
-                    $q->set('order', 'DESC');
-                    break;
-                case 'popularity':
-                    $q->set('orderby', 'meta_value_num');
-                    $q->set('meta_key', 'total_sales');
-                    $q->set('order', 'DESC');
-                    break;
-            }
-        }
-
-        // Pagination from URL
-        $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 0;
-        if ($page > 1) {
-            $q->set('paged', $page);
-        }
-
-        // Products per page
-        $q->set('posts_per_page', 24);
     }
+
+    $s = isset($_GET['s']) ? trim(sanitize_text_field($_GET['s'])) : '';
+    if ($s) $q->set('s', $s);
+
+    $orderby = isset($_GET['orderby']) ? sanitize_text_field($_GET['orderby']) : '';
+    if ($orderby) {
+        switch ($orderby) {
+            case 'price': $q->set('orderby', 'meta_value_num'); $q->set('meta_key', '_price'); $q->set('order', 'ASC'); break;
+            case 'price-desc': $q->set('orderby', 'meta_value_num'); $q->set('meta_key', '_price'); $q->set('order', 'DESC'); break;
+            case 'popularity': $q->set('orderby', 'meta_value_num'); $q->set('meta_key', 'total_sales'); $q->set('order', 'DESC'); break;
+        }
+    }
+
+    $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 0;
+    if ($page > 1) $q->set('paged', $page);
+
+    $q->set('posts_per_page', 24);
 }
 
 add_action('wp_ajax_farmapaz_shop_filter', 'farmapaz_shop_filter_ajax');
@@ -1251,7 +1263,6 @@ function farmapaz_shop_filter_ajax() {
         'meta_query'     => [
             ['key' => '_price', 'value' => 0, 'compare' => '>', 'type' => 'DECIMAL'], // [†] $0 excluded
             ['key' => '_stock_status', 'value' => 'instock'],
-            ['key' => '_thumbnail_id', 'compare' => 'EXISTS'],
         ],
     ];
 
@@ -1817,6 +1828,11 @@ add_action('admin_menu', function () {
 
 // Build Pastillín system prompt with live product data
 function farmapaz_pastillin_system_prompt() {
+    $cached = get_transient('farmapaz_pastillin_system_prompt');
+    if ($cached !== false) {
+        return $cached;
+    }
+
     $prompt = "Eres Pastillín, el asistente virtual de Farmapaz Venezuela. ";
     $prompt .= "Eres amigable, entusiasta, usas español. ";
     $prompt .= "Tu personalidad: fresco, juvenil, futurista. ";
@@ -1833,7 +1849,7 @@ function farmapaz_pastillin_system_prompt() {
     $prompt .= "INFORMACIÓN DE FARMApAZ:\n";
     $prompt .= "- Horario de atención: 7:00 AM a 9:30 PM (incluyendo delivery).\n";
     $prompt .= "- Delivery disponible en Maturín, Edo Monagas.\n";
-    $prompt .= "- Delivery gratis en compras desde \$10.\n";
+    $prompt .= "- Delivery gratis en compras desde \$20.\n";
     $prompt .= "- Envío nacional disponible (consultar por WhatsApp).\n";
     $prompt .= "- WhatsApp: +58 412-8798885\n";
     $prompt .= "- Instagram: @farmapazofficial\n";
@@ -1885,7 +1901,16 @@ function farmapaz_pastillin_system_prompt() {
     $prompt .= "- Al FINAL de cada respuesta, SIEMPRE agrega: Contactanos por WhatsApp: https://wa.me/584128798885\n";
     $prompt .= "- Siempre finaliza ofreciendo ayuda adicional.\n";
 
+    set_transient('farmapaz_pastillin_system_prompt', $prompt, 3600); // 1h cache
     return $prompt;
+}
+
+// Invalidate system prompt cache when categories/brands change
+add_action('created_term', 'farmapaz_pastillin_flush_system_cache');
+add_action('edited_term', 'farmapaz_pastillin_flush_system_cache');
+add_action('delete_term', 'farmapaz_pastillin_flush_system_cache');
+function farmapaz_pastillin_flush_system_cache() {
+    delete_transient('farmapaz_pastillin_system_prompt');
 }
 
 // Search products for context
@@ -1896,6 +1921,13 @@ function farmapaz_pastillin_search_products($query) {
     if (empty($query)) return [];
 
     $normalized = remove_accents(mb_strtolower($query));
+
+    // Try cache first (5min TTL)
+    $cache_key = 'farmapaz_search_' . md5($normalized);
+    $cached = get_transient($cache_key);
+    if ($cached !== false) {
+        return $cached;
+    }
 
     // Synonym map — every term maps to related search keywords
     $synonyms = [
@@ -2217,6 +2249,7 @@ function farmapaz_pastillin_search_products($query) {
         }
     }
 
+    set_transient($cache_key, $products, 300); // 5 min cache
     return $products;
 }
 
@@ -2309,7 +2342,7 @@ function farmapaz_pastillin_local_reply($message) {
         'horario' => "Atendemos de **7:00 AM a 9:30 PM**, todos los dias (incluyendo delivery). Estamos en Maturin, Estado Monagas.",
         'sucursal' => "Nuestras sucursales estan en **Maturin, Estado Monagas**. Para la direccion exacta contactanos por WhatsApp: https://wa.me/584128798885",
         'pago' => "Aceptamos **transferencia bancaria, pago movil y efectivo** en tienda. Para transferencias necesitamos: numero de cedula, banco, telefono y referencia. Escribenos al WhatsApp para detalles: https://wa.me/584128798885",
-        'delivery' => "El delivery en Maturin es **GRATIS en compras desde \$10**. En compras menores el costo es de **\$2**. Para envios nacionales consulta por WhatsApp: https://wa.me/584128798885",
+        'delivery' => "El delivery en Maturin es **GRATIS en compras desde \$20**. En compras menores el costo es de **\$2**. Para envios nacionales consulta por WhatsApp: https://wa.me/584128798885",
         'whatsapp' => "Nuestro WhatsApp: **+58 412-8798885**. Escribenos directamente: https://wa.me/584128798885",
         'instagram' => "Siguenos en Instagram: **@farmapazofficial**. Alli publicamos novedades, promociones y mas.",
         'como_comprar' => "Para comprar en Farmapaz:\n1. Busca el producto que necesitas en nuestra tienda online.\n2. Agregalo al carrito.\n3. Ve al carrito y da click en 'Finalizar compra'.\n4. Llena tus datos y selecciona el metodo de pago.\n5. Te contactaremos por WhatsApp para confirmar.\n\nTambien puedes pedir directo por WhatsApp: https://wa.me/584128798885",
@@ -2335,6 +2368,12 @@ function farmapaz_pastillin_ajax() {
     $message = isset($_POST['message']) ? trim(sanitize_text_field($_POST['message'])) : '';
     if (!$message) {
         wp_send_json(['reply' => 'Hola! Soy Pastillín, tu asistente de Farmapaz. En que puedo ayudarte?']);
+    }
+
+    // Limit message length to prevent token abuse
+    $max_len = 500;
+    if (mb_strlen($message) > $max_len) {
+        $message = mb_substr($message, 0, $max_len);
     }
 
     // Build conversation history from client
@@ -2414,13 +2453,13 @@ function farmapaz_pastillin_build_history($history) {
 }
 
 /**
- * Try AI providers in order: Gemini → OpenRouter
+ * Try AI providers in order: OpenRouter → Gemini → Groq
+ * OpenRouter is the default (primary) provider.
  * Passes product context when available for conversational answers.
  */
 function farmapaz_pastillin_try_ai($message, $products = [], $history_str = '') {
     $context = '';
 
-    // Prepnd conversation history so AI remembers context
     if ($history_str) {
         $context .= "Historial de la conversacion:\n{$history_str}\n\n";
     }
@@ -2452,41 +2491,14 @@ function farmapaz_pastillin_try_ai($message, $products = [], $history_str = '') 
 
     $system_info = farmapaz_pastillin_system_prompt();
 
-    // ----- Gemini (gratis, 60 req/min, 1000 req/día) -----
-    $gemini_key = get_option(FARMA_PASTILLIN_OPTION, '');
+    $system_msg_base = "Eres Pastillín, asistente de Farmapaz Venezuela. Responde breve y amable, sin emojis.\n\n";
 
-    if ($gemini_key) {
-        $system_content = "Eres Pastillín, asistente de Farmapaz Venezuela. Responde breve y amable, sin emojis.\n\n";
-        $system_content .= $system_info . "\n\n";
-        if ($context) {
-            $system_content .= $context . "\n";
-        }
-
-        $response = wp_remote_post('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' . $gemini_key, [
-            'headers' => ['Content-Type' => 'application/json'],
-            'body'    => json_encode([
-                'system_instruction' => ['parts' => [['text' => $system_content]]],
-                'contents' => [['role' => 'user', 'parts' => [['text' => $message]]]],
-            ]),
-            'timeout' => 10,
-        ]);
-
-        if (!is_wp_error($response)) {
-            $body = json_decode(wp_remote_retrieve_body($response), true);
-            if (!isset($body['error']) && isset($body['candidates'][0]['content']['parts'][0]['text'])) {
-                $reply = trim($body['candidates'][0]['content']['parts'][0]['text']);
-                if ($reply) return $reply;
-            }
-        }
-    }
-
-    // ----- OpenRouter (fallback, solo si hay key configurada) -----
+    // ----- OpenRouter (proveedor primario por defecto) -----
     $or_key = get_option(FARMA_OPENROUTER_KEY_OPTION, '');
     $or_model = get_option(FARMA_OPENROUTER_MODEL_OPTION, 'openai/gpt-4o-mini');
 
     if ($or_key) {
-        $system_msg = "Eres Pastillín, asistente de Farmapaz Venezuela. Responde breve y amable, sin emojis.\n\n";
-        $system_msg .= $system_info . "\n\n";
+        $system_msg = $system_msg_base . $system_info . "\n\n";
         if ($context) {
             $system_msg .= $context . "\n";
         }
@@ -2504,7 +2516,7 @@ function farmapaz_pastillin_try_ai($message, $products = [], $history_str = '') 
                 ],
                 'max_tokens' => 400,
             ]),
-            'timeout' => 10,
+            'timeout' => 5,
         ]);
 
         if (!is_wp_error($response)) {
@@ -2516,13 +2528,39 @@ function farmapaz_pastillin_try_ai($message, $products = [], $history_str = '') 
         }
     }
 
-    // ----- Groq (fallback final — recomendado, gratis y confiable) -----
+    // ----- Gemini (fallback) -----
+    $gemini_key = get_option(FARMA_PASTILLIN_OPTION, '');
+
+    if ($gemini_key) {
+        $system_content = $system_msg_base . $system_info . "\n\n";
+        if ($context) {
+            $system_content .= $context . "\n";
+        }
+
+        $response = wp_remote_post('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' . $gemini_key, [
+            'headers' => ['Content-Type' => 'application/json'],
+            'body'    => json_encode([
+                'system_instruction' => ['parts' => [['text' => $system_content]]],
+                'contents' => [['role' => 'user', 'parts' => [['text' => $message]]]],
+            ]),
+            'timeout' => 5,
+        ]);
+
+        if (!is_wp_error($response)) {
+            $body = json_decode(wp_remote_retrieve_body($response), true);
+            if (!isset($body['error']) && isset($body['candidates'][0]['content']['parts'][0]['text'])) {
+                $reply = trim($body['candidates'][0]['content']['parts'][0]['text']);
+                if ($reply) return $reply;
+            }
+        }
+    }
+
+    // ----- Groq (fallback final) -----
     $groq_key = get_option(FARMA_GROQ_KEY_OPTION, '');
     $groq_model = get_option(FARMA_GROQ_MODEL_OPTION, 'llama-3.3-70b-versatile');
 
     if ($groq_key) {
-        $system_msg = "Eres Pastillín, asistente de Farmapaz Venezuela. Responde breve y amable, sin emojis.\n\n";
-        $system_msg .= $system_info . "\n\n";
+        $system_msg = $system_msg_base . $system_info . "\n\n";
         if ($context) {
             $system_msg .= $context . "\n";
         }
@@ -2540,7 +2578,7 @@ function farmapaz_pastillin_try_ai($message, $products = [], $history_str = '') 
                 ],
                 'max_tokens' => 400,
             ]),
-            'timeout' => 10,
+            'timeout' => 5,
         ]);
 
         if (!is_wp_error($response)) {
@@ -2553,4 +2591,646 @@ function farmapaz_pastillin_try_ai($message, $products = [], $history_str = '') 
     }
 
     return null;
+}
+
+// =============================================================================
+// [†] OneSignal Push Notifications
+// =============================================================================
+
+define('FARMA_ONESIGNAL_OPTION', 'farmapaz_onesignal_app_id');
+define('FARMA_ONESIGNAL_KEY_OPTION', 'farmapaz_onesignal_api_key');
+define('FARMA_ONESIGNAL_DELAY_OPTION', 'farmapaz_notif_delay');
+
+// --- Rewrite rules for OneSignal service workers at root ---
+add_action('init', 'farmapaz_onesignal_rewrite');
+function farmapaz_onesignal_rewrite() {
+    add_rewrite_rule('^OneSignalSDKWorker\.js$', 'index.php?farmapaz_onesignal_sw=1', 'top');
+    add_rewrite_rule('^OneSignalSDKUpdaterWorker\.js$', 'index.php?farmapaz_onesignal_sw_updater=1', 'top');
+}
+
+add_filter('query_vars', 'farmapaz_onesignal_query_vars');
+function farmapaz_onesignal_query_vars($vars) {
+    $vars[] = 'farmapaz_onesignal_sw';
+    $vars[] = 'farmapaz_onesignal_sw_updater';
+    return $vars;
+}
+
+add_action('template_redirect', 'farmapaz_onesignal_serve_sw');
+function farmapaz_onesignal_serve_sw() {
+    $sw = get_query_var('farmapaz_onesignal_sw');
+    $updater = get_query_var('farmapaz_onesignal_sw_updater');
+    if (!$sw && !$updater) return;
+    header('Content-Type: application/javascript');
+    header('Service-Worker-Allowed: /');
+    header('Cache-Control: no-cache');
+    if ($sw) {
+        readfile(get_template_directory() . '/onesignal/OneSignalSDKWorker.js');
+    } else {
+        readfile(get_template_directory() . '/onesignal/OneSignalSDKUpdaterWorker.js');
+    }
+    exit;
+}
+
+// --- Manifest link ---
+add_action('wp_head', 'farmapaz_onesignal_manifest');
+function farmapaz_onesignal_manifest() {
+    $app_id = get_option(FARMA_ONESIGNAL_OPTION, '');
+    if (!$app_id) return;
+    echo '<link rel="manifest" href="' . esc_url(get_template_directory_uri() . '/onesignal/manifest.json') . '" />';
+}
+
+// --- Admin settings page ---
+add_action('admin_menu', 'farmapaz_onesignal_menu');
+function farmapaz_onesignal_menu() {
+    add_submenu_page(
+        'options-general.php',
+        'Notificaciones Push',
+        'Notificaciones Push',
+        'manage_options',
+        'farmapaz-onesignal',
+        'farmapaz_onesignal_page'
+    );
+}
+
+add_action('admin_init', 'farmapaz_onesignal_settings');
+function farmapaz_onesignal_settings() {
+    register_setting('farmapaz_onesignal_group', FARMA_ONESIGNAL_OPTION, ['sanitize_callback' => 'sanitize_text_field']);
+    register_setting('farmapaz_onesignal_group', FARMA_ONESIGNAL_KEY_OPTION, ['sanitize_callback' => 'sanitize_text_field']);
+    register_setting('farmapaz_onesignal_group', FARMA_ONESIGNAL_DELAY_OPTION, ['sanitize_callback' => 'absint']);
+
+    add_settings_section('farmapaz_onesignal_main', '', '__return_false', 'farmapaz-onesignal');
+
+    add_settings_field('farmapaz_onesignal_app_id', 'App ID', function () {
+        $val = get_option(FARMA_ONESIGNAL_OPTION, '');
+        echo '<input type="text" name="' . FARMA_ONESIGNAL_OPTION . '" value="' . esc_attr($val) . '" class="regular-text" placeholder="ej: 12345678-xxxx-xxxx-xxxx-xxxxxxxxxxxx">';
+        echo '<p class="description">Lo obtienes en <a href="https://dashboard.onesignal.com" target="_blank">OneSignal Dashboard</a> > Settings > Keys & IDs.</p>';
+    }, 'farmapaz-onesignal', 'farmapaz_onesignal_main');
+
+    add_settings_field('farmapaz_onesignal_api_key', 'REST API Key', function () {
+        $val = get_option(FARMA_ONESIGNAL_KEY_OPTION, '');
+        echo '<input type="password" name="' . FARMA_ONESIGNAL_KEY_OPTION . '" value="' . esc_attr($val) . '" class="regular-text">';
+        echo '<p class="description">Necesaria para segmentar usuarios por compras desde el servidor.</p>';
+    }, 'farmapaz-onesignal', 'farmapaz_onesignal_main');
+
+    add_settings_field('farmapaz_notif_delay', 'Retraso del modal (ms)', function () {
+        $val = get_option(FARMA_ONESIGNAL_DELAY_OPTION, '8000');
+        echo '<input type="number" name="' . FARMA_ONESIGNAL_DELAY_OPTION . '" value="' . esc_attr($val) . '" class="small-text" min="1000" step="1000">';
+        echo '<p class="description">Tiempo en milisegundos antes de mostrar el modal de suscripción (8000 = 8 segundos).</p>';
+    }, 'farmapaz-onesignal', 'farmapaz_onesignal_main');
+}
+
+function farmapaz_onesignal_page() {
+    ?>
+    <div class="wrap">
+        <h1>Notificaciones Push — OneSignal</h1>
+        <form method="post" action="options.php">
+            <?php
+            settings_fields('farmapaz_onesignal_group');
+            do_settings_sections('farmapaz-onesignal');
+            submit_button('Guardar Configuración');
+            ?>
+        </form>
+        <hr>
+        <h2>Probar notificación</h2>
+        <p>Selecciona un segmento y envía una notificación de prueba.</p>
+        <form method="post">
+            <?php wp_nonce_field('farmapaz_test_notif', 'farmapaz_test_notif_nonce'); ?>
+            <input type="hidden" name="farmapaz_send_test" value="1">
+            <table class="form-table">
+                <tr>
+                    <th scope="row"><label for="test-title">Título</label></th>
+                    <td><input type="text" name="test_title" id="test-title" class="regular-text" value="¡Oferta especial Farmapaz!" required></td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="test-body">Mensaje</label></th>
+                    <td><textarea name="test_body" id="test-body" class="large-text" rows="3" required>Aprovecha nuestras ofertas exclusivas esta semana. ¡Visítanos!</textarea></td>
+                </tr>
+                <tr>
+                    <th scope="row">Segmento</th>
+                    <td>
+                        <label><input type="radio" name="test_segment" value="all" checked> Todos los suscriptores</label><br>
+                        <label><input type="radio" name="test_segment" value="Subscribed Users"> Subscribed Users</label>
+                    </td>
+                </tr>
+            </table>
+            <?php submit_button('Enviar notificación de prueba', 'secondary'); ?>
+        </form>
+        <?php
+        if (isset($_POST['farmapaz_send_test']) && wp_verify_nonce($_POST['farmapaz_test_notif_nonce'], 'farmapaz_test_notif')) {
+            $api_key = get_option(FARMA_ONESIGNAL_KEY_OPTION, '');
+            $app_id = get_option(FARMA_ONESIGNAL_OPTION, '');
+            if ($api_key && $app_id) {
+                $title = sanitize_text_field($_POST['test_title']);
+                $body = sanitize_textarea_field($_POST['test_body']);
+                $segment = sanitize_text_field($_POST['test_segment']);
+                $result = farmapaz_onesignal_send($app_id, $api_key, $title, $body, $segment);
+                if (is_wp_error($result)) {
+                    echo '<div class="notice notice-error"><p>Error: ' . esc_html($result->get_error_message()) . '</p></div>';
+                } else {
+                    $r = json_decode(wp_remote_retrieve_body($result), true);
+                    if (isset($r['id'])) {
+                        echo '<div class="notice notice-success"><p>Notificación enviada correctamente. ID: ' . esc_html($r['id']) . '</p></div>';
+                    } else {
+                        echo '<div class="notice notice-warning"><p>Respuesta: <pre>' . esc_html(wp_remote_retrieve_body($result)) . '</pre></p></div>';
+                    }
+                }
+            } else {
+                echo '<div class="notice notice-error"><p>Configura el App ID y REST API Key primero.</p></div>';
+            }
+        }
+        ?>
+    </div>
+    <?php
+}
+
+function farmapaz_onesignal_send($app_id, $api_key, $title, $body, $segment = 'All') {
+    $response = wp_remote_post('https://onesignal.com/api/v1/notifications', [
+        'headers' => [
+            'Content-Type'  => 'application/json; charset=utf-8',
+            'Authorization' => 'Basic ' . $api_key,
+        ],
+        'body' => json_encode([
+            'app_id'            => $app_id,
+            'included_segments' => [$segment],
+            'headings'          => ['en' => $title, 'es' => $title],
+            'contents'          => ['en' => $body, 'es' => $body],
+            'web_url'           => home_url(),
+            'chrome_web_image'  => get_template_directory_uri() . '/assets/images/logo.png',
+        ]),
+        'timeout' => 15,
+    ]);
+    return $response;
+}
+
+// --- AJAX: Set user tags on subscription ---
+add_action('wp_ajax_farmapaz_notif_set_tags', 'farmapaz_onesignal_set_tags');
+add_action('wp_ajax_nopriv_farmapaz_notif_set_tags', 'farmapaz_onesignal_set_tags');
+function farmapaz_onesignal_set_tags() {
+    if (!wp_verify_nonce($_POST['nonce'], 'farmapaz_nonce')) {
+        wp_die('', 403);
+    }
+
+    $onesignal_id = sanitize_text_field($_POST['onesignal_id']);
+    if (!$onesignal_id) wp_die('', 400);
+
+    $api_key = get_option(FARMA_ONESIGNAL_KEY_OPTION, '');
+    $app_id = get_option(FARMA_ONESIGNAL_OPTION, '');
+    if (!$api_key || !$app_id) wp_die('', 400);
+
+    $tags = [];
+
+    // User info
+    if (is_user_logged_in()) {
+        $user = wp_get_current_user();
+        $tags['user_id'] = (string) $user->ID;
+        $tags['user_email'] = $user->user_email;
+        $tags['user_name'] = $user->display_name;
+
+        // WooCommerce purchase history
+        if (class_exists('WooCommerce')) {
+            $orders = wc_get_orders([
+                'customer_id' => $user->ID,
+                'limit'       => 1,
+                'status'      => ['completed', 'processing'],
+            ]);
+            $tags['has_purchased'] = !empty($orders) ? 'yes' : 'no';
+
+            $order_count = wc_get_customer_order_count($user->ID);
+            $tags['order_count'] = (string) $order_count;
+
+            if (!empty($orders)) {
+                $last_order = reset($orders);
+                $tags['last_purchase'] = $last_order->get_date_created()->date('Y-m-d');
+
+                // Get purchased categories
+                $purchased_cats = [];
+                $customer_orders = wc_get_orders([
+                    'customer_id' => $user->ID,
+                    'limit'       => 20,
+                    'status'      => ['completed', 'processing'],
+                ]);
+                foreach ($customer_orders as $o) {
+                    foreach ($o->get_items() as $item) {
+                        $terms = wp_get_post_terms($item->get_product_id(), 'product_cat', ['fields' => 'slugs']);
+                        foreach ($terms as $slug) {
+                            $purchased_cats[$slug] = true;
+                        }
+                    }
+                }
+                $tags['purchased_categories'] = implode(',', array_keys($purchased_cats));
+            }
+        }
+    } else {
+        $tags['has_purchased'] = 'no';
+        $tags['user_type'] = 'guest';
+    }
+
+    // Current date
+    $tags['subscribed_date'] = date('Y-m-d');
+
+    // Send to OneSignal
+    $response = wp_remote_put('https://onesignal.com/api/v1/players/' . $onesignal_id, [
+        'headers' => [
+            'Content-Type' => 'application/json; charset=utf-8',
+            'Authorization' => 'Basic ' . $api_key,
+        ],
+        'body' => json_encode([
+            'app_id' => $app_id,
+            'tags'   => $tags,
+        ]),
+        'timeout' => 10,
+    ]);
+
+    wp_die('ok');
+}
+
+// --- Flush rewrite rules on theme activation ---
+add_action('after_switch_theme', 'farmapaz_onesignal_flush');
+function farmapaz_onesignal_flush() {
+    farmapaz_onesignal_rewrite();
+    flush_rewrite_rules();
+}
+
+// =========================================================
+// PORTADA — CONFIGURACIÓN DESDE EL PANEL (Ajustes > Portada)
+// =========================================================
+define('FARMA_HOME_OPTION', 'farmapaz_home_config');
+
+function farmapaz_home_defaults() {
+    return [
+        'autoscroll'      => 1,
+        'show_categories' => 1,
+        'show_trust'      => 1,
+        'show_promo'      => 1,
+        'banners'         => [],
+        'sections'        => [
+            [
+                'enabled'    => 1,
+                'title'      => 'Ahorra con Farmapaz',
+                'subtitle'   => 'Ofertas exclusivas y descuentos especiales',
+                'category'   => 'ahorra-con-farmapaz',
+                'layout'     => 'carousel',
+                'limit'      => 10,
+                'orderby'    => 'rand',
+                'order'      => 'DESC',
+                'bg_tone'    => 'brand-blue',
+                'badge'      => '',
+                'force_sale' => 1,
+                'on_sale'    => 0,
+            ],
+            [
+                'enabled'    => 1,
+                'title'      => 'Belleza y Cuidado Personal',
+                'subtitle'   => 'Dermocosmetica, maquillaje y cuidado diario',
+                'category'   => 'cuidado-personal-y-dermocosmeticos',
+                'layout'     => 'grid',
+                'limit'      => 8,
+                'orderby'    => 'rand',
+                'order'      => 'DESC',
+                'bg_tone'    => 'lighter',
+                'badge'      => '',
+                'force_sale' => 0,
+                'on_sale'    => 0,
+            ],
+            [
+                'enabled'    => 1,
+                'title'      => 'Alimentos y Bebidas',
+                'subtitle'   => 'Snacks, nutricion y bebidas para toda la familia',
+                'category'   => 'alimentos-y-bebidas',
+                'layout'     => 'carousel',
+                'limit'      => 10,
+                'orderby'    => 'date',
+                'order'      => 'DESC',
+                'bg_tone'    => 'brand-blue',
+                'badge'      => '',
+                'force_sale' => 0,
+                'on_sale'    => 0,
+            ],
+            [
+                'enabled'    => 1,
+                'title'      => 'Salud y Bienestar',
+                'subtitle'   => 'Vitaminas, suplementos y productos para tu salud',
+                'category'   => 'salud-y-bienestar',
+                'layout'     => 'grid',
+                'limit'      => 10,
+                'orderby'    => 'rand',
+                'order'      => 'DESC',
+                'bg_tone'    => 'brand-blue',
+                'badge'      => '',
+                'force_sale' => 0,
+                'on_sale'    => 0,
+            ],
+            [
+                'enabled'    => 1,
+                'title'      => 'Productos para el hogar',
+                'subtitle'   => 'Productos destacados para el hogar mascotas y otros',
+                'category'   => 'hogar-mascotas-y-otros',
+                'layout'     => 'carousel',
+                'limit'      => 10,
+                'orderby'    => 'date',
+                'order'      => 'DESC',
+                'bg_tone'    => 'white',
+                'badge'      => '',
+                'force_sale' => 0,
+                'on_sale'    => 0,
+            ],
+        ],
+    ];
+}
+
+function farmapaz_home_config() {
+    $defaults = farmapaz_home_defaults();
+    $saved    = get_option(FARMA_HOME_OPTION, []);
+    if (!is_array($saved)) $saved = [];
+    return wp_parse_args($saved, $defaults);
+}
+
+// Secciones de productos habilitadas (devuelve los defaults si no hay ninguna activa)
+function farmapaz_home_sections() {
+    $cfg = farmapaz_home_config();
+    $sections = (isset($cfg['sections']) && is_array($cfg['sections'])) ? $cfg['sections'] : [];
+    $out = [];
+    foreach ($sections as $s) {
+        if (!empty($s['enabled']) && !empty($s['title'])) $out[] = $s;
+    }
+    if (empty($out)) $out = farmapaz_home_defaults()['sections'];
+    return $out;
+}
+
+// Banners del hero (configurables; fallback a los archivos banner* de la carpeta assets/images)
+function farmapaz_home_banners() {
+    $cfg = farmapaz_home_config();
+    $banners = [];
+    if (isset($cfg['banners']) && is_array($cfg['banners'])) {
+        foreach ($cfg['banners'] as $b) {
+            $b = trim((string)$b);
+            if ($b) $banners[] = $b;
+        }
+    }
+    if (!empty($banners)) return $banners;
+    $files = glob(get_template_directory() . '/assets/images/banner*.*');
+    $urls = [];
+    foreach ($files as $f) $urls[] = get_template_directory_uri() . '/assets/images/' . basename($f);
+    return $urls;
+}
+
+// --- Menú admin ---
+add_action('admin_menu', 'farmapaz_home_menu');
+function farmapaz_home_menu() {
+    add_submenu_page(
+        'options-general.php',
+        'Portada — Configuración',
+        'Portada',
+        'manage_options',
+        'farmapaz-home',
+        'farmapaz_home_page'
+    );
+}
+
+function farmapaz_home_page() {
+    $cfg = farmapaz_home_config();
+    $cats = get_terms(['taxonomy' => 'product_cat', 'hide_empty' => false]);
+    $cat_options = [];
+    if (!is_wp_error($cats)) {
+        foreach ($cats as $c) $cat_options[$c->slug] = $c->name . ' (' . $c->count . ')';
+    }
+    $layouts = ['carousel' => 'Carrusel', 'grid' => 'Grilla', 'compact' => 'Grilla compacta'];
+    $orderbys = ['date' => 'Más recientes', 'rand' => 'Aleatorio', 'title' => 'Título (A-Z)', 'modified' => 'Última modificación', 'menu_order' => 'Orden del menú', 'price' => 'Precio'];
+    $tones = ['light' => 'Claro (azul suave)', 'lighter' => 'Muy claro', 'white' => 'Blanco', 'brand-blue' => 'Azul brand'];
+    ?>
+    <div class="wrap">
+        <h1>Portada — Configuración</h1>
+        <p>Configura qué secciones de productos, banners y bloques se muestran en la página de inicio. Sin tocar código.</p>
+
+        <form method="post" action="options.php">
+            <?php wp_nonce_field('farmapaz_home_save', 'farmapaz_home_nonce'); ?>
+
+            <h2 style="margin-top:20px;">Banners (hero)</h2>
+            <p class="description">Imágenes del carrusel superior. Deja vacío para usar los banners de la carpeta del theme.</p>
+            <div id="farmapaz-banners-list">
+                <?php foreach ((array)$cfg['banners'] as $banner): ?>
+                <div class="farmapaz-banner-row" style="margin-bottom:6px;">
+                    <input type="text" name="banners[]" value="<?= esc_attr($banner); ?>" class="regular-text farmapaz-banner-url" placeholder="https://...">
+                    <button type="button" class="button farmapaz-media-btn">Subir / Elegir</button>
+                    <button type="button" class="button-link-delete farmapaz-banner-remove">Quitar</button>
+                </div>
+                <?php endforeach; ?>
+            </div>
+            <button type="button" class="button" id="farmapaz-banner-add">+ Añadir banner</button>
+
+            <h2 style="margin-top:24px;">Secciones de productos</h2>
+            <p class="description">Cada sección muestra productos de una categoría. Desmarca "Activa" para ocultarla.</p>
+            <div id="farmapaz-sections-list">
+                <?php foreach ((array)$cfg['sections'] as $i => $s):
+                    $s = wp_parse_args((array)$s, farmapaz_home_defaults()['sections'][0]);
+                ?>
+                <div class="farmapaz-section-row" data-index="<?= $i; ?>" style="border:1px solid #ccd0d4;border-radius:8px;padding:14px 14px 6px;margin-bottom:14px;background:#fff;">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                        <label style="display:flex;align-items:center;gap:5px;">
+                            <input type="checkbox" name="sections[<?= $i; ?>][enabled]" value="1" <?= !empty($s['enabled']) ? 'checked' : ''; ?>>
+                            Activa
+                        </label>
+                        <input type="text" name="sections[<?= $i; ?>][title]" value="<?= esc_attr($s['title']); ?>" class="regular-text" placeholder="Título de la sección" style="flex:1;">
+                        <button type="button" class="button-link-delete farmapaz-section-remove">Eliminar sección</button>
+                    </div>
+                    <table class="form-table" style="margin-top:0;">
+                        <tr>
+                            <th scope="row">Subtítulo</th>
+                            <td><input type="text" name="sections[<?= $i; ?>][subtitle]" value="<?= esc_attr($s['subtitle']); ?>" class="large-text"></td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Categoría</th>
+                            <td>
+                                <select name="sections[<?= $i; ?>][category]" style="min-width:260px;">
+                                    <option value="">— Todas las categorías —</option>
+                                    <?php foreach ($cat_options as $slug => $name): ?>
+                                        <option value="<?= esc_attr($slug); ?>" <?= selected($s['category'], $slug, false); ?>><?= esc_html($name); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Formato</th>
+                            <td>
+                                <select name="sections[<?= $i; ?>][layout]">
+                                    <?php foreach ($layouts as $k => $v): ?>
+                                        <option value="<?= $k; ?>" <?= selected($s['layout'], $k, false); ?>><?= $v; ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Nº de productos</th>
+                            <td><input type="number" name="sections[<?= $i; ?>][limit]" value="<?= (int)$s['limit']; ?>" min="1" max="30" class="small-text"></td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Orden</th>
+                            <td>
+                                <select name="sections[<?= $i; ?>][orderby]">
+                                    <?php foreach ($orderbys as $k => $v): ?>
+                                        <option value="<?= $k; ?>" <?= selected($s['orderby'], $k, false); ?>><?= $v; ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <select name="sections[<?= $i; ?>][order]">
+                                    <option value="DESC" <?= selected($s['order'], 'DESC', false); ?>>Descendente</option>
+                                    <option value="ASC" <?= selected($s['order'], 'ASC', false); ?>>Ascendente</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Fondo</th>
+                            <td>
+                                <select name="sections[<?= $i; ?>][bg_tone]">
+                                    <?php foreach ($tones as $k => $v): ?>
+                                        <option value="<?= $k; ?>" <?= selected($s['bg_tone'], $k, false); ?>><?= $v; ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Extras</th>
+                            <td>
+                                <label style="margin-right:14px;"><input type="checkbox" name="sections[<?= $i; ?>][force_sale]" value="1" <?= !empty($s['force_sale']) ? 'checked' : ''; ?>> Mostrar sello "Oferta"</label>
+                                <label><input type="checkbox" name="sections[<?= $i; ?>][on_sale]" value="1" <?= !empty($s['on_sale']) ? 'checked' : ''; ?>> Solo productos en oferta</label>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <?php endforeach; ?>
+            </div>
+            <button type="button" class="button" id="farmapaz-section-add">+ Añadir sección</button>
+
+            <h2 style="margin-top:24px;">Bloques de la portada</h2>
+            <table class="form-table">
+                <tr>
+                    <th scope="row">Auto-desplazamiento de carruseles</th>
+                    <td><label><input type="checkbox" name="autoscroll" value="1" <?= !empty($cfg['autoscroll']) ? 'checked' : ''; ?>> Activar movimiento automático de los carruseles de productos</label></td>
+                </tr>
+                <tr>
+                    <th scope="row">Carrusel de categorías</th>
+                    <td><label><input type="checkbox" name="show_categories" value="1" <?= !empty($cfg['show_categories']) ? 'checked' : ''; ?>> Mostrar el carrusel de categorías</label></td>
+                </tr>
+                <tr>
+                    <th scope="row">Bloque de confianza</th>
+                    <td><label><input type="checkbox" name="show_trust" value="1" <?= !empty($cfg['show_trust']) ? 'checked' : ''; ?>> Mostrar el bloque de confianza (envíos, pagos, etc.)</label></td>
+                </tr>
+                <tr>
+                    <th scope="row">Banners promocionales</th>
+                    <td><label><input type="checkbox" name="show_promo" value="1" <?= !empty($cfg['show_promo']) ? 'checked' : ''; ?>> Mostrar los banners promocionales del pie</label></td>
+                </tr>
+            </table>
+
+            <input type="hidden" name="farmapaz_home_action" value="save">
+            <?php submit_button('Guardar Portada'); ?>
+        </form>
+    </div>
+
+    <style>
+        #farmapaz-sections-list .form-table th { width: 150px; }
+    </style>
+    <script>
+    (function($) {
+        var sectionTemplate = null;
+        function captureTemplate() {
+            if (sectionTemplate) return;
+            var rows = $('#farmapaz-sections-list .farmapaz-section-row');
+            if (rows.length) sectionTemplate = rows.eq(0).prop('outerHTML');
+        }
+        $('#farmapaz-section-add').on('click', function() {
+            captureTemplate();
+            if (!sectionTemplate) { alert('Agrega al menos una sección primero'); return; }
+            var idx = new Date().getTime();
+            var html = sectionTemplate
+                .replace(/sections\[\d+\]/g, 'sections[' + idx + ']')
+                .replace(/data-index="\d+"/, 'data-index="' + idx + '"');
+            $('#farmapaz-sections-list').append(html);
+        });
+        $(document).on('click', '.farmapaz-section-remove', function() {
+            $(this).closest('.farmapaz-section-row').remove();
+        });
+
+        $('#farmapaz-banner-add').on('click', function() {
+            $('#farmapaz-banners-list').append(
+                '<div class="farmapaz-banner-row" style="margin-bottom:6px;">' +
+                '<input type="text" name="banners[]" value="" class="regular-text farmapaz-banner-url" placeholder="https://...">' +
+                '<button type="button" class="button farmapaz-media-btn">Subir / Elegir</button>' +
+                '<button type="button" class="button-link-delete farmapaz-banner-remove">Quitar</button></div>'
+            );
+        });
+        $(document).on('click', '.farmapaz-banner-remove', function() {
+            $(this).closest('.farmapaz-banner-row').remove();
+        });
+
+        // Media picker
+        $(document).on('click', '.farmapaz-media-btn', function(e) {
+            e.preventDefault();
+            var $row = $(this).closest('.farmapaz-banner-row');
+            var $input = $row.find('.farmapaz-banner-url');
+            var frame = wp.media({ title: 'Elegir banner', multiple: false });
+            frame.on('select', function() {
+                var att = frame.state().get('selection').first().toJSON();
+                $input.val(att.url);
+            });
+            frame.open();
+        });
+    })(jQuery);
+    </script>
+    <?php
+}
+
+add_action('admin_init', 'farmapaz_home_save');
+function farmapaz_home_save() {
+    if (!isset($_POST['farmapaz_home_action']) || $_POST['farmapaz_home_action'] !== 'save') return;
+    if (!current_user_can('manage_options')) return;
+    check_admin_referer('farmapaz_home_save', 'farmapaz_home_nonce');
+
+    $allowed_layout = ['carousel', 'grid', 'compact'];
+    $allowed_orderby = ['date', 'rand', 'title', 'modified', 'menu_order', 'price'];
+    $allowed_tones = ['light', 'lighter', 'white', 'brand-blue'];
+
+    $sections = [];
+    if (isset($_POST['sections']) && is_array($_POST['sections'])) {
+        foreach ($_POST['sections'] as $s) {
+            if (!is_array($s) || empty($s['title'])) continue;
+            $layout = in_array($s['layout'], $allowed_layout, true) ? $s['layout'] : 'carousel';
+            $orderby = in_array($s['orderby'], $allowed_orderby, true) ? $s['orderby'] : 'date';
+            $order = ($s['order'] === 'ASC') ? 'ASC' : 'DESC';
+            $tone = in_array($s['bg_tone'], $allowed_tones, true) ? $s['bg_tone'] : 'light';
+            $sections[] = [
+                'enabled'    => !empty($s['enabled']) ? 1 : 0,
+                'title'      => sanitize_text_field($s['title']),
+                'subtitle'   => sanitize_text_field($s['subtitle'] ?? ''),
+                'category'   => sanitize_title($s['category'] ?? ''),
+                'layout'     => $layout,
+                'limit'      => min(30, max(1, absint($s['limit'] ?? 8))),
+                'orderby'    => $orderby,
+                'order'      => $order,
+                'bg_tone'    => $tone,
+                'badge'      => sanitize_text_field($s['badge'] ?? ''),
+                'force_sale' => !empty($s['force_sale']) ? 1 : 0,
+                'on_sale'    => !empty($s['on_sale']) ? 1 : 0,
+            ];
+        }
+    }
+
+    $banners = [];
+    if (isset($_POST['banners']) && is_array($_POST['banners'])) {
+        foreach ($_POST['banners'] as $b) {
+            $b = esc_url_raw(trim((string)$b));
+            if ($b) $banners[] = $b;
+        }
+    }
+
+    $config = [
+        'autoscroll'      => !empty($_POST['autoscroll']) ? 1 : 0,
+        'show_categories' => !empty($_POST['show_categories']) ? 1 : 0,
+        'show_trust'      => !empty($_POST['show_trust']) ? 1 : 0,
+        'show_promo'      => !empty($_POST['show_promo']) ? 1 : 0,
+        'banners'         => $banners,
+        'sections'        => $sections,
+    ];
+
+    update_option(FARMA_HOME_OPTION, $config);
+    wp_safe_redirect(admin_url('options-general.php?page=farmapaz-home&saved=1'));
+    exit;
 }

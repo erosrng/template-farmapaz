@@ -7,31 +7,22 @@
 
     <div class="relative z-10 w-full">
         <?php
-        $banner_files = glob(get_template_directory() . '/assets/images/banner*.*');
-        $total = count($banner_files);
+        // Banners configurables desde Ajustes > Portada
+        $all_banners = farmapaz_home_banners();
+        $total = count($all_banners);
         ?>
 
         <!-- ===== MOBILE: Single merged carousel with ALL banners ===== -->
-        <?php
-        $banner_aspect = '2.5'; // fallback
-        if (!empty($banner_files)) {
-            $size = @getimagesize($banner_files[0]);
-            if ($size && $size[0] > 0) {
-                $banner_aspect = round($size[0] / $size[1], 4);
-            }
-        }
-        ?>
-        <div class="hero-slider lg:hidden relative w-full overflow-hidden" style="background: #293683; aspect-ratio: <?= $banner_aspect; ?>;">
+        <div class="hero-slider lg:hidden relative w-full overflow-hidden" style="background: #293683; aspect-ratio: 2.5;">
             <?php
-            $all_banners = $banner_files;
-            shuffle($all_banners);
+            $mobile_banners = $all_banners;
+            shuffle($mobile_banners);
             $mi = 0;
-            foreach ($all_banners as $path):
-                $url = get_template_directory_uri() . '/assets/images/' . basename($path);
+            foreach ($mobile_banners as $url):
                 $mi++;
             ?>
             <div class="hero-slide absolute inset-0 w-full h-full <?= $mi === 1 ? 'active' : ''; ?>">
-                <img src="<?= $url; ?>" alt="" class="w-full h-full object-contain" style="background: #293683;" <?= $mi === 1 ? 'fetchpriority="high"' : 'loading="lazy"'; ?>>
+                <img src="<?= esc_url($url); ?>" alt="" class="w-full h-full object-contain" style="background: #293683;" <?= $mi === 1 ? 'fetchpriority="high"' : 'loading="lazy"'; ?> onerror="this.onerror=null;this.src='<?= get_template_directory_uri(); ?>/assets/images/producto.svg'">
             </div>
             <?php endforeach; ?>
             <?php if ($mi > 1): ?>
@@ -53,12 +44,11 @@
 
                 <?php
                 $slide_index = 0;
-                foreach ($banner_files as $path):
-                    $url = get_template_directory_uri() . '/assets/images/' . basename($path);
+                foreach ($all_banners as $url):
                     $slide_index++;
                 ?>
                 <div class="hero-slide absolute inset-0 w-full h-full <?= $slide_index === 1 ? 'active' : ''; ?>">
-                    <img src="<?= $url; ?>" alt="" class="w-full h-full object-cover object-center" <?= $slide_index === 1 ? 'fetchpriority="high"' : ''; ?>>
+                    <img src="<?= esc_url($url); ?>" alt="" class="w-full h-full object-cover object-center" <?= $slide_index === 1 ? 'fetchpriority="high"' : 'loading="lazy"'; ?> onerror="this.onerror=null;this.src='<?= get_template_directory_uri(); ?>/assets/images/producto.svg'">
                 </div>
                 <?php endforeach; ?>
 
@@ -81,22 +71,20 @@
             <!-- RIGHT: 2 Banner Sliders stacked -->
             <div class="flex flex-col gap-3" style="min-height: 300px;">
                 <?php
-                $right_banners = $banner_files;
+                $right_banners = $all_banners;
                 shuffle($right_banners);
                 $half = max(1, ceil($total / 2));
                 $top_banners = array_slice($right_banners, 0, $half);
                 $bottom_banners = array_slice($right_banners, $half);
-                if (count($top_banners) < 2) $top_banners = array_merge($top_banners, $banner_files);
-                if (count($bottom_banners) < 2) $bottom_banners = array_merge($bottom_banners, $banner_files);
+                if (count($top_banners) < 2) $top_banners = array_merge($top_banners, $all_banners);
+                if (count($bottom_banners) < 2) $bottom_banners = array_merge($bottom_banners, $all_banners);
                 ?>
 
                 <!-- Right Top -->
                 <div class="hero-slider flex-1 relative rounded-xl overflow-hidden group" style="box-shadow: 0 4px 20px rgba(0,0,0,0.25);">
-                    <?php $ti = 0; foreach ($top_banners as $path):
-                        $url = get_template_directory_uri() . '/assets/images/' . basename($path); $ti++;
-                    ?>
+                    <?php $ti = 0; foreach ($top_banners as $url): $ti++; ?>
                     <div class="hero-slide absolute inset-0 w-full h-full <?= $ti === 1 ? 'active' : ''; ?>">
-                        <img src="<?= $url; ?>" alt="" class="w-full h-full object-cover object-center" loading="lazy">
+                        <img src="<?= esc_url($url); ?>" alt="" class="w-full h-full object-cover object-center" loading="lazy" onerror="this.onerror=null;this.src='<?= get_template_directory_uri(); ?>/assets/images/producto.svg'">
                     </div>
                     <?php endforeach; ?>
                     <?php if ($ti > 1): ?>
@@ -110,11 +98,9 @@
 
                 <!-- Right Bottom -->
                 <div class="hero-slider flex-1 relative rounded-xl overflow-hidden group" style="box-shadow: 0 4px 20px rgba(0,0,0,0.25);">
-                    <?php $bi = 0; foreach ($bottom_banners as $path):
-                        $url = get_template_directory_uri() . '/assets/images/' . basename($path); $bi++;
-                    ?>
+                    <?php $bi = 0; foreach ($bottom_banners as $url): $bi++; ?>
                     <div class="hero-slide absolute inset-0 w-full h-full <?= $bi === 1 ? 'active' : ''; ?>">
-                        <img src="<?= $url; ?>" alt="" class="w-full h-full object-cover object-center" loading="lazy">
+                        <img src="<?= esc_url($url); ?>" alt="" class="w-full h-full object-cover object-center" loading="lazy" onerror="this.onerror=null;this.src='<?= get_template_directory_uri(); ?>/assets/images/producto.svg'">
                     </div>
                     <?php endforeach; ?>
                     <?php if ($bi > 1): ?>

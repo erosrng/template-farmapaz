@@ -3325,6 +3325,161 @@
 /* ====== PASTILLÍN — CHATBOT FRUTIGER AERO ====== */
 
 /* [†] Animaciones futuristas — glow, ping, saludo */
+/* ===== PASTILLÍN — FUTURISTIC ANIMATIONS ===== */
+
+/* Glow pulse on the chat box border */
+@keyframes pastBorderGlow {
+    0%, 100% { box-shadow: 0 12px 60px rgba(9,20,110,0.12), 0 0 0 1px rgba(9,20,110,0.06); }
+    50%      { box-shadow: 0 12px 60px rgba(9,20,110,0.18), 0 0 20px rgba(9,20,110,0.10), 0 0 0 1px rgba(9,20,110,0.12); }
+}
+
+/* Scan-line overlay for cyber effect */
+@keyframes pastScanlines {
+    0%   { transform: translateY(-100%); }
+    100% { transform: translateY(100vh); }
+}
+
+@keyframes pastScanFade {
+    0%   { opacity: 0; }
+    20%  { opacity: 0.5; }
+    80%  { opacity: 0.5; }
+    100% { opacity: 0; }
+}
+
+/* Shimmer sweep on message bubbles */
+@keyframes pastShimmer {
+    0%   { transform: translateX(-100%) skewX(-15deg); }
+    100% { transform: translateX(200%) skewX(-15deg); }
+}
+
+/* Futuristic glow on header */
+@keyframes pastHeaderGlow {
+    0%, 100% { background-position: 0% 50%; }
+    50%      { background-position: 100% 50%; }
+}
+
+/* Typing ring pulse */
+@keyframes pastTypingRing {
+    0%   { transform: scale(1); opacity: 0.6; }
+    100% { transform: scale(1.5); opacity: 0; }
+}
+
+/* Message entrance with glow */
+@keyframes pastMsgGlowIn {
+    0%   { opacity: 0; transform: translateY(12px) scale(0.92); filter: blur(4px); }
+    60%  { opacity: 1; transform: translateY(-2px) scale(1.01); filter: blur(0); }
+    100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+
+/* User message entrance */
+@keyframes pastUserMsgIn {
+    0%   { opacity: 0; transform: translateX(20px) scale(0.92); }
+    100% { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+/* Bot message shine sweep */
+.past-msg-bot .past-msg-content::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+    animation: pastShimmer 2.5s ease-in-out infinite;
+    pointer-events: none;
+}
+
+/* Cyber scan-line overlay on chat box */
+#pastillin-box::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(9,20,110,0.015) 2px,
+        rgba(9,20,110,0.015) 4px
+    );
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    border-radius: inherit;
+    overflow: hidden;
+}
+#pastillin-box.open::before {
+    opacity: 1;
+}
+
+/* Scan line sweep on open */
+#pastillin-box::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(9,20,110,0.08), transparent);
+    pointer-events: none;
+    z-index: 2;
+    opacity: 0;
+    border-radius: inherit;
+}
+#pastillin-box.open::after {
+    animation: pastScanlines 0.8s ease-out, pastScanFade 0.8s ease-out forwards;
+}
+
+/* Glow ring behind typing dots */
+.past-typing .past-msg-content {
+    position: relative;
+    overflow: visible;
+}
+.past-typing .past-msg-content::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 40px;
+    height: 40px;
+    transform: translate(-50%, -50%);
+    border: 1.5px solid rgba(9,20,110,0.08);
+    border-radius: 50%;
+    animation: pastTypingRing 1.5s ease-out infinite;
+    pointer-events: none;
+}
+
+/* Header gradient animation */
+.past-header {
+    background-size: 200% 200%;
+    animation: pastHeaderGlow 4s ease-in-out infinite;
+}
+
+/* Message animations override */
+@keyframes pastFadeIn {
+    0% { opacity: 0; transform: translateY(8px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Glow on open */
+#pastillin-box.open {
+    animation: pastBorderGlow 3s ease-in-out infinite;
+}
+
+/* Enhanced message entrance */
+.past-msg.past-msg-bot {
+    animation: pastMsgGlowIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.past-msg.past-msg-user {
+    animation: pastUserMsgIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Send button glow */
+#pastillin-send:active {
+    transform: scale(0.92);
+    box-shadow: 0 0 20px rgba(9,20,110,0.3);
+}
+
 @keyframes pastillin-ping {
     0%   { transform: scale(1);   opacity: 0.5; }
     100% { transform: scale(1.8); opacity: 0;   }

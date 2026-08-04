@@ -260,7 +260,15 @@
                 </div>
 
                 <!-- Right: Quick Links + Primary Menu -->
-                <div class="flex items-center gap-1 min-w-0 scrollbar-hide" style="-webkit-overflow-scrolling: touch;">
+                <div class="nav-carousel relative flex items-center flex-1 min-w-0">
+
+                    <!-- Left Scroll Arrow -->
+                    <button class="nav-car-arrow" type="button" aria-label="Anterior" style="left: 0;" onclick="this.parentElement.querySelector('.nav-car-track').scrollBy({left: -260, behavior: 'smooth'})">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"/></svg>
+                    </button>
+
+                    <!-- Scrollable Track -->
+                    <div class="nav-car-track flex items-center gap-1 overflow-x-auto scrollbar-hide flex-1 min-w-0 px-3" style="-webkit-overflow-scrolling: touch; scroll-behavior: smooth;">
 
                     <!-- Category Pills -->
                     <?php
@@ -311,6 +319,12 @@
                         <?php endif; ?>
                     </div>
                     <?php endforeach; endif; ?>
+                    </div>
+
+                    <!-- Right Scroll Arrow -->
+                    <button class="nav-car-arrow" type="button" aria-label="Siguiente" style="right: 0;" onclick="this.parentElement.querySelector('.nav-car-track').scrollBy({left: 260, behavior: 'smooth'})">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/></svg>
+                    </button>
                 </div>
 
             </div>

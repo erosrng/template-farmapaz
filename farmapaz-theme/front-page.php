@@ -1,79 +1,47 @@
 <?php
 /**
- * Front Page - Homepage v3
+ * Front Page - Homepage
+ * Las secciones, banners y bloques se configuran en
+ * Ajustes > Portada (sin tocar código).
  */
 
-get_header(); ?>
+get_header();
 
-<?php get_template_part('template-parts/hero'); ?>
+get_template_part('template-parts/hero');
 
+$home_cfg  = farmapaz_home_config();
+$sections  = farmapaz_home_sections();
+
+foreach ($sections as $sec):
+    $args = [
+        'title'      => $sec['title'],
+        'subtitle'   => $sec['subtitle'],
+        'category'   => $sec['category'],
+        'limit'      => (int)$sec['limit'],
+        'orderby'    => $sec['orderby'],
+        'order'      => $sec['order'],
+        'layout'     => $sec['layout'],
+        'bg_tone'    => $sec['bg_tone'],
+        'badge'      => $sec['badge'],
+        'force_sale' => !empty($sec['force_sale']),
+        'on_sale'    => !empty($sec['on_sale']),
+    ];
+?>
 <section class="section-offscreen">
-<?php farmapaz_product_carousel([
-    'title'       => 'Ahorra con Farmapaz',
-    'subtitle'    => 'Ofertas exclusivas y descuentos especiales',
-    'category'    => 'ahorra-con-farmapaz',
-    'limit'       => 20,
-    'orderby'     => 'rand',
-    'force_sale'  => true,
-    'layout'      => 'carousel',
-    'bg_tone'     => 'brand-blue',
-]); ?>
+<?php farmapaz_product_carousel($args); ?>
 </section>
+<?php endforeach; ?>
 
-<section class="section-offscreen">
-<?php farmapaz_product_carousel([
-    'title'       => 'Belleza y Cuidado Personal',
-    'subtitle'    => 'Dermocosmetica, maquillaje y cuidado diario',
-    'category'    => 'cuidado-personal-y-dermocosmeticos',
-    'limit'       => 12,
-    'orderby'     => 'rand',
-    'layout'      => 'grid',
-    'bg_tone'     => 'lighter',
-]); ?>
-</section>
+<?php if (!empty($home_cfg['show_categories'])): ?>
+    <?php get_template_part('template-parts/categories-carousel'); ?>
+<?php endif; ?>
 
-<?php get_template_part('template-parts/categories-carousel'); ?>
+<?php if (!empty($home_cfg['show_trust'])): ?>
+    <?php get_template_part('template-parts/trust-section'); ?>
+<?php endif; ?>
 
-<section class="section-offscreen">
-<?php farmapaz_product_carousel([
-    'title'       => 'Alimentos y Bebidas',
-    'subtitle'    => 'Snacks, nutricion y bebidas para toda la familia',
-    'category'    => 'alimentos-y-bebidas',
-    'limit'       => 15,
-    'orderby'     => 'date',
-    'layout'      => 'carousel',
-    'bg_tone'     => 'brand-blue',
-]); ?>
-</section>
-
-<section class="section-offscreen">
-<?php farmapaz_product_carousel([
-    'title'       => 'Salud y Bienestar',
-    'subtitle'    => 'Vitaminas, suplementos y productos para tu salud',
-    'category'    => 'salud-y-bienestar',
-    'limit'       => 20,
-    'orderby'     => 'rand',
-    'layout'      => 'grid',
-    'bg_tone'     => 'brand-blue',
-]); ?>
-</section>
-
-
-
-<?php get_template_part('template-parts/trust-section'); ?>
-
-<section class="section-offscreen">
-<?php farmapaz_product_carousel([
-    'title'       => 'Productos para el hogar',
-    'subtitle'    => 'Productos destacados para el hogar mascotas y otros',
-    'category'    => 'hogar-mascotas-y-otros',
-    'limit'       => 15,
-    'orderby'     => 'date',
-    'order'       => 'DESC',
-    'bg_tone'     => 'white',
-]); ?>
-</section>
-
-<?php get_template_part('template-parts/promo-banners'); ?>
+<?php if (!empty($home_cfg['show_promo'])): ?>
+    <?php get_template_part('template-parts/promo-banners'); ?>
+<?php endif; ?>
 
 <?php get_footer(); ?>

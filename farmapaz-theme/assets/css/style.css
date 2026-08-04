@@ -30,6 +30,7 @@
 /* Smooth scroll */
 html {
     scroll-behavior: smooth;
+    margin-top: 0 !important;
 }
 
 /* ====== ANIMATIONS ====== */
@@ -708,4 +709,64 @@ select:focus-visible {
 }
 @keyframes farmapazSpin {
     to { transform: rotate(360deg); }
+}
+
+/* Navbar category pills carousel */
+.nav-carousel {
+    position: relative;
+}
+.nav-car-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 5;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    background: rgba(255,255,255,0.92);
+    color: #374151;
+    box-shadow: 0 2px 8px rgba(9,20,110,0.12);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s ease, transform 0.2s ease, background 0.2s ease;
+    border: none;
+    outline: none;
+    padding: 0;
+    line-height: 1;
+    pointer-events: none;
+}
+.nav-carousel:hover .nav-car-arrow {
+    opacity: 1;
+    pointer-events: auto;
+}
+.nav-car-arrow:hover {
+    transform: translateY(-50%) scale(1.15);
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(9,20,110,0.18);
+}
+.nav-car-track {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}
+.nav-car-track::-webkit-scrollbar {
+    display: none;
+}
+
+/* Responsive iframes in page content */
+.page-content iframe,
+.prose iframe {
+    width: 100%;
+    border-radius: 0.75rem;
+    border: none;
+}
+.page-content iframe {
+    min-height: 480px;
+}
+.prose iframe {
+    min-height: 400px;
 }

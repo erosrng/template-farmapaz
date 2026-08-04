@@ -103,12 +103,19 @@
             '<div class="past-msg-content"><div class="past-msg-text">Hola! Soy <strong>Pastillín</strong>, tu asistente de Farmapaz. En que puedo ayudarte?</div><div class="past-quick-replies"></div></div>';
         chatMessages.appendChild(msg);
         var qrContainer = msg.querySelector('.past-quick-replies');
-        quickReplies.forEach(function (text) {
+        quickReplies.forEach(function (text, i) {
             var btn = document.createElement('button');
             btn.className = 'past-quick-btn';
+            btn.style.opacity = '0';
+            btn.style.transform = 'translateY(8px)';
             btn.textContent = text;
             btn.addEventListener('click', function () { sendMessage(text); });
             qrContainer.appendChild(btn);
+            setTimeout(function () {
+                btn.style.transition = 'opacity 0.3s cubic-bezier(0.16,1,0.3,1), transform 0.3s cubic-bezier(0.16,1,0.3,1)';
+                btn.style.opacity = '1';
+                btn.style.transform = 'translateY(0)';
+            }, 80 + i * 60);
         });
         scrollDown();
     }
@@ -215,15 +222,22 @@
         if (!chatQuickBar) return;
         chatQuickBar.innerHTML = '';
         var shown = {};
-        quickReplies.forEach(function (text) {
+        quickReplies.forEach(function (text, i) {
             var key = text.toLowerCase().trim();
             if (shown[key]) return;
             shown[key] = true;
             var btn = document.createElement('button');
             btn.className = 'past-quick-bar-btn';
+            btn.style.opacity = '0';
+            btn.style.transform = 'translateY(6px)';
             btn.textContent = text;
             btn.addEventListener('click', function () { sendMessage(text); });
             chatQuickBar.appendChild(btn);
+            setTimeout(function () {
+                btn.style.transition = 'opacity 0.35s cubic-bezier(0.16,1,0.3,1), transform 0.35s cubic-bezier(0.16,1,0.3,1)';
+                btn.style.opacity = '1';
+                btn.style.transform = 'translateY(0)';
+            }, 50 + i * 50);
         });
     }
 
@@ -242,9 +256,22 @@
             sendMessage(chatInput.value);
         }
     });
+    var MAX_LENGTH = 500;
+    function updateCounter() {
+        var counter = document.getElementById('pastillin-counter');
+        if (!counter) return;
+        var len = chatInput.value.length;
+        counter.textContent = len + '/' + MAX_LENGTH;
+        counter.style.color = len > MAX_LENGTH * 0.9 ? '#ef4444' : 'rgba(255,255,255,0.3)';
+    }
+
     chatInput.addEventListener('input', function () {
+        if (this.value.length > MAX_LENGTH) {
+            this.value = this.value.substring(0, MAX_LENGTH);
+        }
         this.style.height = 'auto';
         this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        updateCounter();
     });
 
     document.addEventListener('click', function (e) {

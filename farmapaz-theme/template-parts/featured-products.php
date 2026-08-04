@@ -19,9 +19,16 @@
             'meta_query'     => [
                 'relation' => 'AND',
                 ['key' => '_featured', 'value' => 'yes'],
-                ['key' => '_price', 'value' => 0, 'compare' => '>', 'type' => 'DECIMAL'], // [†] $0 excluded
+                ['key' => '_price', 'value' => 0, 'compare' => '>', 'type' => 'DECIMAL'],
                 ['key' => '_stock_status', 'value' => 'instock'],
+                ['key' => '_thumbnail_id', 'compare' => 'EXISTS'],
             ],
+            'tax_query'      => [[
+                'taxonomy' => 'product_cat',
+                'field'    => 'slug',
+                'terms'    => ['medicamentos-controlados', 'cuidado-facial'],
+                'operator' => 'NOT IN',
+            ]],
             'orderby'        => 'date',
             'order'          => 'DESC',
         ]);
@@ -32,7 +39,7 @@
             <div class="flex gap-4 lg:gap-6 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory -mx-4 px-4" id="featured-carousel">
                 <?php while ($featured->have_posts()): $featured->the_post();
                     global $product;
-                    $image = get_the_post_thumbnail_url(get_the_ID(), 'full');
+                    $image = farmapaz_product_img_fallback(get_the_post_thumbnail_url(get_the_ID(), 'full'));
                     $stock_qty = $product->get_stock_quantity();
                     $managing = $product->managing_stock();
                     $low_stock = $managing && $stock_qty !== null && $stock_qty <= 5;
@@ -57,17 +64,10 @@
                                 </span>
                             <?php endif; ?>
 
-                            <?php if ($image): ?>
-                                <img src="<?= $image; ?>" alt="<?php the_title(); ?>"
-                                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                     loading="lazy">
-                            <?php else: ?>
-                                <div class="w-full h-full flex items-center justify-center text-gray-300">
-                                    <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                    </svg>
-                                </div>
-                            <?php endif; ?>
+                            <img src="<?= $image; ?>" alt="<?php the_title(); ?>"
+                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                 loading="lazy"
+                                 onerror="this.onerror=null;this.src='<?= get_template_directory_uri(); ?>/assets/images/producto.svg'">
                             <div class="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors"></div>
                         </div>
                         <div class="p-4 flex flex-col flex-1">
