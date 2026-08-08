@@ -21,7 +21,7 @@ defined('ABSPATH') || exit;
         </div>
         <h3 class="farmapaz-payment-empty-title">No disponible</h3>
         <p class="farmapaz-payment-empty-text">Los métodos de pago solo se pueden agregar durante el proceso de compra. Si necesitas ayuda, contáctanos por WhatsApp.</p>
-        <a href="https://wa.me/584128798885" target="_blank"
+        <a href="<?= esc_url(farmapaz_whatsapp_url()); ?>" target="_blank"
            class="farmapaz-orders-shop-btn">
             Contactar por WhatsApp
         </a>

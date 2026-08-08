@@ -39,6 +39,20 @@ $show_shipping = !wc_ship_to_billing_address_only() && $order->needs_shipping_ad
             </address>
         </div>
     </section>
+    <?php else: ?>
+        <?php if ($order->get_meta('_farmapaz_delivery_method') === 'pickup'): ?>
+        <section class="woocommerce-columns woocommerce-columns--1 woocommerce-columns--addresses col2-set addresses">
+            <div class="woocommerce-column woocommerce-column--1 col-1">
+                <h2 class="woocommerce-column__title">Retiro en tienda</h2>
+                <address>
+                    <p>Tu pedido quedará listo para retirar en:</p>
+                    <p><?php echo esc_html(farmapaz_store_address()); ?></p>
+                    <p>Te contactaremos cuando esté listo.</p>
+                    <?php do_action('woocommerce_order_details_after_customer_address', 'shipping', $order); ?>
+                </address>
+            </div>
+        </section>
+        <?php endif; ?>
     <?php endif; ?>
 
     <?php do_action('woocommerce_order_details_after_customer_details', $order); ?>

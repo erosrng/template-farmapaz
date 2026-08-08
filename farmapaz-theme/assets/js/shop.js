@@ -102,7 +102,7 @@
                 grid.innerHTML = data.products;
                 state.page = 1;
             }
-            if (count) count.textContent = data.count + ' productos';
+            if (count && !append) count.textContent = data.count + ' productos';
             hasMore = data.has_more;
             if (!hasMore && sentinel) sentinel.style.display = 'none';
             else if (sentinel) sentinel.style.display = '';
@@ -191,18 +191,24 @@
             });
         }
 
-        var searchInput = document.querySelector('.filter-search');
+        var searchInputs = document.querySelectorAll('.filter-search');
         var searchTimer;
-        if (searchInput) {
-            searchInput.addEventListener('input', function() {
-                clearTimeout(searchTimer);
-                searchTimer = setTimeout(function() {
-                    state.s = searchInput.value;
-                    state.page = 1;
-                    hasMore = true;
-                    if (sentinel) sentinel.style.display = '';
-                    fetchProducts(false, null, true);
-                }, 400);
+        function syncSearchInputs(value) {
+            searchInputs.forEach(function(el) { el.value = value; });
+        }
+        if (searchInputs.length) {
+            searchInputs.forEach(function(searchInput) {
+                searchInput.addEventListener('input', function() {
+                    clearTimeout(searchTimer);
+                    searchTimer = setTimeout(function() {
+                        state.s = searchInput.value;
+                        syncSearchInputs(searchInput.value);
+                        state.page = 1;
+                        hasMore = true;
+                        if (sentinel) sentinel.style.display = '';
+                        fetchProducts(false, null, true);
+                    }, 400);
+                });
             });
         }
 
@@ -243,7 +249,7 @@
                 if (document.querySelector('.filter-price-max')) document.querySelector('.filter-price-max').value = '';
             } else if (remove === 's') {
                 state.s = '';
-                if (document.querySelector('.filter-search')) document.querySelector('.filter-search').value = '';
+                syncSearchInputs('');
             }
             state.page = 1;
             hasMore = true;
@@ -256,7 +262,7 @@
                 var field = this.dataset.clear;
                 if (field === 's') {
                     state.s = '';
-                    if (document.querySelector('.filter-search')) document.querySelector('.filter-search').value = '';
+                    syncSearchInputs('');
                     state.page = 1;
                     hasMore = true;
                     if (sentinel) sentinel.style.display = '';

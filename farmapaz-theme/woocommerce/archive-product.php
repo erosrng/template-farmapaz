@@ -56,6 +56,18 @@ get_header(); ?>
                 </div>
                 <?php endif; ?>
                 </div>
+                <div class="shop-hero-search" id="shopHeroSearch">
+                    <svg class="shop-hero-search-icon" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <input type="text" class="filter-input filter-search shop-hero-search-input"
+                           placeholder="Buscar en esta categoría..."
+                           value="<?= esc_attr($current_s); ?>"
+                           autocomplete="off">
+                    <?php if ($current_s): ?>
+                    <button class="filter-clear-btn shop-hero-search-clear" data-clear="s" aria-label="Limpiar búsqueda">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                    <?php endif; ?>
+                </div>
                 <p class="shop-hero-sub">
                     <?php printf('%d productos encontrados', $wp_query->found_posts); ?>
                 </p>
@@ -113,13 +125,7 @@ get_header(); ?>
                             <?php wc_get_template_part('content', 'product'); ?>
                         <?php endwhile; ?>
                     <?php else: ?>
-                        <div class="shop-empty">
-                            <div class="shop-empty-icon">
-                                <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                            </div>
-                            <p class="shop-empty-text">No se encontraron productos con estos filtros.</p>
-                            <a href="<?= get_permalink(wc_get_page_id('shop')); ?>" class="shop-empty-link">Limpiar filtros</a>
-                        </div>
+                        <?php farmapaz_empty_state_html($current_s, $current_orderby); ?>
                     <?php endif; ?>
                 </div>
 

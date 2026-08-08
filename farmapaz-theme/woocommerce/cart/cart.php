@@ -34,7 +34,6 @@ do_action('woocommerce_before_cart'); ?>
                         $permalink = apply_filters('woocommerce_cart_item_permalink', $_product->is_visible() ? $_product->get_permalink($cart_item) : '', $cart_item, $cart_item_key);
 
                         $img_url = farmapaz_product_img_fallback(get_the_post_thumbnail_url($product_id, 'thumbnail'));
-                        $fallback = get_template_directory_uri() . '/assets/images/producto.png';
                     ?>
                     <div class="cart-item" data-cart-key="<?= esc_attr($cart_item_key); ?>" data-product-id="<?= esc_attr($product_id); ?>" data-unit-price="<?= esc_attr($_product->get_price()); ?>">
                         <button class="cart-item-remove" title="Eliminar"
@@ -43,10 +42,7 @@ do_action('woocommerce_before_cart'); ?>
                         </button>
                         <div class="cart-item-img-wrap">
                             <?php if ($permalink): ?><a href="<?= esc_url($permalink); ?>"><?php endif; ?>
-                                <img src="<?= esc_url($img_url); ?>"
-                                     alt="<?= esc_attr($product_name); ?>"
-                                     class="cart-item-img"
-                                     onerror="this.onerror=null;this.src='<?= $fallback; ?>'">
+                                <?php farmapaz_picture($img_url, $product_name, 'cart-item-img'); ?>
                             <?php if ($permalink): ?></a><?php endif; ?>
                         </div>
                         <div class="cart-item-body">
@@ -122,10 +118,7 @@ do_action('woocommerce_before_cart'); ?>
                         $img = farmapaz_product_img_fallback(get_the_post_thumbnail_url(get_the_ID(), 'thumbnail'));
                     ?>
                     <a href="<?php the_permalink(); ?>" class="cart-cross-item">
-                        <img src="<?= $img; ?>" alt="<?php the_title(); ?>"
-                             class="cart-cross-img"
-                             loading="lazy"
-                             onerror="this.onerror=null;this.src='<?= get_template_directory_uri(); ?>/assets/images/producto.png'">
+                        <?php farmapaz_picture($img, get_the_title(), 'cart-cross-img'); ?>
                         <div class="cart-cross-name"><?php the_title(); ?></div>
                         <div class="cart-cross-price"><?= $product->get_price_html(); ?></div>
                     </a>

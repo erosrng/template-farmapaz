@@ -53,6 +53,65 @@
         });
     }
 
+    // ====== MINI CART DRAWER ======
+    window.farmapazUpdateMiniCart = function(fragments) {
+        var html = fragments['div.farmapaz-mini-cart-body'];
+        if (!html) return;
+        var body = document.querySelector('.farmapaz-mini-cart-body');
+        if (body) body.outerHTML = html;
+        bindCartQty();
+        updateBadgeFromFragments(fragments);
+    };
+
+    function updateBadgeFromFragments(fragments) {
+        var html = fragments['#cart-count'];
+        if (!html) return;
+        var tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        var nb = tmp.querySelector('#cart-count');
+        if (nb) {
+            var badge = document.getElementById('cart-count');
+            if (badge) badge.textContent = nb.textContent;
+        }
+    }
+
+    function openMiniCart() {
+        var drawer = document.getElementById('farmapaz-mini-cart');
+        if (!drawer) return;
+        drawer.classList.add('open');
+        drawer.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('farmapaz-mini-cart-open');
+    }
+
+    function closeMiniCart() {
+        var drawer = document.getElementById('farmapaz-mini-cart');
+        if (!drawer) return;
+        drawer.classList.remove('open');
+        drawer.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('farmapaz-mini-cart-open');
+    }
+
+    window.farmapazOpenMiniCart = openMiniCart;
+    window.farmapazCloseMiniCart = closeMiniCart;
+
+    document.addEventListener('click', function(e) {
+        var openBtn = e.target.closest('#cart-open-btn');
+        if (openBtn) {
+            e.preventDefault();
+            openMiniCart();
+            return;
+        }
+        var closeBtn = e.target.closest('[data-mini-cart-close]');
+        if (closeBtn) {
+            closeMiniCart();
+            return;
+        }
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeMiniCart();
+    });
+
     // ====== REMOVE FROM CART (AJAX) ======
     window.farmapaz_remove_from_cart = function(key) {
         updating[key] = true;
@@ -156,5 +215,53 @@
     }
 
     bindCartQty();
+
+    // ====== DELIVERY METHOD (envío / retiro en tienda) ======
+    var deliveryMethods = document.querySelector('[data-delivery-methods]');
+    if (deliveryMethods) {
+        var shippingSection = document.querySelector('.checkout-shipping-section');
+        var radios = deliveryMethods.querySelectorAll('input[name="farmapaz_delivery_method"]');
+
+        function applyDeliveryMethod() {
+            var value = 'delivery';
+            radios.forEach(function(r) { if (r.checked) value = r.value; });
+            deliveryMethods.querySelectorAll('.farmapaz-delivery-option').forEach(function(opt) {
+                var input = opt.querySelector('input');
+                opt.classList.toggle('is-selected', input && input.checked);
+            });
+            if (shippingSection) {
+                shippingSection.classList.toggle('is-hidden', value === 'pickup');
+            }
+        }
+
+        function refreshReviewTotals() {
+            var value = 'delivery';
+            radios.forEach(function(r) { if (r.checked) value = r.value; });
+            var fd = new FormData();
+            fd.append('action', 'farmapaz_set_delivery_method');
+            fd.append('method', value);
+            fd.append('nonce', typeof farmapazData !== 'undefined' ? farmapazData.nonce : '');
+            fetch(typeof farmapazData !== 'undefined' ? farmapazData.ajaxUrl : '/wp-admin/admin-ajax.php', {
+                method: 'POST', body: fd
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data && data.success && data.data && data.data.review_totals) {
+                    var container = document.querySelector('.checkout-review-totals');
+                    if (container) container.outerHTML = data.data.review_totals;
+                }
+            })
+            .catch(function() {});
+        }
+
+        radios.forEach(function(r) {
+            r.addEventListener('change', function() {
+                applyDeliveryMethod();
+                refreshReviewTotals();
+            });
+        });
+
+        applyDeliveryMethod();
+    }
 
 })();

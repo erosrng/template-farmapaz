@@ -8,6 +8,11 @@
     --brand-yellow: #FEAB0D;
     --brand-red: #FF1A27;
     --brand-orange: #F97316;
+    --brand-green-rgb: 90 125 67;
+    --brand-blue-rgb: 9 20 110;
+    --brand-yellow-rgb: 254 171 13;
+    --brand-red-rgb: 255 26 39;
+    --brand-orange-rgb: 249 115 22;
 }
 
 /* Line clamp */
@@ -238,7 +243,7 @@ html {
 
 /* Sale badge */
 .sale-badge {
-    background: linear-gradient(135deg, #FF1A27, #ff4d5a);
+    background: linear-gradient(135deg, var(--brand-red), color-mix(in srgb, var(--brand-red) 75%, #fff));
     color: white;
     font-size: 11px;
     font-weight: 800;
@@ -246,12 +251,12 @@ html {
     border-radius: 6px;
     letter-spacing: -0.02em;
     animation: salePulse 2s ease-in-out infinite;
-    box-shadow: 0 2px 8px rgba(255, 26, 39, 0.3);
+    box-shadow: 0 2px 8px rgb(var(--brand-red-rgb) / 0.3);
 }
 
 @keyframes salePulse {
-    0%, 100% { transform: scale(1); box-shadow: 0 2px 8px rgba(255, 26, 39, 0.3); }
-    50% { transform: scale(1.05); box-shadow: 0 4px 16px rgba(255, 26, 39, 0.5); }
+    0%, 100% { transform: scale(1); box-shadow: 0 2px 8px rgb(var(--brand-red-rgb) / 0.3); }
+    50% { transform: scale(1.05); box-shadow: 0 4px 16px rgb(var(--brand-red-rgb) / 0.5); }
 }
 
 /* Product card v2 */
@@ -298,14 +303,14 @@ html {
     border: 1px solid #e5e7eb;
 }
 .woocommerce-pagination .page-numbers a:hover {
-    background: #5A7D43;
+    background: var(--brand-green);
     color: white;
-    border-color: #5A7D43;
+    border-color: var(--brand-green);
 }
 .woocommerce-pagination .page-numbers span.current {
-    background: #5A7D43;
+    background: var(--brand-green);
     color: white;
-    border: 1px solid #5A7D43;
+    border: 1px solid var(--brand-green);
 }
 
 /* WooCommerce ordering select */
@@ -367,7 +372,7 @@ a:focus-visible,
 button:focus-visible,
 input:focus-visible,
 select:focus-visible {
-    outline: 2px solid #5A7D43;
+    outline: 2px solid var(--brand-green);
     outline-offset: 2px;
 }
 
@@ -410,7 +415,7 @@ select:focus-visible {
     background: rgba(255,255,255,0.7);
 }
 .hero-dot.active {
-    background: #5A7D43;
+    background: var(--brand-green);
     transform: scale(1.2);
     width: 20px;
     border-radius: 4px;
@@ -423,20 +428,20 @@ select:focus-visible {
     background: rgba(255, 255, 255, 0.75);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(9, 20, 110, 0.08);
-    box-shadow: 0 4px 20px rgba(9, 20, 110, 0.06);
+    border: 1px solid rgb(var(--brand-blue-rgb) / 0.08);
+    box-shadow: 0 4px 20px rgb(var(--brand-blue-rgb) / 0.06);
 }
 .glass-card:hover {
     background: rgba(255, 255, 255, 0.92);
-    border-color: rgba(9, 20, 110, 0.15);
-    box-shadow: 0 12px 40px rgba(9, 20, 110, 0.12), 0 0 0 1px rgba(90, 125, 67, 0.15);
+    border-color: rgb(var(--brand-blue-rgb) / 0.15);
+    box-shadow: 0 12px 40px rgb(var(--brand-blue-rgb) / 0.12), 0 0 0 1px rgb(var(--brand-green-rgb) / 0.15);
     transform: translateY(-6px);
 }
 
 /* Glow effect for futuristic elements */
 @keyframes glow-pulse {
-    0%, 100% { box-shadow: 0 0 8px rgba(9, 20, 110, 0.08); }
-    50% { box-shadow: 0 0 20px rgba(9, 20, 110, 0.15); }
+    0%, 100% { box-shadow: 0 0 8px rgb(var(--brand-blue-rgb) / 0.08); }
+    50% { box-shadow: 0 0 20px rgb(var(--brand-blue-rgb) / 0.15); }
 }
 .glow-card {
     animation: glow-pulse 4s ease-in-out infinite;
@@ -470,7 +475,7 @@ select:focus-visible {
     left: -30%;
     width: 80%;
     height: 200%;
-    background: radial-gradient(ellipse, rgba(9,20,110,0.04) 0%, transparent 70%);
+    background: radial-gradient(ellipse, rgb(var(--brand-blue-rgb) / 0.04) 0%, transparent 70%);
     pointer-events: none;
 }
 .futuristic-section::after {
@@ -480,19 +485,14 @@ select:focus-visible {
     right: -20%;
     width: 60%;
     height: 150%;
-    background: radial-gradient(ellipse, rgba(90,125,67,0.04) 0%, transparent 70%);
+    background: radial-gradient(ellipse, rgb(var(--brand-green-rgb) / 0.04) 0%, transparent 70%);
     pointer-events: none;
 }
 
-/* Content-visibility for below-fold sections (render delay = perceived speed) */
+/* Content-visibility removed: caused blank scroll space because sections
+   reserved 400px and grew after render (scrollHeight jumped ~3300px).
+   Page speed is handled by image lazy-loading + hero preload. */
 .section-offscreen {
-    content-visibility: auto;
-    contain-intrinsic-size: 400px;
-}
-@media (prefers-reduced-motion: reduce) {
-    .section-offscreen {
-        content-visibility: visible;
-    }
 }
 
 /* Dark brand blue futuristic variant */
@@ -543,7 +543,7 @@ select:focus-visible {
 .orb-1 {
     width: 300px;
     height: 300px;
-    background: radial-gradient(circle, rgba(9,20,110,0.1), transparent);
+    background: radial-gradient(circle, rgb(var(--brand-blue-rgb) / 0.1), transparent);
     top: -100px;
     left: -100px;
     animation: orbFloat 12s ease-in-out infinite;
@@ -551,7 +551,7 @@ select:focus-visible {
 .orb-2 {
     width: 250px;
     height: 250px;
-    background: radial-gradient(circle, rgba(90,125,67,0.08), transparent);
+    background: radial-gradient(circle, rgb(var(--brand-green-rgb) / 0.08), transparent);
     bottom: -80px;
     right: -80px;
     animation: orbFloat 15s ease-in-out infinite reverse;
@@ -559,7 +559,7 @@ select:focus-visible {
 .orb-3 {
     width: 200px;
     height: 200px;
-    background: radial-gradient(circle, rgba(254,171,13,0.06), transparent);
+    background: radial-gradient(circle, rgb(var(--brand-yellow-rgb) / 0.06), transparent);
     top: 50%;
     left: 60%;
     animation: orbFloat 10s ease-in-out infinite 2s;
@@ -580,8 +580,8 @@ select:focus-visible {
     text-transform: uppercase;
     letter-spacing: 0.08em;
     border-radius: 999px;
-    background: rgba(9, 20, 110, 0.06);
-    color: #09146E;
+    background: rgb(var(--brand-blue-rgb) / 0.06);
+    color: var(--brand-blue);
 }
 
 /* Futuristic price */
@@ -593,14 +593,14 @@ select:focus-visible {
 /* Card white variant for light sections */
 .card-white {
     background: white;
-    border: 1px solid rgba(9, 20, 110, 0.06);
-    box-shadow: 0 2px 12px rgba(9, 20, 110, 0.04);
+    border: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
+    box-shadow: 0 2px 12px rgb(var(--brand-blue-rgb) / 0.04);
     transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .card-white:hover {
     transform: translateY(-6px);
-    border-color: rgba(9, 20, 110, 0.18);
-    box-shadow: 0 12px 40px rgba(9, 20, 110, 0.12);
+    border-color: rgb(var(--brand-blue-rgb) / 0.18);
+    box-shadow: 0 12px 40px rgb(var(--brand-blue-rgb) / 0.12);
 }
 
 /* Glass card for dark futuristic sections (brand-blue bg) */
@@ -614,22 +614,22 @@ select:focus-visible {
 }
 .card-glass-dark:hover {
     transform: translateY(-8px) scale(1.02);
-    border-color: rgba(254,171,13,0.35);
-    box-shadow: 0 16px 48px rgba(9,20,110,0.3), 0 0 40px rgba(254,171,13,0.08);
+    border-color: rgb(var(--brand-yellow-rgb) / 0.35);
+    box-shadow: 0 16px 48px rgb(var(--brand-blue-rgb) / 0.3), 0 0 40px rgb(var(--brand-yellow-rgb) / 0.08);
 }
 
 /* Brand-colored arrows for dark sections */
 .carousel-arrow-brand {
-    background: #09146E !important;
+    background: var(--brand-blue) !important;
     color: #fff !important;
     border: 1px solid rgba(255,255,255,0.12) !important;
     box-shadow: 0 4px 20px rgba(0,0,0,0.25) !important;
 }
 .carousel-arrow-brand:hover {
-    background: #FEAB0D !important;
-    color: #09146E !important;
-    border-color: #FEAB0D !important;
-    box-shadow: 0 8px 32px rgba(254,171,13,0.35) !important;
+    background: var(--brand-yellow) !important;
+    color: var(--brand-blue) !important;
+    border-color: var(--brand-yellow) !important;
+    box-shadow: 0 8px 32px rgb(var(--brand-yellow-rgb) / 0.35) !important;
     transform: translateY(-50%) scale(1.15) !important;
 }
 .carousel-arrow-brand svg {
@@ -656,7 +656,7 @@ select:focus-visible {
 .carousel-arrow-prev:hover,
 .carousel-arrow-next:hover {
     background: white !important;
-    box-shadow: 0 8px 28px rgba(9,20,110,0.2) !important;
+    box-shadow: 0 8px 28px rgb(var(--brand-blue-rgb) / 0.2) !important;
 }
 
 /* Subtle bg shift on hover for banners */
@@ -683,7 +683,7 @@ select:focus-visible {
     animation: farmapazFadeDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .farmapaz-suggestions::-webkit-scrollbar { width: 4px; }
-.farmapaz-suggestions::-webkit-scrollbar-thumb { background: rgba(9,20,110,0.12); border-radius: 4px; }
+.farmapaz-suggestions::-webkit-scrollbar-thumb { background: rgb(var(--brand-blue-rgb) / 0.12); border-radius: 4px; }
 .farmapaz-suggestions::-webkit-scrollbar-track { background: transparent; }
 
 @keyframes farmapazFadeDown {
@@ -701,8 +701,8 @@ select:focus-visible {
     width: 14px;
     height: 14px;
     margin-top: -7px;
-    border: 1.5px solid rgba(9,20,110,0.08);
-    border-top-color: #09146E;
+    border: 1.5px solid rgb(var(--brand-blue-rgb) / 0.08);
+    border-top-color: var(--brand-blue);
     border-radius: 50%;
     animation: farmapazSpin 0.6s linear infinite;
 }

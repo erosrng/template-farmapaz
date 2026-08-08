@@ -10,7 +10,31 @@ if (!is_dir($cache_dir)) {
     @mkdir($cache_dir, 0755, true);
 }
 
-$remote = 'https://farmapazvenezuela.com/' . ltrim($url, '/');
+$path = ltrim($url, '/');
+if (strpos($path, '../') !== false || strpos($path, '://') !== false) {
+    header('HTTP/1.1 400 Bad Request');
+    exit;
+}
+
+$local_file = dirname(__FILE__) . '/../../..' . '/' . $path;
+if (is_file($local_file)) {
+    $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+    $mime = [
+        'jpg' => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'png' => 'image/png',
+        'gif' => 'image/gif',
+        'webp' => 'image/webp',
+        'svg' => 'image/svg+xml',
+    ];
+    header('Content-Type: ' . ($mime[$ext] ?? 'application/octet-stream'));
+    header('Cache-Control: public, max-age=86400');
+    header('X-Proxy-Status: local');
+    readfile($local_file);
+    exit;
+}
+
+$remote = 'https://farmapazvenezuela.com/' . $path;
 $cache_key = md5($url);
 $cache_file = $cache_dir . '/' . $cache_key . '.img';
 
@@ -22,7 +46,8 @@ if (file_exists($cache_file) && time() - filemtime($cache_file) < 86400) {
         CURLOPT_URL => $remote,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_TIMEOUT => 15,
+        CURLOPT_CONNECTTIMEOUT => 4,
+        CURLOPT_TIMEOUT => 10,
         CURLOPT_USERAGENT => 'Mozilla/5.0 (compatible; FarmapazBot/1.0)',
         CURLOPT_SSL_VERIFYPEER => false,
     ]);

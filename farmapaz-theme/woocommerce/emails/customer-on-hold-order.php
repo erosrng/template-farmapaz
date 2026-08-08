@@ -16,7 +16,7 @@ do_action('woocommerce_email_header', $email_heading, $email);
 
 <p>Gracias por tu pedido #<?= esc_html($order->get_order_number()); ?>. Estamos revisando la información de pago y te notificaremos cuando sea confirmado.</p>
 
-<p>Si tienes alguna duda, escríbenos por WhatsApp al <a href="https://wa.me/584128798885">0412-8798885</a>.</p>
+<p>Si tienes alguna duda, escríbenos por WhatsApp al <a href="<?= esc_url(farmapaz_whatsapp_url()); ?>"><?= esc_html(farmapaz_whatsapp_number()); ?></a>.</p>
 
 <?php
 

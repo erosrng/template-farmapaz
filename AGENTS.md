@@ -39,7 +39,7 @@ No test/lint/typecheck commands exist.
 
 ## Key Details
 - **Page IDs**: Cart = 9 (`carrito`), Checkout = 10 (`checkout`). Content stored as WPBakery base64 in `[vc_raw_html]` blocks → decoded in `page.php`.
-- **Shipping**: Dynamic fee via `woocommerce_cart_calculate_fees` — free (`$0`) if subtotal ≥ $10, otherwise `$2`.
+- **Shipping**: Dynamic fee via `woocommerce_cart_calculate_fees` — free (`$0`) if subtotal ≥ configurable minimum (default `$20`, option `farmapaz_free_shipping_min`), otherwise flat fee (default `$2`, option `farmapaz_shipping_fee`). Both editable in `Ajustes de Tienda` admin menu (`dashicons-store`, top-level).
 - **Pastillín AI chatbot**: `wp_ajax_farmapaz_pastillin` / `nopriv`. Supports Gemini, OpenRouter, Groq — configured in `Ajustes > Pastillín AI`. Tries providers in order: Gemini → OpenRouter → Groq. Local replies for competitors, greetings, business info. Searches products for context.
 - **`shop.css`** loads only on cart, checkout, and account pages.
 - **JS data object**: `window.farmapazData` exposes `homeUrl`, `cartUrl`.
@@ -50,3 +50,6 @@ No test/lint/typecheck commands exist.
 - `/?wc-ajax=update_cart` broken for guests — use remove+add combo instead.
 - Empty cart after removing last item: totals show `$0` but empty-state message not shown until reload.
 - Card stepper buttons not synced on `wc_fragment_refresh` — manual page reload needed.
+
+## Future Plans (not yet implemented)
+- **Pickup by branch**: "Retiro en tienda" will become "choose a sucursal" (it's a large chain — user picks from e.g. Maturín, Tipuro, Luis del Valle). Currently pickup uses a single store address (`farmapaz_store_address()`). Later: add branch list + selection in checkout. Do NOT implement now.

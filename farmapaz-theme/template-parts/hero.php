@@ -1,3 +1,13 @@
+<?php
+$banners_large   = farmapaz_hero_banners('large');
+$banners_small_top = farmapaz_hero_banners('small_top');
+$banners_small_bottom = farmapaz_hero_banners('small_bottom');
+$total = count($banners_large) + count($banners_small_top) + count($banners_small_bottom);
+
+// Sin banners cargados: no se muestra nada
+if ($total > 0):
+    $all_banners = array_merge($banners_large, $banners_small_top, $banners_small_bottom);
+?>
 <section class="relative overflow-hidden w-full" style="background: #293683;">
     <div class="absolute inset-0 overflow-hidden pointer-events-none z-0" data-speed="0.15">
         <div class="absolute -top-20 -right-20 w-64 h-64 rounded-full" style="background: radial-gradient(circle, rgba(254,171,13,0.15), transparent);"></div>
@@ -6,32 +16,17 @@
     </div>
 
     <div class="relative z-10 w-full">
-        <?php
-        $banner_files = glob(get_template_directory() . '/assets/images/banner*.*');
-        $total = count($banner_files);
-        ?>
 
         <!-- ===== MOBILE: Single merged carousel with ALL banners ===== -->
-        <?php
-        $banner_aspect = '2.5'; // fallback
-        if (!empty($banner_files)) {
-            $size = @getimagesize($banner_files[0]);
-            if ($size && $size[0] > 0) {
-                $banner_aspect = round($size[0] / $size[1], 4);
-            }
-        }
-        ?>
-        <div class="hero-slider lg:hidden relative w-full overflow-hidden" style="background: #293683; aspect-ratio: <?= $banner_aspect; ?>;">
+        <div class="hero-slider lg:hidden relative w-full overflow-hidden flex items-center justify-center hero-mobile-slider" style="background: linear-gradient(135deg, #293683 0%, #09146E 55%, #1c2a6b 100%); min-height: 200px;">
             <?php
-            $all_banners = $banner_files;
-            shuffle($all_banners);
             $mi = 0;
-            foreach ($all_banners as $path):
-                $url = get_template_directory_uri() . '/assets/images/' . basename($path);
+            foreach ($all_banners as $banner):
+                $url = $banner['url'];
                 $mi++;
             ?>
             <div class="hero-slide absolute inset-0 w-full h-full <?= $mi === 1 ? 'active' : ''; ?>">
-                <img src="<?= $url; ?>" alt="" class="w-full h-full object-contain" style="background: #293683;" <?= $mi === 1 ? 'fetchpriority="high"' : 'loading="lazy"'; ?>>
+                <img src="<?= $url; ?>" alt="" class="w-full h-full object-cover object-center" style="background: #293683;" <?= $mi === 1 ? 'fetchpriority="high"' : 'loading="lazy"'; ?>>
             </div>
             <?php endforeach; ?>
             <?php if ($mi > 1): ?>
@@ -44,17 +39,17 @@
             <?php endif; ?>
         </div>
 
-        <!-- ===== DESKTOP: 3-column grid with separate sliders ===== -->
+        <!-- ===== DESKTOP: 3-column grid (1 grande + 2 pequeños) ===== -->
         <div class="hidden lg:grid lg:grid-cols-3 gap-3 p-3">
 
-            <!-- LEFT: Banner Carousel (66%) -->
+            <!-- LEFT: Carrusel GRANDE (66%) -->
             <div class="hero-slider col-span-2 relative rounded-2xl overflow-hidden group"
                  style="min-height: 300px; box-shadow: 0 8px 40px rgba(9,20,110,0.4);">
 
                 <?php
                 $slide_index = 0;
-                foreach ($banner_files as $path):
-                    $url = get_template_directory_uri() . '/assets/images/' . basename($path);
+                foreach ($banners_large as $banner):
+                    $url = $banner['url'];
                     $slide_index++;
                 ?>
                 <div class="hero-slide absolute inset-0 w-full h-full <?= $slide_index === 1 ? 'active' : ''; ?>">
@@ -78,22 +73,13 @@
                 <?php endif; ?>
             </div>
 
-            <!-- RIGHT: 2 Banner Sliders stacked -->
+            <!-- RIGHT: 2 Carruseles pequeños apilados -->
             <div class="flex flex-col gap-3" style="min-height: 300px;">
-                <?php
-                $right_banners = $banner_files;
-                shuffle($right_banners);
-                $half = max(1, ceil($total / 2));
-                $top_banners = array_slice($right_banners, 0, $half);
-                $bottom_banners = array_slice($right_banners, $half);
-                if (count($top_banners) < 2) $top_banners = array_merge($top_banners, $banner_files);
-                if (count($bottom_banners) < 2) $bottom_banners = array_merge($bottom_banners, $banner_files);
-                ?>
 
                 <!-- Right Top -->
                 <div class="hero-slider flex-1 relative rounded-xl overflow-hidden group" style="box-shadow: 0 4px 20px rgba(0,0,0,0.25);">
-                    <?php $ti = 0; foreach ($top_banners as $path):
-                        $url = get_template_directory_uri() . '/assets/images/' . basename($path); $ti++;
+                    <?php $ti = 0; foreach ($banners_small_top as $banner):
+                        $url = $banner['url']; $ti++;
                     ?>
                     <div class="hero-slide absolute inset-0 w-full h-full <?= $ti === 1 ? 'active' : ''; ?>">
                         <img src="<?= $url; ?>" alt="" class="w-full h-full object-cover object-center" loading="lazy">
@@ -110,8 +96,8 @@
 
                 <!-- Right Bottom -->
                 <div class="hero-slider flex-1 relative rounded-xl overflow-hidden group" style="box-shadow: 0 4px 20px rgba(0,0,0,0.25);">
-                    <?php $bi = 0; foreach ($bottom_banners as $path):
-                        $url = get_template_directory_uri() . '/assets/images/' . basename($path); $bi++;
+                    <?php $bi = 0; foreach ($banners_small_bottom as $banner):
+                        $url = $banner['url']; $bi++;
                     ?>
                     <div class="hero-slide absolute inset-0 w-full h-full <?= $bi === 1 ? 'active' : ''; ?>">
                         <img src="<?= $url; ?>" alt="" class="w-full h-full object-cover object-center" loading="lazy">
@@ -130,3 +116,4 @@
         </div>
     </div>
 </section>
+<?php endif; ?>

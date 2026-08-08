@@ -48,10 +48,11 @@ get_header(); ?>
                     </span>
                 <?php endif; ?>
                 <div class="rounded-2xl overflow-hidden bg-gray-50/50" style="backdrop-filter: blur(4px);">
-                    <img src="<?= farmapaz_product_img_fallback(get_the_post_thumbnail_url(get_the_ID(), 'full')); ?>"
-                         alt="<?php the_title(); ?>"
-                         class="product-gallery-main w-full h-auto object-cover transition-transform duration-500 group-hover:scale-[1.02]"
-                         onerror="this.onerror=null;this.src='<?= get_template_directory_uri(); ?>/assets/images/producto.png'">
+                    <?php farmapaz_picture(
+                        farmapaz_product_img_fallback(get_the_post_thumbnail_url(get_the_ID(), 'full')),
+                        get_the_title(),
+                        'product-gallery-main w-full h-auto object-cover transition-transform duration-500 group-hover:scale-[1.02]'
+                    ); ?>
                 </div>
             </div>
             <?php
@@ -66,9 +67,7 @@ get_header(); ?>
                 <button class="product-gallery-thumb w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden flex-shrink-0 transition-all duration-200 hover:ring-2 hover:ring-brand-blue/30 active:scale-95"
                         style="border: 2px solid #09146E;"
                         data-src="<?= esc_attr($main_full); ?>">
-                    <img src="<?= esc_attr($main_thumb); ?>" alt=""
-                         class="w-full h-full object-cover bg-gray-50"
-                         onerror="this.onerror=null;this.src='<?= get_template_directory_uri(); ?>/assets/images/producto.png'">
+                    <?php farmapaz_picture($main_thumb, '', 'w-full h-full object-cover bg-gray-50'); ?>
                 </button>
                 <?php foreach ($attachment_ids as $attachment_id):
                     $thumb = farmapaz_product_img_fallback(wp_get_attachment_image_url($attachment_id, 'thumbnail'));
@@ -77,9 +76,7 @@ get_header(); ?>
                     <button class="product-gallery-thumb w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden flex-shrink-0 transition-all duration-200 hover:ring-2 hover:ring-brand-blue/30 active:scale-95"
                             style="border: 2px solid transparent;"
                             data-src="<?= esc_attr($full); ?>">
-                        <img src="<?= esc_attr($thumb); ?>" alt=""
-                             class="w-full h-full object-cover bg-gray-50"
-                             onerror="this.onerror=null;this.src='<?= get_template_directory_uri(); ?>/assets/images/producto.png'">
+                        <?php farmapaz_picture($thumb, '', 'w-full h-full object-cover bg-gray-50'); ?>
                     </button>
                 <?php endforeach; ?>
             </div>
@@ -165,7 +162,7 @@ get_header(); ?>
                     Añadir al carrito
                 </a>
 
-                <a href="https://wa.me/584128798885?text=<?= urlencode('Hola, me interesa: ' . get_the_title() . ' - ' . get_permalink()); ?>"
+                <a href="<?= esc_url(farmapaz_whatsapp_url('Hola, me interesa: ' . get_the_title() . ' - ' . get_permalink())); ?>"
                    target="_blank" rel="noopener"
                    class="flex items-center justify-center gap-2 w-full py-3.5 sm:py-4 px-8 font-semibold rounded-xl transition-all duration-300 text-sm sm:text-base text-white"
                    style="background: #25D366; box-shadow: 0 4px 20px rgba(37,211,102,0.2);"

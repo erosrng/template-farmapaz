@@ -34,9 +34,9 @@
                 $slug = $cat->slug;
             ?>
             <a href="<?= get_term_link($cat); ?>"
-               class="flex-none snap-start group stagger-item" style="width: 170px;">
-                <div class="flex flex-col items-center p-6 rounded-2xl card-glass-dark">
-                    <div class="w-16 h-16 sm:w-18 sm:h-18 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 mb-1" style="background: linear-gradient(135deg, rgba(254,171,13,0.12), rgba(255,255,255,0.06)); color: #fff; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 0 20px rgba(254,171,13,0.05);">
+               class="flex-none snap-start group stagger-item" style="width: 190px; height: 225px;">
+                <div class="flex flex-col items-center justify-center p-6 rounded-2xl card-glass-dark h-full w-full">
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 mb-1" style="background: linear-gradient(135deg, rgba(254,171,13,0.12), rgba(255,255,255,0.06)); color: #fff; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 0 20px rgba(254,171,13,0.05);">
                         <?= farmapaz_cat_icon($slug); ?>
                     </div>
                     <span class="text-sm sm:text-base font-semibold mt-3 text-center leading-tight line-clamp-2" style="color: #FEAB0D;">

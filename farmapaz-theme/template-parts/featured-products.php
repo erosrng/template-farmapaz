@@ -33,11 +33,9 @@
                 <?php while ($featured->have_posts()): $featured->the_post();
                     global $product;
                     $image = get_the_post_thumbnail_url(get_the_ID(), 'full');
-                    $stock_qty = $product->get_stock_quantity();
-                    $managing = $product->managing_stock();
-                    $low_stock = $managing && $stock_qty !== null && $stock_qty <= 5;
+                    $low_stock = farmapaz_is_low_stock($product);
                 ?>
-                <div class="flex-none w-[220px] sm:w-[240px] lg:w-[260px] snap-start animate-on-scroll">
+                <div class="flex-none w-[180px] sm:w-[240px] lg:w-[260px] snap-start animate-on-scroll">
                     <div class="product-card group h-full flex flex-col">
                         <div class="relative aspect-square bg-gray-50 overflow-hidden">
                             <?php if ($product->is_on_sale()): ?>
@@ -46,13 +44,13 @@
                                 </span>
                             <?php endif; ?>
                             <?php if ($low_stock): ?>
-                                <span class="absolute top-3 right-3 z-10 bg-orange-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow" style="background: #F97316;">
-                                    Solo por tienda
+                                <span class="absolute top-3 right-3 z-10 bg-orange-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow" style="background: #F97316;" title="Quedan pocas unidades. Para asegurar la existencia, consulta por call center o WhatsApp.">
+                                    Disponibilidad por call center
                                 </span>
                             <?php endif; ?>
 
-                            <?php $s_price = $product->get_price(); if ($s_price && $s_price >= 10): ?>
-                                <span class="absolute top-3 right-3 z-10 bg-orange-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow" style="background: #F97316;">
+                            <?php $s_price = $product->get_price(); if ($s_price && $s_price >= 20): ?>
+                                <span class="absolute bottom-3 right-3 z-10 bg-orange-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow" style="background: #F97316;">
                                     Delivery Gratis
                                 </span>
                             <?php endif; ?>
@@ -81,10 +79,11 @@
                                     <?= $product->get_price_html(); ?>
                                 </div>
                                 <?php if ($low_stock): ?>
-                                    <a href="https://wa.me/584128798885?text=Consultar%20disponibilidad%3A%20<?= urlencode(get_the_title()); ?>"
+                                    <a href="<?= esc_url(farmapaz_whatsapp_url('Consultar disponibilidad: ' . get_the_title())); ?>"
                                        target="_blank"
                                        class="block mt-2 w-full text-center py-2.5 px-4 text-white text-sm font-medium rounded-xl transition-colors"
-                                       style="background: #F97316;">
+                                       style="background: #F97316;"
+                                       title="Quedan pocas unidades. Escríbenos para confirmar existencia y gestionar tu compra.">
                                         Consultar disponible
                                     </a>
                                 <?php else: ?>

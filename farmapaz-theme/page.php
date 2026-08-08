@@ -57,7 +57,7 @@ if (is_page('sucursales')):
         <div class="relative z-10 container-farmapaz py-20 lg:py-28">
             <div class="max-w-3xl">
                 <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight" style="animation: fadeIn 0.6s ease-out;">Sucursales</h1>
-                <p class="text-lg sm:text-xl text-white/70 mt-4 max-w-xl" style="animation: slideUp 0.6s ease-out 0.1s both;">17 sucursales en Maturin, Estado Monagas. Te esperamos con los mejores productos para tu salud y bienestar.</p>
+                <p class="text-lg sm:text-xl text-white/70 mt-4 max-w-xl" style="animation: slideUp 0.6s ease-out 0.1s both;"><?= count(farmapaz_sucursales_activas()); ?> sucursales en Maturin, Caripito y Punta de Mata, Estado Monagas. Te esperamos con los mejores productos para tu salud y bienestar.</p>
             </div>
         </div>
     </section>
@@ -71,7 +71,7 @@ if (is_page('sucursales')):
         <div class="absolute inset-0 pointer-events-none flex items-center justify-center" style="background: linear-gradient(180deg, rgba(9,20,110,0.3) 0%, transparent 40%, transparent 60%, rgba(9,20,110,0.3) 100%);"></div>
         <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
             <div class="px-6 py-3 rounded-full text-white text-sm font-medium backdrop-blur-md" style="background: rgba(9,20,110,0.75); border: 1px solid rgba(255,255,255,0.1);">
-                Maturin, Edo Monagas — 17 sucursales
+                Maturin, Caripito y Punta de Mata, Edo Monagas — <?= count(farmapaz_sucursales_activas()); ?> sucursales
             </div>
         </div>
     </section>
@@ -80,7 +80,7 @@ if (is_page('sucursales')):
     <section class="py-16 lg:py-24" style="background: #f8fafc;">
         <div class="container-farmapaz">
             <div class="flex items-center justify-between mb-10">
-                <h2 class="text-3xl lg:text-4xl font-bold" style="color: #09146E;">Todas nuestras sucursales</h2>
+                <h2 class="text-3xl lg:text-4xl font-bold" style="color: #09146E;">Nuestras sucursales</h2>
                 <a href="https://www.google.com/maps/search/Farmapaz+Maturin/" target="_blank" rel="noopener"
                    class="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 hover:shadow-lg"
                    style="background: rgba(9,20,110,0.06); color: #09146E;">
@@ -90,54 +90,50 @@ if (is_page('sucursales')):
             </div>
             <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6">
                 <?php
-                $sucursales = [
-                    ['Av. La Paz', 'Av. La Paz Qta. Nro 50-1, Sector las Avenidas.', '0412-8798885', 0.1],
-                    ['Juncal', 'Av. Juncal con calle Piar, Local 3, Sector Centro.', '0412-8798885', 0.13],
-                    ['Luis del Valle', 'Av. Luis del Valle Garcia, Edif. Doña Maria, P/B Local 1 y 2, Sector las Avenidas.', '0412-8798885', 0.16],
-                    ['Hospital', 'Av. Bicentenario, Edif. Torre Fema, P/B Local 01.', '0412-8798885', 0.19],
-                    ['Guaritos', 'Av. Principal los Guaritos, Local Nro 12.', '0412-8798885', 0.22],
-                    ['Av. El Ejercito', 'Av. El Ejercito, Edif. San Jose, P/B Local 2, Urb. Alto de los Godos.', '0412-8798885', 0.25],
-                    ['Tipuro', 'Av. Los Proceres, P/B Local S/N y Local 4, Sector Tipuro, Parroquia Boqueron.', '0412-8798885', 0.28],
-                    ['La Cruz', 'Av. Principal de la Cruz, Local 1 y 2, frente a la plaza.', '0412-8798885', 0.31],
-                    ['Sabana Grande', 'Calle Principal, Local Nro A-1, Sector 3 de Sabana Grande.', '0412-8798885', 0.34],
-                    ['Santa Ines', 'Av. Raul Leoni, Local 7-3. Frente al Comando de GN. Sector Santa Ines.', '0412-8798885', 0.37],
-                    ['La Puente', 'Calle Principal, Casa Nro S/N. Sector La Puente.', '0422-0130448', 0.40],
-                    ['Azcue', 'Calle Azcue con Carrera 9, Edif. Morve, P/B Local B, Sector Centro.', '0422-0130448', 0.43],
-                    ['City', 'Av. Bolivar, Edif. Radio Maturin, P/B Local Nro 4, Sector Centro. (Antiguo City Lamp).', '0422-0130448', 0.46],
-                    ['Mercado', 'Calle 7, Local Nro 26, Sector Mercado Viejo.', '0422-0130448', 0.49, '7:30 AM — 5:30 PM'],
-                    ['Las Cocuizas', 'CR Nro 7, Local Nro 133, Urb. Las Cocuizas.', '0422-0130448', 0.52],
-                    ['Paramaconi', 'Calle Principal, Local S/N, Sector Paramaconi.', '0422-0129206', 0.55],
-                ];
+                $sucursales = farmapaz_sucursales_activas();
                 $wa_groups = [];
                 foreach ($sucursales as $s):
-                    $tel = $s[2];
+                    $tel = $s['telefono'] ?? '';
+                    $nombre = $s['nombre'] ?? '';
+                    if ($tel === '' || $nombre === '') continue;
                     $tel_clean = preg_replace('/[^0-9]/', '', $tel);
                     $tel_wa = '58' . substr($tel_clean, 1);
                     $wa_groups[$tel_wa]['tel'] = $tel;
-                    $wa_groups[$tel_wa]['branches'][] = $s[0];
+                    $wa_groups[$tel_wa]['branches'][] = $nombre;
                 endforeach;
-                foreach ($sucursales as $s):
-                    $nombre = $s[0];
-                    $dir = $s[1];
-                    $delay = $s[3];
-                    $hora = $s[4] ?? '24 horas';
+                $placeholder = get_template_directory_uri() . '/assets/images/producto.png';
+                foreach ($sucursales as $i => $s):
+                    $nombre = $s['nombre'] ?? '';
+                    $dir = $s['direccion'] ?? '';
+                    $hora = !empty($s['horario']) ? $s['horario'] : '24 horas';
+                    $info = $s['informacion'] ?? '';
+                    $img = !empty($s['imagen']) ? $s['imagen'] : $placeholder;
+                    $delay = min(0.1 + 0.04 * $i, 0.8);
                 ?>
                 <div class="rounded-2xl transition-all duration-500 hover:-translate-y-1 hover:shadow-xl overflow-hidden" style="background: rgba(255,255,255,0.85); backdrop-filter: blur(20px); border: 1px solid rgba(9,20,110,0.06); box-shadow: 0 4px 24px rgba(9,20,110,0.06); animation: slideUp 0.6s ease-out <?= $delay; ?>s both;">
-                    <div class="w-full" style="height: 180px; overflow: hidden; background: #e2e8f0;">
-                        <img src="<?= get_template_directory_uri(); ?>/assets/images/producto.png"
-                             alt="Farmapaz <?= $nombre; ?>"
-                             class="w-full h-full" style="object-fit: cover;"
-                             loading="lazy">
+                    <div class="w-full" style="aspect-ratio: 3/4; overflow: hidden; background: #e2e8f0;">
+                        <img src="<?= esc_url($img); ?>"
+                             alt="Farmapaz <?= esc_attr($nombre); ?>"
+                             class="w-full h-full"
+                             style="object-fit: cover; object-position: center;"
+                             loading="lazy"
+                             onerror="this.onerror=null; this.src='<?= esc_url($placeholder); ?>';">
                     </div>
                     <div class="p-5">
                         <div class="flex items-center justify-between mb-2.5">
-                            <h3 class="text-base font-bold leading-tight" style="color: #09146E;">Farmapaz <?= $nombre; ?></h3>
+                            <h3 class="text-base font-bold leading-tight" style="color: #09146E;">Farmapaz <?= esc_html($nombre); ?></h3>
                             <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap" style="background: #5A7D43; color: #fff;">
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                <?= $hora; ?>
+                                <?= esc_html($hora); ?>
                             </span>
                         </div>
-                        <p class="text-gray-400 text-xs leading-relaxed"><?= $dir; ?></p>
+                        <p class="text-gray-400 text-xs leading-relaxed"><?= esc_html($dir); ?></p>
+                        <?php if ($info): ?>
+                        <p class="text-gray-500 text-xs leading-relaxed mt-2 flex items-start gap-1.5">
+                            <svg class="w-3.5 h-3.5 mt-0.5 shrink-0" style="color: #09146E;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <?= esc_html($info); ?>
+                        </p>
+                        <?php endif; ?>
                     </div>
                     <div class="w-full" style="height: 130px; overflow: hidden;">
                         <iframe scrolling="no" marginheight="0" marginwidth="0"

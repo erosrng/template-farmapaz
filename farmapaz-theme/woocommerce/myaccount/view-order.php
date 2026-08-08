@@ -66,7 +66,7 @@ defined('ABSPATH') || exit;
                                 <?php if ($product): ?>
                                 <div class="farmapaz-view-order-product-img">
                                     <?php $img = farmapaz_product_img_fallback(get_the_post_thumbnail_url($product->get_id(), 'thumbnail')); ?>
-                                    <img src="<?= esc_url($img); ?>" alt="<?= esc_attr($item->get_name()); ?>" width="48" height="48">
+                                    <?php farmapaz_picture($img, $item->get_name(), 'w-12 h-12'); ?>
                                 </div>
                                 <?php endif; ?>
                                 <div class="farmapaz-view-order-product-info">

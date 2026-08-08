@@ -14,11 +14,11 @@ module.exports = {
       },
       colors: {
         brand: {
-          green: '#5A7D43',
-          blue: '#09146E',
-          yellow: '#FEAB0D',
-          red: '#FF1A27',
-          orange: '#F97316',
+          green: 'rgb(var(--brand-green-rgb) / <alpha-value>)',
+          blue: 'rgb(var(--brand-blue-rgb) / <alpha-value>)',
+          yellow: 'rgb(var(--brand-yellow-rgb) / <alpha-value>)',
+          red: 'rgb(var(--brand-red-rgb) / <alpha-value>)',
+          orange: 'rgb(var(--brand-orange-rgb) / <alpha-value>)',
         },
       },
       borderRadius: {

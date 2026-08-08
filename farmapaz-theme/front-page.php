@@ -1,78 +1,59 @@
 <?php
 /**
  * Front Page - Homepage v3
+ * Carousels are configurable from Ajustes de Tienda > Carruseles de la portada
  */
 
 get_header(); ?>
 
 <?php get_template_part('template-parts/hero'); ?>
 
-<section class="section-offscreen">
-<?php farmapaz_product_carousel([
-    'title'       => 'Ahorra con Farmapaz',
-    'subtitle'    => 'Ofertas exclusivas y descuentos especiales',
-    'category'    => 'ahorra-con-farmapaz',
-    'limit'       => 20,
-    'orderby'     => 'rand',
-    'force_sale'  => true,
-    'layout'      => 'carousel',
-    'bg_tone'     => 'brand-blue',
-]); ?>
-</section>
+<?php $farmapaz_home_carousels = farmapaz_home_carousels(); ?>
 
-<section class="section-offscreen">
-<?php farmapaz_product_carousel([
-    'title'       => 'Belleza y Cuidado Personal',
-    'subtitle'    => 'Dermocosmetica, maquillaje y cuidado diario',
-    'category'    => 'cuidado-personal-y-dermocosmeticos',
-    'limit'       => 12,
-    'orderby'     => 'rand',
-    'layout'      => 'grid',
-    'bg_tone'     => 'lighter',
-]); ?>
-</section>
-
-<?php get_template_part('template-parts/categories-carousel'); ?>
-
-<section class="section-offscreen">
-<?php farmapaz_product_carousel([
-    'title'       => 'Alimentos y Bebidas',
-    'subtitle'    => 'Snacks, nutricion y bebidas para toda la familia',
-    'category'    => 'alimentos-y-bebidas',
-    'limit'       => 15,
-    'orderby'     => 'date',
-    'layout'      => 'carousel',
-    'bg_tone'     => 'brand-blue',
-]); ?>
-</section>
-
-<section class="section-offscreen">
-<?php farmapaz_product_carousel([
-    'title'       => 'Salud y Bienestar',
-    'subtitle'    => 'Vitaminas, suplementos y productos para tu salud',
-    'category'    => 'salud-y-bienestar',
-    'limit'       => 20,
-    'orderby'     => 'rand',
-    'layout'      => 'grid',
-    'bg_tone'     => 'brand-blue',
-]); ?>
-</section>
-
-
+<?php if (!empty($farmapaz_home_carousels)):
+    $farmapaz_carousel_index = 0;
+    $farmapaz_total_carousels = count($farmapaz_home_carousels);
+    foreach ($farmapaz_home_carousels as $farmapaz_carousel):
+        $farmapaz_carousel_index++;
+        $farmapaz_carousel = wp_parse_args($farmapaz_carousel, [
+            'title'    => 'Productos',
+            'subtitle' => '',
+            'category' => '',
+            'limit'    => 12,
+            'orderby'  => 'date',
+            'order'    => 'DESC',
+            'force_sale' => false,
+            'layout'   => 'carousel',
+            'bg_tone'  => 'light',
+        ]);
+        ?>
+        <section class="section-offscreen">
+        <?php farmapaz_product_carousel([
+            'title'      => $farmapaz_carousel['title'],
+            'subtitle'   => $farmapaz_carousel['subtitle'],
+            'category'   => $farmapaz_carousel['category'],
+            'limit'      => max(1, (int) $farmapaz_carousel['limit']),
+            'orderby'    => $farmapaz_carousel['orderby'],
+            'order'      => $farmapaz_carousel['order'],
+            'force_sale' => !empty($farmapaz_carousel['force_sale']),
+            'layout'     => $farmapaz_carousel['layout'],
+            'bg_tone'    => $farmapaz_carousel['bg_tone'],
+        ]); ?>
+        </section>
+        <?php
+        if ($farmapaz_carousel_index === 1 && $farmapaz_total_carousels === 1) {
+            get_template_part('template-parts/categories-carousel');
+        }
+        if ($farmapaz_carousel_index === 2) {
+            get_template_part('template-parts/categories-carousel');
+        }
+    endforeach;
+else:
+    get_template_part('template-parts/categories-carousel');
+endif;
+?>
 
 <?php get_template_part('template-parts/trust-section'); ?>
-
-<section class="section-offscreen">
-<?php farmapaz_product_carousel([
-    'title'       => 'Productos para el hogar',
-    'subtitle'    => 'Productos destacados para el hogar mascotas y otros',
-    'category'    => 'hogar-mascotas-y-otros',
-    'limit'       => 15,
-    'orderby'     => 'date',
-    'order'       => 'DESC',
-    'bg_tone'     => 'white',
-]); ?>
-</section>
 
 <?php get_template_part('template-parts/promo-banners'); ?>
 

@@ -12,7 +12,7 @@
                 Por qué elegirnos
             </span>
             <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">Tu salud, <span style="color: #FEAB0D;">nuestra prioridad</span></h2>
-            <p class="text-sm sm:text-base mt-3 max-w-xl mx-auto" style="color: rgba(255,255,255,0.55);">Más de 18,000 productos originales con delivery rápido y atención personalizada</p>
+            <p class="text-sm sm:text-base mt-3 max-w-xl mx-auto" style="color: rgba(255,255,255,0.55);">Más de <?= number_format(farmapaz_product_count()); ?> productos originales con delivery rápido y atención personalizada</p>
         </div>
 
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6 stagger-children">
@@ -21,7 +21,7 @@
                 ['icon' => 'shield', 'title' => 'Productos Originales', 'desc' => 'Garantizamos la autenticidad de todos nuestros productos'],
                 ['icon' => 'truck', 'title' => 'Delivery Rápido', 'desc' => 'Recibe tus productos en la puerta de tu casa'],
                 ['icon' => 'phone', 'title' => 'Atención Personalizada', 'desc' => 'Nuestro equipo está listo para ayudarte'],
-                ['icon' => 'star', 'title' => '+18,000 Productos', 'desc' => 'El catálogo más completo para tu salud'],
+                ['icon' => 'star', 'title' => '+' . number_format(farmapaz_product_count()) . ' Productos', 'desc' => 'El catálogo más completo para tu salud'],
             ];
 
             foreach ($trust_items as $item):

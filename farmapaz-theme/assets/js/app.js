@@ -33,10 +33,23 @@
         const dots = heroSlider.querySelectorAll('.hero-dot');
         const prevBtn = heroSlider.querySelector('.hero-prev');
         const nextBtn = heroSlider.querySelector('.hero-next');
+        const isAdaptive = heroSlider.classList.contains('hero-adaptive');
         let currentSlide = 0;
         let slideInterval;
 
-        if (slides.length < 2) return;
+        function fitAdaptiveHeight() {
+            if (!isAdaptive) return;
+            const active = slides[currentSlide];
+            const img = active ? active.querySelector('img') : null;
+            if (!img || !img.naturalWidth || !img.naturalHeight) return;
+            const ratio = img.naturalWidth / img.naturalHeight;
+            heroSlider.style.height = Math.round(heroSlider.clientWidth / ratio) + 'px';
+        }
+
+        if (slides.length < 2) {
+            if (isAdaptive) fitAdaptiveHeight();
+            return;
+        }
 
         function showSlide(index) {
             slides.forEach(s => s.classList.remove('active'));
@@ -47,6 +60,7 @@
             if (dots[currentSlide]) {
                 dots[currentSlide].classList.add('active');
             }
+            fitAdaptiveHeight();
         }
 
         function nextSlide() { showSlide(currentSlide + 1); }
@@ -74,6 +88,20 @@
         heroSlider.addEventListener('mouseenter', stopAutoplay);
         heroSlider.addEventListener('mouseleave', startAutoplay);
 
+        if (isAdaptive) {
+            slides.forEach(slide => {
+                const img = slide.querySelector('img');
+                if (img) {
+                    if (img.complete) {
+                        fitAdaptiveHeight();
+                    } else {
+                        img.addEventListener('load', fitAdaptiveHeight);
+                    }
+                }
+            });
+            window.addEventListener('resize', fitAdaptiveHeight);
+        }
+
         // Touch swipe
         let touchStartX = 0;
         heroSlider.addEventListener('touchstart', e => {
@@ -100,6 +128,20 @@
             const prevBtn = document.querySelector(`.carousel-arrow-prev[data-carousel="${sectionId}"]`);
             const nextBtn = document.querySelector(`.carousel-arrow-next[data-carousel="${sectionId}"]`);
 
+            // ==== Infinite loop: duplicate content once ====
+            const originals = Array.from(track.children).filter(el => !el.classList.contains('carousel-clone'));
+            let halfWidth = 0;
+            if (originals.length > 0) {
+                originals.forEach(item => {
+                    const clone = item.cloneNode(true);
+                    clone.classList.add('carousel-clone', 'visible');
+                    clone.classList.remove('stagger-item');
+                    clone.removeAttribute('data-tilt');
+                    track.appendChild(clone);
+                });
+                halfWidth = track.scrollWidth / 2;
+            }
+
             const getScrollStep = () => {
                 const first = track.querySelector('.flex-none, .snap-start');
                 if (!first) return 300;
@@ -109,11 +151,19 @@
 
             const scrollToStep = (direction) => {
                 const step = getScrollStep();
-                const maxScroll = track.scrollWidth - track.clientWidth;
                 let target = track.scrollLeft + (direction * step);
-                if (target < 0) target = maxScroll;
-                else if (target > maxScroll) target = 0;
-                track.scrollTo({ left: target, behavior: 'smooth' });
+                if (halfWidth > 0) {
+                    let wrapped = false;
+                    if (target < 0) { target += halfWidth; wrapped = true; }
+                    else if (target >= halfWidth) { target -= halfWidth; wrapped = true; }
+                    if (wrapped) track.scrollLeft = target;
+                    else track.scrollTo({ left: target, behavior: 'smooth' });
+                } else {
+                    const maxScroll = track.scrollWidth - track.clientWidth;
+                    if (target < 0) target = maxScroll;
+                    else if (target > maxScroll) target = 0;
+                    track.scrollTo({ left: target, behavior: 'smooth' });
+                }
                 resetAutoScroll();
             };
 
@@ -157,6 +207,9 @@
                 isDragging = false;
                 track.style.cursor = '';
                 track.style.userSelect = '';
+                if (halfWidth > 0) {
+                    track.scrollLeft = ((track.scrollLeft % halfWidth) + halfWidth) % halfWidth;
+                }
             });
 
             track.addEventListener('mouseleave', () => {
@@ -166,7 +219,7 @@
                 track.style.userSelect = '';
             });
 
-            // Auto-scroll
+            // Auto-scroll — seamless infinite
             let autoScrollTimer;
             function startAutoScroll() {
                 stopAutoScroll();
@@ -174,10 +227,19 @@
                 if (!hasOverflow) return;
                 autoScrollTimer = setInterval(() => {
                     const step = getScrollStep();
-                    const maxScroll = track.scrollWidth - track.clientWidth;
                     let nextPos = track.scrollLeft + step;
-                    if (nextPos > maxScroll) nextPos = 0;
-                    track.scrollTo({ left: nextPos, behavior: 'smooth' });
+                    if (halfWidth > 0) {
+                        if (nextPos >= halfWidth) {
+                            nextPos -= halfWidth;
+                            track.scrollLeft = nextPos;
+                        } else {
+                            track.scrollTo({ left: nextPos, behavior: 'smooth' });
+                        }
+                    } else {
+                        const maxScroll = track.scrollWidth - track.clientWidth;
+                        if (nextPos > maxScroll) nextPos = 0;
+                        track.scrollTo({ left: nextPos, behavior: 'smooth' });
+                    }
                 }, 4000);
             }
             function stopAutoScroll() {
@@ -277,6 +339,17 @@
         }, { passive: true });
     }
 
+    // ====== NAV PILLS BAR: block vertical wheel, keep horizontal scroll ======
+    // Prevents the page from scrolling down (and pills drifting out of view)
+    // when the wheel/trackpad is used over the category pills.
+    const navPillsBar = document.querySelector('.nav-pills-bar');
+    if (navPillsBar) {
+        navPillsBar.addEventListener('wheel', (e) => {
+            const isVertical = Math.abs(e.deltaY) > Math.abs(e.deltaX);
+            if (isVertical) e.preventDefault();
+        }, { passive: false });
+    }
+
     // ====== AJAX ADD TO CART ======
     function bindAddToCart(container) {
         const scope = container || document;
@@ -309,6 +382,9 @@
                     if (data.fragments) {
                         updateBadgeFromFragments(data.fragments);
                         updateCartMapFromFragments(data.fragments);
+                        if (typeof window.farmapazUpdateMiniCart === 'function') {
+                            window.farmapazUpdateMiniCart(data.fragments);
+                        }
                     }
 
                     cartBounce();
@@ -446,6 +522,9 @@
             if (data.fragments) {
                 updateBadgeFromFragments(data.fragments);
                 updateCartMapFromFragments(data.fragments);
+                if (typeof window.farmapazUpdateMiniCart === 'function') {
+                    window.farmapazUpdateMiniCart(data.fragments);
+                }
             }
             var cm = getCartMap();
             if (cm[productId]) valueEl.textContent = cm[productId].qty;
@@ -476,6 +555,9 @@
             if (data.fragments) {
                 updateBadgeFromFragments(data.fragments);
                 updateCartMapFromFragments(data.fragments);
+                if (typeof window.farmapazUpdateMiniCart === 'function') {
+                    window.farmapazUpdateMiniCart(data.fragments);
+                }
             }
             var cm = getCartMap();
             if (cm[productId]) valueEl.textContent = cm[productId].qty;

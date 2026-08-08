@@ -23,7 +23,7 @@
 .shop-hero {
     position: relative;
     overflow: hidden;
-    background: linear-gradient(135deg, #09146E 0%, #0a1a7a 30%, #0c2090 60%, #09146E 100%);
+    background: linear-gradient(135deg, var(--brand-blue) 0%, color-mix(in srgb, var(--brand-blue) 88%, #fff) 30%, color-mix(in srgb, var(--brand-blue) 84%, #fff) 60%, var(--brand-blue) 100%);
     padding: 3rem 0;
     min-height: 220px;
     display: flex;
@@ -33,9 +33,9 @@
     position: absolute;
     inset: 0;
     background-image:
-        radial-gradient(circle at 20% 50%, rgba(254,171,13,0.08) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(90,125,67,0.06) 0%, transparent 50%),
-        radial-gradient(circle at 50% 80%, rgba(9,20,110,0.1) 0%, transparent 50%);
+        radial-gradient(circle at 20% 50%, rgb(var(--brand-yellow-rgb) / 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgb(var(--brand-green-rgb) / 0.06) 0%, transparent 50%),
+        radial-gradient(circle at 50% 80%, rgb(var(--brand-blue-rgb) / 0.1) 0%, transparent 50%);
 }
 .shop-hero-orb {
     position: absolute;
@@ -46,13 +46,13 @@
 }
 .shop-hero-orb-1 {
     width: 300px; height: 300px;
-    background: rgba(254,171,13,0.15);
+    background: rgb(var(--brand-yellow-rgb) / 0.15);
     top: -80px; right: 10%;
     animation: orbFloat 8s ease-in-out infinite;
 }
 .shop-hero-orb-2 {
     width: 200px; height: 200px;
-    background: rgba(90,125,67,0.1);
+    background: rgb(var(--brand-green-rgb) / 0.1);
     bottom: -40px; left: 15%;
     animation: orbFloat 6s ease-in-out infinite reverse;
 }
@@ -80,8 +80,8 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    background: rgba(254,171,13,0.15);
-    color: #FEAB0D;
+    background: rgb(var(--brand-yellow-rgb) / 0.15);
+    color: var(--brand-yellow);
     margin-bottom: 0.75rem;
 }
 .shop-hero-title {
@@ -125,6 +125,51 @@
     font-weight: 700;
     color: #fff;
 }
+.shop-hero-search {
+    position: relative;
+    max-width: 480px;
+    margin-top: 1.25rem;
+}
+.shop-hero-search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255,255,255,0.45);
+    pointer-events: none;
+    z-index: 1;
+}
+.shop-hero-search .shop-hero-search-input {
+    width: 100%;
+    padding: 0.85rem 3rem 0.85rem 2.75rem;
+    border-radius: 1rem;
+    font-size: 0.95rem;
+    color: #fff;
+    background: rgba(255,255,255,0.1);
+    border: 1.5px solid rgba(255,255,255,0.18);
+    backdrop-filter: blur(8px);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    box-sizing: border-box;
+}
+.shop-hero-search .shop-hero-search-input::placeholder {
+    color: rgba(255,255,255,0.45);
+}
+.shop-hero-search .shop-hero-search-input:focus {
+    outline: none;
+    border-color: var(--brand-yellow);
+    background: rgba(255,255,255,0.14);
+    box-shadow: 0 0 0 3px rgb(var(--brand-yellow-rgb) / 0.2);
+}
+.shop-hero-search .shop-hero-search-clear {
+    right: 0.75rem;
+    color: rgba(255,255,255,0.6);
+}
+.shop-hero-search .shop-hero-search-clear:hover {
+    color: #fff;
+}
+@media (min-width: 640px) {
+    .shop-hero-search { max-width: 560px; }
+}
 
 /* ---------- Brand Search ---------- */
 .filter-brand-search-wrap {
@@ -142,18 +187,18 @@
 .filter-brand-search {
     width: 100%;
     padding: 0.4rem 0.5rem 0.4rem 1.6rem;
-    border: 1.5px solid rgba(9,20,110,0.1);
+    border: 1.5px solid rgb(var(--brand-blue-rgb) / 0.1);
     border-radius: 0.5rem;
     font-size: 0.75rem;
     background: #fff;
-    color: #09146E;
+    color: var(--brand-blue);
     outline: none;
     box-sizing: border-box;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .filter-brand-search:focus {
-    border-color: #09146E;
-    box-shadow: 0 0 0 3px rgba(9,20,110,0.06);
+    border-color: var(--brand-blue);
+    box-shadow: 0 0 0 3px rgb(var(--brand-blue-rgb) / 0.06);
 }
 .filter-brand-list {
     max-height: 260px;
@@ -166,7 +211,7 @@
     background: transparent;
 }
 .filter-brand-list::-webkit-scrollbar-thumb {
-    background: rgba(9,20,110,0.15);
+    background: rgb(var(--brand-blue-rgb) / 0.15);
     border-radius: 4px;
 }
 
@@ -177,7 +222,7 @@
     gap: 1rem;
     padding: 1rem 0;
     margin-bottom: 1rem;
-    border-bottom: 1px solid rgba(9,20,110,0.06);
+    border-bottom: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
 }
 .shop-filter-toggle {
     display: inline-flex;
@@ -187,19 +232,19 @@
     border-radius: 0.75rem;
     font-size: 0.85rem;
     font-weight: 600;
-    border: 1.5px solid rgba(9,20,110,0.1);
+    border: 1.5px solid rgb(var(--brand-blue-rgb) / 0.1);
     background: #fff;
-    color: #09146E;
+    color: var(--brand-blue);
     cursor: pointer;
     transition: all 0.2s;
 }
 .shop-filter-toggle:hover {
-    border-color: #09146E;
-    background: rgba(9,20,110,0.03);
+    border-color: var(--brand-blue);
+    background: rgb(var(--brand-blue-rgb) / 0.03);
 }
 .shop-count {
     font-size: 0.85rem;
-    color: rgba(9,20,110,0.4);
+    color: rgb(var(--brand-blue-rgb) / 0.4);
     flex: 1;
 }
 @media (min-width: 1024px) {
@@ -212,7 +257,7 @@
 }
 .shop-sorting-label {
     font-size: 0.8rem;
-    color: rgba(9,20,110,0.4);
+    color: rgb(var(--brand-blue-rgb) / 0.4);
     display: none;
 }
 @media (min-width: 640px) {
@@ -220,11 +265,11 @@
 }
 .shop-sorting-select {
     padding: 0.4rem 2rem 0.4rem 0.75rem;
-    border: 1.5px solid rgba(9,20,110,0.1);
+    border: 1.5px solid rgb(var(--brand-blue-rgb) / 0.1);
     border-radius: 0.75rem;
     font-size: 0.8rem;
     font-weight: 500;
-    color: #09146E;
+    color: var(--brand-blue);
     background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%2309146E' viewBox='0 0 24 24'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E") no-repeat right 0.5rem center;
     appearance: none;
     cursor: pointer;
@@ -232,7 +277,7 @@
 }
 .shop-sorting-select:focus {
     outline: none;
-    border-color: #09146E;
+    border-color: var(--brand-blue);
 }
 
 /* ---------- Active Filters ---------- */
@@ -247,7 +292,7 @@
 .active-filters-label {
     font-size: 0.8rem;
     font-weight: 600;
-    color: rgba(9,20,110,0.5);
+    color: rgb(var(--brand-blue-rgb) / 0.5);
 }
 .active-filters-list {
     display: flex;
@@ -263,16 +308,16 @@
     border-radius: 9999px;
     font-size: 0.75rem;
     font-weight: 500;
-    background: rgba(9,20,110,0.06);
-    color: #09146E;
+    background: rgb(var(--brand-blue-rgb) / 0.06);
+    color: var(--brand-blue);
     border: none;
     cursor: pointer;
     transition: all 0.2s;
     line-height: 1.4;
 }
 .active-filter-tag:hover {
-    background: rgba(254,171,13,0.12);
-    color: #09146E;
+    background: rgb(var(--brand-yellow-rgb) / 0.12);
+    color: var(--brand-blue);
 }
 .active-filter-tag svg {
     width: 12px;
@@ -285,7 +330,7 @@
 .active-filter-clear-all {
     font-size: 0.75rem;
     font-weight: 600;
-    color: #FF1A27;
+    color: var(--brand-red);
     text-decoration: none;
     padding: 0.25rem 0.5rem;
     transition: opacity 0.2s;
@@ -311,8 +356,8 @@
     background: #fff;
     border-radius: 1rem;
     padding: 1.5rem;
-    border: 1px solid rgba(9,20,110,0.06);
-    box-shadow: 0 4px 24px rgba(9,20,110,0.04);
+    border: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
+    box-shadow: 0 4px 24px rgb(var(--brand-blue-rgb) / 0.04);
 }
 .shop-sidebar-header {
     display: flex;
@@ -320,25 +365,25 @@
     justify-content: space-between;
     margin-bottom: 1.25rem;
     padding-bottom: 1rem;
-    border-bottom: 1px solid rgba(9,20,110,0.06);
+    border-bottom: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
 }
 .shop-sidebar-title {
     font-size: 1.1rem;
     font-weight: 700;
-    color: #09146E;
+    color: var(--brand-blue);
     margin: 0;
 }
 .shop-sidebar-close {
     display: none;
     background: none;
     border: none;
-    color: rgba(9,20,110,0.3);
+    color: rgb(var(--brand-blue-rgb) / 0.3);
     cursor: pointer;
     padding: 0.25rem;
     border-radius: 0.5rem;
     transition: color 0.2s;
 }
-.shop-sidebar-close:hover { color: #09146E; }
+.shop-sidebar-close:hover { color: var(--brand-blue); }
 
 /* ---------- Filter Blocks ---------- */
 .filter-block {
@@ -347,7 +392,7 @@
 .filter-title {
     font-size: 0.85rem;
     font-weight: 700;
-    color: #09146E;
+    color: var(--brand-blue);
     margin: 0 0 0.75rem 0;
     display: flex;
     align-items: center;
@@ -361,7 +406,7 @@
 }
 .filter-chevron {
     transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    color: rgba(9,20,110,0.3);
+    color: rgb(var(--brand-blue-rgb) / 0.3);
 }
 .filter-toggle.open .filter-chevron {
     transform: rotate(180deg);
@@ -384,7 +429,7 @@
     background: transparent;
 }
 .filter-list::-webkit-scrollbar-thumb {
-    background: rgba(9,20,110,0.15);
+    background: rgb(var(--brand-blue-rgb) / 0.15);
     border-radius: 4px;
 }
 .filter-search-wrap {
@@ -395,23 +440,23 @@
     left: 0.75rem;
     top: 50%;
     transform: translateY(-50%);
-    color: rgba(9,20,110,0.25);
+    color: rgb(var(--brand-blue-rgb) / 0.25);
     pointer-events: none;
 }
 .filter-input {
     width: 100%;
     padding: 0.5rem 0.75rem;
-    border: 1.5px solid rgba(9,20,110,0.08);
+    border: 1.5px solid rgb(var(--brand-blue-rgb) / 0.08);
     border-radius: 0.75rem;
     font-size: 0.8rem;
-    color: #09146E;
-    background: rgba(9,20,110,0.02);
+    color: var(--brand-blue);
+    background: rgb(var(--brand-blue-rgb) / 0.02);
     transition: border-color 0.2s;
     box-sizing: border-box;
 }
 .filter-input:focus {
     outline: none;
-    border-color: #09146E;
+    border-color: var(--brand-blue);
 }
 .filter-search {
     padding-left: 2.25rem;
@@ -424,13 +469,13 @@
     transform: translateY(-50%);
     background: none;
     border: none;
-    color: rgba(9,20,110,0.25);
+    color: rgb(var(--brand-blue-rgb) / 0.25);
     cursor: pointer;
     padding: 0.25rem;
     border-radius: 9999px;
     transition: color 0.2s;
 }
-.filter-clear-btn:hover { color: #09146E; }
+.filter-clear-btn:hover { color: var(--brand-blue); }
 .filter-option {
     display: flex;
     align-items: center;
@@ -444,7 +489,7 @@
     appearance: none;
     width: 16px;
     height: 16px;
-    border: 1.5px solid rgba(9,20,110,0.15);
+    border: 1.5px solid rgb(var(--brand-blue-rgb) / 0.15);
     border-radius: 4px;
     flex-shrink: 0;
     cursor: pointer;
@@ -452,8 +497,8 @@
     position: relative;
 }
 .filter-check:checked {
-    background: #09146E;
-    border-color: #09146E;
+    background: var(--brand-blue);
+    border-color: var(--brand-blue);
 }
 .filter-check:checked::after {
     content: '';
@@ -476,18 +521,18 @@
 }
 .filter-count {
     font-size: 0.7rem;
-    color: rgba(9,20,110,0.3);
+    color: rgb(var(--brand-blue-rgb) / 0.3);
     font-weight: 600;
     flex-shrink: 0;
 }
 /* [†] Categorías jerárquicas — hijas indentadas con línea vertical */
 .filter-children {
     padding-left: 1.5rem;
-    border-left: 2px solid rgba(9,20,110,0.06);
+    border-left: 2px solid rgb(var(--brand-blue-rgb) / 0.06);
     margin: 0 0 0.25rem 0;
 }
 .filter-option-parent {
-    border-bottom: 1px solid rgba(9,20,110,0.04);
+    border-bottom: 1px solid rgb(var(--brand-blue-rgb) / 0.04);
     margin-top: 0.125rem;
 }
 .filter-option-child {
@@ -530,8 +575,8 @@
 .nav-cat-sub-inner {
     background: #fff;
     border-radius: 0.75rem;
-    box-shadow: 0 8px 32px rgba(9,20,110,0.12);
-    border: 1px solid rgba(9,20,110,0.06);
+    box-shadow: 0 8px 32px rgb(var(--brand-blue-rgb) / 0.12);
+    border: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
     padding: 0.5rem;
     min-width: 200px;
 }
@@ -548,8 +593,8 @@
     transition: all 0.15s ease;
 }
 .nav-cat-sub-link:hover {
-    background: rgba(90,125,67,0.06);
-    color: #5A7D43;
+    background: rgb(var(--brand-green-rgb) / 0.06);
+    color: var(--brand-green);
 }
 
 /* ---------- Navbar Pill Submenu ---------- */
@@ -568,8 +613,8 @@
 .nav-pill-sub-inner {
     background: #fff;
     border-radius: 0.75rem;
-    box-shadow: 0 8px 32px rgba(9,20,110,0.12);
-    border: 1px solid rgba(9,20,110,0.06);
+    box-shadow: 0 8px 32px rgb(var(--brand-blue-rgb) / 0.12);
+    border: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
     padding: 0.5rem;
     min-width: 180px;
 }
@@ -597,7 +642,7 @@
     margin: 0;
 }
 .filter-price-sep {
-    color: rgba(9,20,110,0.2);
+    color: rgb(var(--brand-blue-rgb) / 0.2);
     font-size: 0.85rem;
     flex-shrink: 0;
 }
@@ -632,8 +677,8 @@
     -webkit-backdrop-filter: blur(12px);
     border-radius: 1rem;
     overflow: hidden;
-    border: 1px solid rgba(9,20,110,0.08);
-    box-shadow: 0 4px 20px rgba(9,20,110,0.06);
+    border: 1px solid rgb(var(--brand-blue-rgb) / 0.08);
+    box-shadow: 0 4px 20px rgb(var(--brand-blue-rgb) / 0.06);
     transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
                 box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1),
                 background 0.4s ease,
@@ -648,7 +693,7 @@
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    background: radial-gradient(circle at 50% 30%, rgba(254,171,13,0.06) 0%, transparent 60%);
+    background: radial-gradient(circle at 50% 30%, rgb(var(--brand-yellow-rgb) / 0.06) 0%, transparent 60%);
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.5s ease;
@@ -669,8 +714,8 @@
 }
 .sp-card:hover .sp-card-inner {
     background: rgba(255,255,255,0.92);
-    border-color: rgba(9,20,110,0.18);
-    box-shadow: 0 12px 40px rgba(9,20,110,0.12), 0 0 0 1px rgba(90,125,67,0.15);
+    border-color: rgb(var(--brand-blue-rgb) / 0.18);
+    box-shadow: 0 12px 40px rgb(var(--brand-blue-rgb) / 0.12), 0 0 0 1px rgb(var(--brand-green-rgb) / 0.15);
     transform: translateY(-6px);
 }
 .sp-card:hover .sp-card-inner::before {
@@ -687,7 +732,7 @@
     aspect-ratio: 1;
     background: #fff;
     overflow: hidden;
-    border-bottom: 1px solid rgba(9,20,110,0.04);
+    border-bottom: 1px solid rgb(var(--brand-blue-rgb) / 0.04);
 }
 .sp-card-img {
     width: 100%;
@@ -718,23 +763,29 @@
 }
 .sp-card-badge-sale {
     left: 0.5rem;
-    background: linear-gradient(135deg, #FF1A27, #dc2626);
+    background: linear-gradient(135deg, var(--brand-red), color-mix(in srgb, var(--brand-red) 85%, #000));
     color: #fff;
-    box-shadow: 0 2px 8px rgba(255,26,39,0.3);
+    box-shadow: 0 2px 8px rgb(var(--brand-red-rgb) / 0.3);
 }
 .sp-card-badge-low {
     right: 0.5rem;
-    background: #F97316;
+    background: var(--brand-orange);
     color: #fff;
-    box-shadow: 0 2px 8px rgba(249,115,22,0.3);
+    box-shadow: 0 2px 8px rgb(var(--brand-orange-rgb) / 0.3);
+}
+.sp-card-badge-low-sale {
+    top: 2.75rem;
+    left: 0.5rem;
+    right: auto;
+    max-width: calc(100% - 1rem);
 }
 .sp-card-badge-delivery {
     right: 0.5rem;
     bottom: 0.5rem;
     top: auto;
-    background: #5A7D43;
+    background: var(--brand-green);
     color: #fff;
-    box-shadow: 0 2px 8px rgba(90,125,67,0.3);
+    box-shadow: 0 2px 8px rgb(var(--brand-green-rgb) / 0.3);
 }
 
 /* Body — uniform fixed-height sections */
@@ -767,7 +818,7 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: rgba(9,20,110,0.35);
+    color: rgb(var(--brand-blue-rgb) / 0.35);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -776,7 +827,7 @@
 .sp-card-brand {
     font-size: 0.65rem;
     font-weight: 600;
-    color: #5A7D43;
+    color: var(--brand-green);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -803,7 +854,7 @@
     transition: color 0.2s;
 }
 .sp-card-title a:hover {
-    color: #09146E;
+    color: var(--brand-blue);
 }
 
 /* Price — fixed-height slot */
@@ -825,7 +876,7 @@
 .sp-card-price-sale {
     font-size: 1.05rem;
     font-weight: 800;
-    color: #FF1A27;
+    color: var(--brand-red);
     line-height: 1;
 }
 @media (min-width: 640px) {
@@ -840,7 +891,7 @@
 .sp-card-price-normal {
     font-size: 1.05rem;
     font-weight: 800;
-    color: #09146E;
+    color: var(--brand-blue);
     line-height: 1;
 }
 @media (min-width: 640px) {
@@ -871,12 +922,12 @@
     box-sizing: border-box;
 }
 .sp-card-btn-cart {
-    background: linear-gradient(135deg, #09146E, #0c1fa0);
+    background: linear-gradient(135deg, var(--brand-blue), color-mix(in srgb, var(--brand-blue) 82%, #fff));
     color: #fff;
-    box-shadow: 0 2px 12px rgba(9,20,110,0.15);
+    box-shadow: 0 2px 12px rgb(var(--brand-blue-rgb) / 0.15);
 }
 .sp-card-btn-cart:hover {
-    box-shadow: 0 4px 20px rgba(9,20,110,0.25);
+    box-shadow: 0 4px 20px rgb(var(--brand-blue-rgb) / 0.25);
     transform: translateY(-1px);
 }
 .sp-card-btn-whatsapp {
@@ -939,8 +990,8 @@
     height: 2.5rem;
     border-radius: 0.75rem;
     overflow: hidden;
-    background: linear-gradient(135deg, #F97316, #ea580c);
-    box-shadow: 0 2px 12px rgba(249,115,22,0.2);
+    background: linear-gradient(135deg, var(--brand-orange), color-mix(in srgb, var(--brand-orange) 85%, #000));
+    box-shadow: 0 2px 12px rgb(var(--brand-orange-rgb) / 0.2);
 }
 .cart-card-stepper-btn {
     flex: 0 0 auto;
@@ -998,8 +1049,8 @@
 .shop-spinner {
     width: 32px;
     height: 32px;
-    border: 3px solid rgba(9,20,110,0.1);
-    border-top-color: #09146E;
+    border: 3px solid rgb(var(--brand-blue-rgb) / 0.1);
+    border-top-color: var(--brand-blue);
     border-radius: 50%;
     animation: shopSpin 0.6s linear infinite;
 }
@@ -1025,32 +1076,32 @@
     border-radius: 0.75rem;
     font-size: 0.85rem;
     font-weight: 600;
-    color: rgba(9,20,110,0.5);
+    color: rgb(var(--brand-blue-rgb) / 0.5);
     background: #fff;
-    border: 1.5px solid rgba(9,20,110,0.06);
+    border: 1.5px solid rgb(var(--brand-blue-rgb) / 0.06);
     text-decoration: none;
     transition: all 0.2s;
 }
 .shop-pagination .page-numbers:hover {
-    border-color: rgba(9,20,110,0.15);
-    color: #09146E;
+    border-color: rgb(var(--brand-blue-rgb) / 0.15);
+    color: var(--brand-blue);
 }
 .shop-pagination .page-numbers.current {
-    background: #09146E;
+    background: var(--brand-blue);
     color: #fff;
-    border-color: #09146E;
+    border-color: var(--brand-blue);
 }
 .shop-pagination .page-numbers.prev,
 .shop-pagination .page-numbers.next {
     border: none;
     background: none;
-    color: #09146E;
+    color: var(--brand-blue);
     font-size: 1rem;
 }
 .shop-pagination .page-numbers.dots {
     border: none;
     background: none;
-    color: rgba(9,20,110,0.2);
+    color: rgb(var(--brand-blue-rgb) / 0.2);
     min-width: auto;
 }
 
@@ -1065,15 +1116,15 @@
     height: 64px;
     margin: 0 auto 1rem;
     border-radius: 9999px;
-    background: rgba(9,20,110,0.04);
+    background: rgb(var(--brand-blue-rgb) / 0.04);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: rgba(9,20,110,0.2);
+    color: rgb(var(--brand-blue-rgb) / 0.2);
 }
 .shop-empty-text {
     font-size: 1rem;
-    color: rgba(9,20,110,0.5);
+    color: rgb(var(--brand-blue-rgb) / 0.5);
     margin-bottom: 1rem;
 }
 .shop-empty-link {
@@ -1082,13 +1133,13 @@
     border-radius: 0.75rem;
     font-size: 0.85rem;
     font-weight: 600;
-    background: #09146E;
+    background: var(--brand-blue);
     color: #fff;
     text-decoration: none;
     transition: box-shadow 0.2s;
 }
 .shop-empty-link:hover {
-    box-shadow: 0 4px 16px rgba(9,20,110,0.2);
+    box-shadow: 0 4px 16px rgb(var(--brand-blue-rgb) / 0.2);
 }
 
 /* ---------- Infinite Scroll Loader ---------- */
@@ -1099,7 +1150,7 @@
     justify-content: center;
     gap: 0.75rem;
     padding: 2rem 0;
-    color: rgba(9,20,110,0.4);
+    color: rgb(var(--brand-blue-rgb) / 0.4);
     font-size: 0.85rem;
     font-weight: 500;
 }
@@ -1117,7 +1168,7 @@
         background: transparent;
     }
     .shop-sidebar-inner::-webkit-scrollbar-thumb {
-        background: rgba(9,20,110,0.1);
+        background: rgb(var(--brand-blue-rgb) / 0.1);
         border-radius: 4px;
     }
 }
@@ -1209,8 +1260,8 @@
     background: #fff;
     border-radius: 1rem;
     padding: 1.5rem;
-    border: 1px solid rgba(9,20,110,0.06);
-    box-shadow: 0 4px 24px rgba(9,20,110,0.04);
+    border: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
+    box-shadow: 0 4px 24px rgb(var(--brand-blue-rgb) / 0.04);
 }
 
 /* Header */
@@ -1220,17 +1271,17 @@
     gap: 0.75rem;
     margin-bottom: 1.25rem;
     padding-bottom: 1rem;
-    border-bottom: 1px solid rgba(9,20,110,0.06);
+    border-bottom: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
 }
 .cart-items-title {
     font-size: 1.15rem;
     font-weight: 700;
-    color: #09146E;
+    color: var(--brand-blue);
     margin: 0;
 }
 .cart-items-count {
     font-size: 0.8rem;
-    color: rgba(9,20,110,0.35);
+    color: rgb(var(--brand-blue-rgb) / 0.35);
     font-weight: 500;
 }
 
@@ -1239,7 +1290,7 @@
     display: flex;
     gap: 1rem;
     padding: 1rem 0;
-    border-bottom: 1px solid rgba(9,20,110,0.04);
+    border-bottom: 1px solid rgb(var(--brand-blue-rgb) / 0.04);
     position: relative;
     align-items: flex-start;
 }
@@ -1252,7 +1303,7 @@
     right: 0;
     background: none;
     border: none;
-    color: rgba(9,20,110,0.2);
+    color: rgb(var(--brand-blue-rgb) / 0.2);
     cursor: pointer;
     padding: 0.25rem;
     border-radius: 9999px;
@@ -1260,7 +1311,7 @@
     line-height: 1;
 }
 .cart-item-remove:hover {
-    color: #FF1A27;
+    color: var(--brand-red);
 }
 .cart-item-img-wrap {
     width: 80px;
@@ -1268,8 +1319,8 @@
     flex-shrink: 0;
     border-radius: 0.75rem;
     overflow: hidden;
-    background: rgba(9,20,110,0.02);
-    border: 1px solid rgba(9,20,110,0.06);
+    background: rgb(var(--brand-blue-rgb) / 0.02);
+    border: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
 }
 .cart-item-img {
     width: 100%;
@@ -1302,11 +1353,11 @@
     transition: color 0.2s;
 }
 .cart-item-name a:hover {
-    color: #09146E;
+    color: var(--brand-blue);
 }
 .cart-item-meta {
     font-size: 0.75rem;
-    color: rgba(9,20,110,0.4);
+    color: rgb(var(--brand-blue-rgb) / 0.4);
 }
 .cart-item-meta dl {
     margin: 0;
@@ -1324,7 +1375,7 @@
     display: none;
     font-size: 0.9rem;
     font-weight: 700;
-    color: #09146E;
+    color: var(--brand-blue);
     margin-top: 0.25rem;
 }
 
@@ -1332,7 +1383,7 @@
 .cart-qty-selector {
     display: flex;
     align-items: center;
-    border: 1.5px solid rgba(9,20,110,0.1);
+    border: 1.5px solid rgb(var(--brand-blue-rgb) / 0.1);
     border-radius: 0.75rem;
     overflow: hidden;
     background: #fff;
@@ -1345,7 +1396,7 @@
     justify-content: center;
     background: none;
     border: none;
-    color: rgba(9,20,110,0.4);
+    color: rgb(var(--brand-blue-rgb) / 0.4);
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
@@ -1354,19 +1405,19 @@
     padding: 0;
 }
 .cart-qty-btn:hover {
-    color: #09146E;
-    background: rgba(9,20,110,0.03);
+    color: var(--brand-blue);
+    background: rgb(var(--brand-blue-rgb) / 0.03);
 }
 .cart-qty-input {
     width: 36px;
     height: 32px;
     text-align: center;
     border: none;
-    border-left: 1.5px solid rgba(9,20,110,0.06);
-    border-right: 1.5px solid rgba(9,20,110,0.06);
+    border-left: 1.5px solid rgb(var(--brand-blue-rgb) / 0.06);
+    border-right: 1.5px solid rgb(var(--brand-blue-rgb) / 0.06);
     font-size: 0.85rem;
     font-weight: 600;
-    color: #09146E;
+    color: var(--brand-blue);
     background: none;
     -moz-appearance: textfield;
 }
@@ -1378,7 +1429,7 @@
 .cart-item-price {
     font-size: 0.95rem;
     font-weight: 700;
-    color: #09146E;
+    color: var(--brand-blue);
     white-space: nowrap;
     padding-top: 0.25rem;
 }
@@ -1390,7 +1441,7 @@
     gap: 0.75rem;
     padding-top: 1rem;
     margin-top: 0.5rem;
-    border-top: 1px solid rgba(9,20,110,0.06);
+    border-top: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
 }
 .cart-coupon {
     display: flex;
@@ -1400,16 +1451,16 @@
 .cart-coupon-input {
     flex: 1;
     padding: 0.5rem 0.75rem;
-    border: 1.5px solid rgba(9,20,110,0.08);
+    border: 1.5px solid rgb(var(--brand-blue-rgb) / 0.08);
     border-radius: 0.75rem;
     font-size: 0.8rem;
-    color: #09146E;
-    background: rgba(9,20,110,0.02);
+    color: var(--brand-blue);
+    background: rgb(var(--brand-blue-rgb) / 0.02);
     transition: border-color 0.2s;
 }
 .cart-coupon-input:focus {
     outline: none;
-    border-color: #09146E;
+    border-color: var(--brand-blue);
 }
 .cart-coupon-btn {
     padding: 0.5rem 1rem;
@@ -1417,14 +1468,14 @@
     font-size: 0.8rem;
     font-weight: 600;
     border: none;
-    background: rgba(9,20,110,0.06);
-    color: #09146E;
+    background: rgb(var(--brand-blue-rgb) / 0.06);
+    color: var(--brand-blue);
     cursor: pointer;
     transition: all 0.2s;
     white-space: nowrap;
 }
 .cart-coupon-btn:hover {
-    background: #09146E;
+    background: var(--brand-blue);
     color: #fff;
 }
 
@@ -1432,10 +1483,10 @@
 .cart-totals-title {
     font-size: 1.15rem;
     font-weight: 700;
-    color: #09146E;
+    color: var(--brand-blue);
     margin: 0 0 1rem;
     padding-bottom: 0.75rem;
-    border-bottom: 1px solid rgba(9,20,110,0.06);
+    border-bottom: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
 }
 .cart-totals-rows {
     margin-bottom: 1rem;
@@ -1446,21 +1497,21 @@
     align-items: center;
     padding: 0.5rem 0;
     font-size: 0.85rem;
-    color: rgba(9,20,110,0.6);
+    color: rgb(var(--brand-blue-rgb) / 0.6);
 }
 .cart-totals-row span:last-child {
     font-weight: 600;
-    color: #09146E;
+    color: var(--brand-blue);
 }
 .cart-totals-discount span:last-child {
-    color: #5A7D43;
+    color: var(--brand-green);
 }
 .cart-totals-shipping {
     text-align: right;
 }
 .cart-totals-shipping .shipping-calculator-button {
     font-size: 0.75rem;
-    color: rgba(9,20,110,0.4);
+    color: rgb(var(--brand-blue-rgb) / 0.4);
     text-decoration: underline;
 }
 .cart-totals-total {
@@ -1468,14 +1519,14 @@
     justify-content: space-between;
     align-items: center;
     padding: 1rem 0;
-    border-top: 2px solid rgba(9,20,110,0.08);
+    border-top: 2px solid rgb(var(--brand-blue-rgb) / 0.08);
     font-size: 1rem;
     font-weight: 700;
-    color: #09146E;
+    color: var(--brand-blue);
 }
 .cart-totals-total span:last-child {
     font-size: 1.2rem;
-    color: #09146E;
+    color: var(--brand-blue);
 }
 .cart-checkout-btn-wrap {
     margin-top: 0.5rem;
@@ -1490,16 +1541,16 @@
     border-radius: 0.875rem;
     font-size: 0.95rem;
     font-weight: 700;
-    background: linear-gradient(135deg, #09146E, #0c1fa0);
+    background: linear-gradient(135deg, var(--brand-blue), color-mix(in srgb, var(--brand-blue) 82%, #fff));
     color: #fff;
     text-decoration: none;
-    box-shadow: 0 4px 20px rgba(9,20,110,0.15);
+    box-shadow: 0 4px 20px rgb(var(--brand-blue-rgb) / 0.15);
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     border: none;
     cursor: pointer;
 }
 .cart-checkout-btn:hover {
-    box-shadow: 0 8px 28px rgba(9,20,110,0.25);
+    box-shadow: 0 8px 28px rgb(var(--brand-blue-rgb) / 0.25);
     transform: translateY(-1px);
     color: #fff;
 }
@@ -1508,12 +1559,12 @@
 .cart-cross-sells {
     margin-top: 2rem;
     padding-top: 1.5rem;
-    border-top: 1px solid rgba(9,20,110,0.06);
+    border-top: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
 }
 .cart-cross-title {
     font-size: 1rem;
     font-weight: 700;
-    color: #09146E;
+    color: var(--brand-blue);
     margin-bottom: 1rem;
 }
 .cart-cross-grid {
@@ -1527,20 +1578,20 @@
     gap: 0.375rem;
     padding: 0.75rem;
     border-radius: 0.75rem;
-    border: 1px solid rgba(9,20,110,0.06);
+    border: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
     text-decoration: none;
     transition: all 0.2s;
 }
 .cart-cross-item:hover {
-    border-color: rgba(9,20,110,0.12);
-    box-shadow: 0 2px 12px rgba(9,20,110,0.04);
+    border-color: rgb(var(--brand-blue-rgb) / 0.12);
+    box-shadow: 0 2px 12px rgb(var(--brand-blue-rgb) / 0.04);
 }
 .cart-cross-img {
     width: 100%;
     aspect-ratio: 1;
     object-fit: contain;
     border-radius: 0.5rem;
-    background: rgba(9,20,110,0.02);
+    background: rgb(var(--brand-blue-rgb) / 0.02);
 }
 .cart-cross-name {
     font-size: 0.75rem;
@@ -1555,7 +1606,7 @@
 .cart-cross-price {
     font-size: 0.8rem;
     font-weight: 700;
-    color: #09146E;
+    color: var(--brand-blue);
 }
 
 
@@ -1598,7 +1649,7 @@
 .cart-totals-shipping .shipping-calculator-form select {
     width: 100%;
     padding: 0.4rem 0.5rem;
-    border: 1.5px solid rgba(9,20,110,0.08);
+    border: 1.5px solid rgb(var(--brand-blue-rgb) / 0.08);
     border-radius: 0.5rem;
     font-size: 0.75rem;
     margin-bottom: 0.375rem;
@@ -1609,8 +1660,8 @@
     border-radius: 0.5rem;
     font-size: 0.75rem;
     font-weight: 600;
-    background: rgba(9,20,110,0.06);
-    color: #09146E;
+    background: rgb(var(--brand-blue-rgb) / 0.06);
+    color: var(--brand-blue);
     border: none;
     cursor: pointer;
 }
@@ -1629,7 +1680,7 @@
     appearance: none;
     width: 16px;
     height: 16px;
-    border: 1.5px solid rgba(9,20,110,0.15);
+    border: 1.5px solid rgb(var(--brand-blue-rgb) / 0.15);
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.2s;
@@ -1637,8 +1688,8 @@
     flex-shrink: 0;
 }
 .checkout-fields-col .form-row input[type="checkbox"]:checked {
-    background: #09146E;
-    border-color: #09146E;
+    background: var(--brand-blue);
+    border-color: var(--brand-blue);
 }
 .checkout-fields-col .form-row input[type="checkbox"]:checked::after {
     content: '';
@@ -1690,13 +1741,13 @@
     background: #fff;
     border-radius: 1rem;
     padding: 2rem;
-    border: 1px solid rgba(9,20,110,0.06);
-    box-shadow: 0 4px 24px rgba(9,20,110,0.04);
+    border: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
+    box-shadow: 0 4px 24px rgb(var(--brand-blue-rgb) / 0.04);
 }
 .woocommerce-order-received .woocommerce-order h2 {
     font-size: 1.15rem;
     font-weight: 700;
-    color: #09146E;
+    color: var(--brand-blue);
     margin: 1.5rem 0 0.75rem;
 }
 .woocommerce-order-received .woocommerce-order ul.order_details {
@@ -1709,12 +1760,12 @@
 }
 .woocommerce-order-received .woocommerce-order ul.order_details li {
     font-size: 0.8rem;
-    color: rgba(9,20,110,0.5);
+    color: rgb(var(--brand-blue-rgb) / 0.5);
 }
 .woocommerce-order-received .woocommerce-order ul.order_details li strong {
     display: block;
     font-size: 0.9rem;
-    color: #09146E;
+    color: var(--brand-blue);
     font-weight: 700;
 }
 .woocommerce-order-received .woocommerce-order table.shop_table {
@@ -1726,12 +1777,12 @@
 .woocommerce-order-received .woocommerce-order table.shop_table th,
 .woocommerce-order-received .woocommerce-order table.shop_table td {
     padding: 0.5rem 0.75rem;
-    border-bottom: 1px solid rgba(9,20,110,0.06);
+    border-bottom: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
     text-align: left;
 }
 .woocommerce-order-received .woocommerce-order table.shop_table th {
     font-weight: 600;
-    color: rgba(9,20,110,0.5);
+    color: rgb(var(--brand-blue-rgb) / 0.5);
     font-size: 0.75rem;
     text-transform: uppercase;
 }
@@ -1761,21 +1812,21 @@
     height: 80px;
     margin: 0 auto 1.25rem;
     border-radius: 9999px;
-    background: rgba(9,20,110,0.04);
+    background: rgb(var(--brand-blue-rgb) / 0.04);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: rgba(9,20,110,0.15);
+    color: rgb(var(--brand-blue-rgb) / 0.15);
 }
 .cart-empty-heading {
     font-size: 1.25rem;
     font-weight: 700;
-    color: #09146E;
+    color: var(--brand-blue);
     margin: 0 0 0.5rem;
 }
 .cart-empty-desc {
     font-size: 0.9rem;
-    color: rgba(9,20,110,0.4);
+    color: rgb(var(--brand-blue-rgb) / 0.4);
     margin: 0 0 1.5rem;
 }
 .cart-empty-btn {
@@ -1786,14 +1837,14 @@
     border-radius: 0.875rem;
     font-size: 0.9rem;
     font-weight: 700;
-    background: linear-gradient(135deg, #09146E, #0c1fa0);
+    background: linear-gradient(135deg, var(--brand-blue), color-mix(in srgb, var(--brand-blue) 82%, #fff));
     color: #fff;
     text-decoration: none;
-    box-shadow: 0 4px 20px rgba(9,20,110,0.15);
+    box-shadow: 0 4px 20px rgb(var(--brand-blue-rgb) / 0.15);
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .cart-empty-btn:hover {
-    box-shadow: 0 8px 28px rgba(9,20,110,0.25);
+    box-shadow: 0 8px 28px rgb(var(--brand-blue-rgb) / 0.25);
     transform: translateY(-1px);
     color: #fff;
 }
@@ -1819,7 +1870,7 @@
     border: 1px solid rgba(22,163,74,0.15);
 }
 .farmapaz-toast-link {
-    color: #09146E;
+    color: var(--brand-blue);
     font-weight: 700;
     text-decoration: none;
     margin-left: auto;
@@ -1827,7 +1878,7 @@
     transition: color 0.2s;
 }
 .farmapaz-toast-link:hover {
-    color: #5A7D43;
+    color: var(--brand-green);
 }
 @keyframes farmapaz-toast-in {
     from { opacity: 0; transform: translateX(100%) scale(0.92); }
@@ -1876,15 +1927,15 @@
     height: 64px;
     margin: 0 auto 1rem;
     border-radius: 9999px;
-    background: rgba(9,20,110,0.04);
+    background: rgb(var(--brand-blue-rgb) / 0.04);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: rgba(9,20,110,0.2);
+    color: rgb(var(--brand-blue-rgb) / 0.2);
 }
 .checkout-empty-text {
     font-size: 1rem;
-    color: rgba(9,20,110,0.5);
+    color: rgb(var(--brand-blue-rgb) / 0.5);
     margin-bottom: 1rem;
 }
 .checkout-empty-link {
@@ -1893,13 +1944,13 @@
     border-radius: 0.75rem;
     font-size: 0.85rem;
     font-weight: 600;
-    background: #09146E;
+    background: var(--brand-blue);
     color: #fff;
     text-decoration: none;
     transition: box-shadow 0.2s;
 }
 .checkout-empty-link:hover {
-    box-shadow: 0 4px 16px rgba(9,20,110,0.2);
+    box-shadow: 0 4px 16px rgb(var(--brand-blue-rgb) / 0.2);
 }
 .checkout-layout {
     display: flex;
@@ -1924,19 +1975,19 @@
 .checkout-section-title {
     font-size: 1.05rem;
     font-weight: 700;
-    color: #09146E;
+    color: var(--brand-blue);
     margin: 0 0 1rem;
     padding-bottom: 0.5rem;
-    border-bottom: 1px solid rgba(9,20,110,0.06);
+    border-bottom: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
 }
 .checkout-notes {
     width: 100%;
     padding: 0.75rem;
-    border: 1.5px solid rgba(9,20,110,0.08);
+    border: 1.5px solid rgb(var(--brand-blue-rgb) / 0.08);
     border-radius: 0.75rem;
     font-size: 0.85rem;
-    color: #09146E;
-    background: rgba(9,20,110,0.02);
+    color: var(--brand-blue);
+    background: rgb(var(--brand-blue-rgb) / 0.02);
     resize: vertical;
     transition: border-color 0.2s;
     font-family: inherit;
@@ -1944,7 +1995,91 @@
 }
 .checkout-notes:focus {
     outline: none;
-    border-color: #09146E;
+    border-color: var(--brand-blue);
+}
+
+/* ====== Delivery method (envío / retiro en tienda) ====== */
+.farmapaz-delivery-methods {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+.farmapaz-delivery-option {
+    position: relative;
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    padding: 1rem;
+    border: 1.5px solid rgb(var(--brand-blue-rgb) / 0.1);
+    border-radius: 0.9rem;
+    background: #fff;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+    box-sizing: border-box;
+}
+.farmapaz-delivery-option:hover {
+    border-color: rgb(var(--brand-blue-rgb) / 0.25);
+}
+.farmapaz-delivery-option.is-selected {
+    border-color: var(--brand-green);
+    background: rgb(var(--brand-green-rgb) / 0.06);
+    box-shadow: 0 0 0 3px rgb(var(--brand-green-rgb) / 0.12);
+}
+.farmapaz-delivery-option input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+.farmapaz-delivery-option-icon {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: rgb(var(--brand-blue-rgb) / 0.06);
+    color: var(--brand-blue);
+    transition: background 0.2s ease, color 0.2s ease;
+}
+.farmapaz-delivery-option.is-selected .farmapaz-delivery-option-icon {
+    background: var(--brand-green);
+    color: #fff;
+}
+.farmapaz-delivery-option-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+}
+.farmapaz-delivery-option-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--brand-blue);
+}
+.farmapaz-delivery-option-desc {
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: rgb(var(--brand-blue-rgb) / 0.55);
+}
+.farmapaz-delivery-option-fee {
+    margin-left: auto;
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--brand-blue);
+    white-space: nowrap;
+}
+.farmapaz-delivery-option-free {
+    color: var(--brand-green);
+}
+@media (max-width: 480px) {
+    .farmapaz-delivery-methods {
+        grid-template-columns: 1fr;
+    }
+}
+.checkout-shipping-section.is-hidden {
+    display: none;
 }
 
 /* WooCommerce form fields override */
@@ -1955,11 +2090,11 @@
     display: block;
     font-size: 0.8rem;
     font-weight: 600;
-    color: rgba(9,20,110,0.6);
+    color: rgb(var(--brand-blue-rgb) / 0.6);
     margin-bottom: 0.25rem;
 }
 .checkout-fields-col .form-row .required {
-    color: #FF1A27;
+    color: var(--brand-red);
     border: none;
 }
 .checkout-fields-col .form-row input[type="text"],
@@ -1969,11 +2104,11 @@
 .checkout-fields-col .form-row textarea {
     width: 100%;
     padding: 0.6rem 0.75rem;
-    border: 1.5px solid rgba(9,20,110,0.08);
+    border: 1.5px solid rgb(var(--brand-blue-rgb) / 0.08);
     border-radius: 0.75rem;
     font-size: 0.85rem;
-    color: #09146E;
-    background: rgba(9,20,110,0.02);
+    color: var(--brand-blue);
+    background: rgb(var(--brand-blue-rgb) / 0.02);
     transition: border-color 0.2s;
     box-sizing: border-box;
     font-family: inherit;
@@ -1982,10 +2117,10 @@
 .checkout-fields-col .form-row select:focus,
 .checkout-fields-col .form-row textarea:focus {
     outline: none;
-    border-color: #09146E;
+    border-color: var(--brand-blue);
 }
 .checkout-fields-col .form-row .select2-selection {
-    border: 1.5px solid rgba(9,20,110,0.08) !important;
+    border: 1.5px solid rgb(var(--brand-blue-rgb) / 0.08) !important;
     border-radius: 0.75rem !important;
     padding: 0.35rem 0.5rem;
     min-height: 38px;
@@ -2020,7 +2155,7 @@
     appearance: none;
     width: 16px;
     height: 16px;
-    border: 1.5px solid rgba(9,20,110,0.15);
+    border: 1.5px solid rgb(var(--brand-blue-rgb) / 0.15);
     border-radius: 9999px;
     flex-shrink: 0;
     cursor: pointer;
@@ -2028,7 +2163,7 @@
     position: relative;
 }
 .checkout-review-col #shipping_method input[type="radio"]:checked {
-    border-color: #09146E;
+    border-color: var(--brand-blue);
     border-width: 5px;
 }
 
@@ -2036,10 +2171,10 @@
 .checkout-review-title {
     font-size: 1.15rem;
     font-weight: 700;
-    color: #09146E;
+    color: var(--brand-blue);
     margin: 0 0 1rem;
     padding-bottom: 0.75rem;
-    border-bottom: 1px solid rgba(9,20,110,0.06);
+    border-bottom: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
 }
 .checkout-review-table {
     margin-bottom: 1rem;
@@ -2048,7 +2183,7 @@
     display: flex;
     gap: 0.75rem;
     padding: 0.625rem 0;
-    border-bottom: 1px solid rgba(9,20,110,0.04);
+    border-bottom: 1px solid rgb(var(--brand-blue-rgb) / 0.04);
     align-items: center;
 }
 .checkout-review-item:last-child {
@@ -2061,8 +2196,8 @@
     border-radius: 0.625rem;
     overflow: hidden;
     background: #fff;
-    border: 1px solid rgba(9,20,110,0.08);
-    box-shadow: 0 1px 4px rgba(9,20,110,0.04);
+    border: 1px solid rgb(var(--brand-blue-rgb) / 0.08);
+    box-shadow: 0 1px 4px rgb(var(--brand-blue-rgb) / 0.04);
 }
 .checkout-review-item-img img {
     width: 100%;
@@ -2085,48 +2220,48 @@
     text-decoration: none;
 }
 .checkout-review-item-name a:hover {
-    color: #09146E;
+    color: var(--brand-blue);
 }
 .checkout-review-item-qty {
-    color: rgba(9,20,110,0.3);
+    color: rgb(var(--brand-blue-rgb) / 0.3);
     font-weight: 400;
 }
 .checkout-review-item-meta {
     font-size: 0.7rem;
-    color: rgba(9,20,110,0.35);
+    color: rgb(var(--brand-blue-rgb) / 0.35);
 }
 .checkout-review-item-total {
     font-size: 0.85rem;
     font-weight: 600;
-    color: #09146E;
+    color: var(--brand-blue);
     white-space: nowrap;
 }
 .checkout-review-totals {
     margin-top: 0.75rem;
     padding-top: 0.75rem;
-    border-top: 1px solid rgba(9,20,110,0.06);
+    border-top: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
 }
 .checkout-review-total-row {
     display: flex;
     justify-content: space-between;
     padding: 0.375rem 0;
     font-size: 0.85rem;
-    color: rgba(9,20,110,0.6);
+    color: rgb(var(--brand-blue-rgb) / 0.6);
 }
 .checkout-review-total-row span:last-child {
     font-weight: 600;
-    color: #09146E;
+    color: var(--brand-blue);
 }
 .checkout-review-coupon span:last-child {
-    color: #5A7D43;
+    color: var(--brand-green);
 }
 .checkout-review-grand-total {
     padding-top: 0.75rem;
     margin-top: 0.5rem;
-    border-top: 2px solid rgba(9,20,110,0.08);
+    border-top: 2px solid rgb(var(--brand-blue-rgb) / 0.08);
     font-size: 1rem;
     font-weight: 700;
-    color: #09146E;
+    color: var(--brand-blue);
 }
 .checkout-review-grand-total span:last-child {
     font-size: 1.15rem;
@@ -2138,7 +2273,7 @@
     padding: 0.625rem 0.75rem;
     border-radius: 0.75rem;
     background: #fff;
-    border: 1px solid rgba(9,20,110,0.06);
+    border: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
     font-size: 0.8rem;
     display: flex;
     align-items: center;
@@ -2154,10 +2289,10 @@
     flex-shrink: 0;
 }
 .checkout-shipping-free-icon {
-    color: #5A7D43;
+    color: var(--brand-green);
 }
 .checkout-shipping-paid-icon {
-    color: #F97316;
+    color: var(--brand-orange);
 }
 .checkout-shipping-text {
     font-weight: 600;
@@ -2167,7 +2302,7 @@
     font-size: 0.9rem;
 }
 .checkout-review-shipping .checkout-shipping-amount {
-    color: #09146E;
+    color: var(--brand-blue);
 }
 
 /* Payment */
@@ -2177,10 +2312,10 @@
 .checkout-payment-title {
     font-size: 1rem;
     font-weight: 700;
-    color: #09146E;
+    color: var(--brand-blue);
     margin: 0 0 0.75rem;
     padding-bottom: 0.5rem;
-    border-bottom: 1px solid rgba(9,20,110,0.06);
+    border-bottom: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
 }
 .checkout-payment-methods {
     list-style: none;
@@ -2188,10 +2323,10 @@
     margin: 0 0 1rem;
     border-radius: 0.75rem;
     overflow: hidden;
-    border: 1px solid rgba(9,20,110,0.06);
+    border: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
 }
 .checkout-payment-method {
-    border-bottom: 1px solid rgba(9,20,110,0.04);
+    border-bottom: 1px solid rgb(var(--brand-blue-rgb) / 0.04);
 }
 .checkout-payment-method:last-child {
     border-bottom: none;
@@ -2206,13 +2341,13 @@
     margin: 0;
 }
 .checkout-payment-label:hover {
-    background: rgba(9,20,110,0.02);
+    background: rgb(var(--brand-blue-rgb) / 0.02);
 }
 .checkout-payment-radio {
     appearance: none;
     width: 16px;
     height: 16px;
-    border: 1.5px solid rgba(9,20,110,0.15);
+    border: 1.5px solid rgb(var(--brand-blue-rgb) / 0.15);
     border-radius: 9999px;
     flex-shrink: 0;
     cursor: pointer;
@@ -2220,7 +2355,7 @@
     position: relative;
 }
 .checkout-payment-radio:checked {
-    border-color: #09146E;
+    border-color: var(--brand-blue);
     border-width: 5px;
 }
 .checkout-payment-name {
@@ -2231,9 +2366,9 @@
 .checkout-payment-box {
     padding: 0.75rem 1rem 1rem;
     font-size: 0.8rem;
-    color: rgba(9,20,110,0.6);
-    background: rgba(9,20,110,0.02);
-    border-top: 1px solid rgba(9,20,110,0.04);
+    color: rgb(var(--brand-blue-rgb) / 0.6);
+    background: rgb(var(--brand-blue-rgb) / 0.02);
+    border-top: 1px solid rgb(var(--brand-blue-rgb) / 0.04);
 }
 .checkout-payment-box p {
     margin: 0 0 0.5rem;
@@ -2244,7 +2379,7 @@
 .checkout-no-gateways {
     padding: 1rem;
     font-size: 0.85rem;
-    color: rgba(9,20,110,0.5);
+    color: rgb(var(--brand-blue-rgb) / 0.5);
     margin: 0;
 }
 .checkout-place-order {
@@ -2260,15 +2395,15 @@
     border-radius: 0.875rem;
     font-size: 1rem;
     font-weight: 700;
-    background: linear-gradient(135deg, #09146E, #0c1fa0);
+    background: linear-gradient(135deg, var(--brand-blue), color-mix(in srgb, var(--brand-blue) 82%, #fff));
     color: #fff;
     border: none;
     cursor: pointer;
-    box-shadow: 0 4px 20px rgba(9,20,110,0.15);
+    box-shadow: 0 4px 20px rgb(var(--brand-blue-rgb) / 0.15);
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .checkout-place-order-btn:hover {
-    box-shadow: 0 8px 28px rgba(9,20,110,0.25);
+    box-shadow: 0 8px 28px rgb(var(--brand-blue-rgb) / 0.25);
     transform: translateY(-1px);
 }
 .checkout-place-order-btn:disabled {
@@ -2299,8 +2434,8 @@
     padding: 2rem 1.75rem;
     box-shadow:
         0 0 0 1px rgba(255,255,255,0.9),
-        0 8px 40px rgba(9,20,110,0.08),
-        0 2px 8px rgba(9,20,110,0.04);
+        0 8px 40px rgb(var(--brand-blue-rgb) / 0.08),
+        0 2px 8px rgb(var(--brand-blue-rgb) / 0.04);
     z-index: 2;
     animation: farmapazLoginFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -2323,7 +2458,7 @@
     width: 200px;
     height: 200px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(90,125,67,0.15), transparent 70%);
+    background: radial-gradient(circle, rgb(var(--brand-green-rgb) / 0.15), transparent 70%);
     pointer-events: none;
 }
 /* Decorative shapes */
@@ -2338,21 +2473,21 @@
     height: 400px;
     top: -100px;
     left: -100px;
-    background: radial-gradient(circle, rgba(9,20,110,0.06), transparent 70%);
+    background: radial-gradient(circle, rgb(var(--brand-blue-rgb) / 0.06), transparent 70%);
 }
 .farmapaz-login-shape-2 {
     width: 300px;
     height: 300px;
     bottom: -50px;
     right: -50px;
-    background: radial-gradient(circle, rgba(90,125,67,0.08), transparent 70%);
+    background: radial-gradient(circle, rgb(var(--brand-green-rgb) / 0.08), transparent 70%);
 }
 /* Tabs */
 .farmapaz-login-tabs {
     display: flex;
     position: relative;
     margin-bottom: 2rem;
-    background: rgba(9,20,110,0.04);
+    background: rgb(var(--brand-blue-rgb) / 0.04);
     border-radius: 1rem;
     padding: 0.25rem;
 }
@@ -2365,7 +2500,7 @@
     padding: 0.7rem 1rem;
     border: none;
     background: transparent;
-    color: rgba(9,20,110,0.4);
+    color: rgb(var(--brand-blue-rgb) / 0.4);
     font-size: 0.875rem;
     font-weight: 600;
     cursor: pointer;
@@ -2377,7 +2512,7 @@
     white-space: nowrap;
 }
 .farmapaz-login-tab.active {
-    color: #09146E;
+    color: var(--brand-blue);
 }
 .farmapaz-login-tab svg {
     flex-shrink: 0;
@@ -2389,7 +2524,7 @@
     left: 0.25rem;
     background: #fff;
     border-radius: 0.75rem;
-    box-shadow: 0 1px 4px rgba(9,20,110,0.08);
+    box-shadow: 0 1px 4px rgb(var(--brand-blue-rgb) / 0.08);
     z-index: 1;
     transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -2416,7 +2551,7 @@
     display: block;
     font-size: 0.8125rem;
     font-weight: 600;
-    color: rgba(9,20,110,0.7);
+    color: rgb(var(--brand-blue-rgb) / 0.7);
     margin-bottom: 0.4rem;
 }
 .farmapaz-login-input-wrap {
@@ -2427,40 +2562,40 @@
 .farmapaz-login-input-icon {
     position: absolute;
     left: 0.85rem;
-    color: rgba(9,20,110,0.3);
+    color: rgb(var(--brand-blue-rgb) / 0.3);
     pointer-events: none;
     flex-shrink: 0;
     transition: color 0.2s;
 }
 .farmapaz-login-input-wrap:focus-within .farmapaz-login-input-icon {
-    color: #09146E;
+    color: var(--brand-blue);
 }
 .farmapaz-login-input {
     width: 100%;
     padding: 0.75rem 0.85rem 0.75rem 2.8rem;
-    border: 1.5px solid rgba(9,20,110,0.1);
+    border: 1.5px solid rgb(var(--brand-blue-rgb) / 0.1);
     border-radius: 0.85rem;
     font-size: 0.9375rem;
     background: rgba(255,255,255,0.8);
-    color: #09146E;
+    color: var(--brand-blue);
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     outline: none;
     line-height: 1.4;
 }
 .farmapaz-login-input::placeholder {
-    color: rgba(9,20,110,0.2);
+    color: rgb(var(--brand-blue-rgb) / 0.2);
 }
 .farmapaz-login-input:focus {
-    border-color: #09146E;
+    border-color: var(--brand-blue);
     background: #fff;
-    box-shadow: 0 0 0 4px rgba(9,20,110,0.06);
+    box-shadow: 0 0 0 4px rgb(var(--brand-blue-rgb) / 0.06);
 }
 .farmapaz-login-pw-toggle {
     position: absolute;
     right: 0.75rem;
     background: none;
     border: none;
-    color: rgba(9,20,110,0.3);
+    color: rgb(var(--brand-blue-rgb) / 0.3);
     cursor: pointer;
     padding: 0.25rem;
     display: flex;
@@ -2468,7 +2603,7 @@
     transition: color 0.2s;
 }
 .farmapaz-login-pw-toggle:hover {
-    color: rgba(9,20,110,0.6);
+    color: rgb(var(--brand-blue-rgb) / 0.6);
 }
 /* Options row */
 .farmapaz-login-options {
@@ -2485,7 +2620,7 @@
     gap: 0.5rem;
     cursor: pointer;
     font-size: 0.8125rem;
-    color: rgba(9,20,110,0.55);
+    color: rgb(var(--brand-blue-rgb) / 0.55);
     user-select: none;
     position: relative;
 }
@@ -2498,7 +2633,7 @@
 .farmapaz-login-checkmark {
     width: 18px;
     height: 18px;
-    border: 1.5px solid rgba(9,20,110,0.2);
+    border: 1.5px solid rgb(var(--brand-blue-rgb) / 0.2);
     border-radius: 5px;
     display: flex;
     align-items: center;
@@ -2507,8 +2642,8 @@
     flex-shrink: 0;
 }
 .farmapaz-login-remember input:checked + .farmapaz-login-checkmark {
-    background: #09146E;
-    border-color: #09146E;
+    background: var(--brand-blue);
+    border-color: var(--brand-blue);
 }
 .farmapaz-login-remember input:checked + .farmapaz-login-checkmark::after {
     content: '';
@@ -2521,13 +2656,13 @@
 }
 .farmapaz-login-lostpw {
     font-size: 0.8125rem;
-    color: #5A7D43;
+    color: var(--brand-green);
     text-decoration: none;
     font-weight: 500;
     transition: color 0.2s;
 }
 .farmapaz-login-lostpw:hover {
-    color: #4a6a36;
+    color: color-mix(in srgb, var(--brand-green) 85%, #000);
     text-decoration: underline;
 }
 /* Submit */
@@ -2548,18 +2683,18 @@
     color: #fff;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    background: linear-gradient(135deg, #09146E 0%, #0a1a7a 100%);
-    box-shadow: 0 4px 16px rgba(9,20,110,0.2);
+    background: linear-gradient(135deg, var(--brand-blue) 0%, color-mix(in srgb, var(--brand-blue) 88%, #fff) 100%);
+    box-shadow: 0 4px 16px rgb(var(--brand-blue-rgb) / 0.2);
     line-height: 1.3;
 }
 .farmapaz-login-btn:hover {
-    background: linear-gradient(135deg, #5A7D43 0%, #4a6a36 100%);
-    box-shadow: 0 6px 24px rgba(90,125,67,0.3);
+    background: linear-gradient(135deg, var(--brand-green) 0%, color-mix(in srgb, var(--brand-green) 85%, #000) 100%);
+    box-shadow: 0 6px 24px rgb(var(--brand-green-rgb) / 0.3);
     transform: translateY(-1px);
 }
 .farmapaz-login-btn:active {
     transform: translateY(0);
-    box-shadow: 0 2px 8px rgba(9,20,110,0.15);
+    box-shadow: 0 2px 8px rgb(var(--brand-blue-rgb) / 0.15);
 }
 /* Register terms */
 .farmapaz-login-terms {
@@ -2568,7 +2703,7 @@
     gap: 0.5rem;
     margin-bottom: 1.25rem;
     font-size: 0.75rem;
-    color: rgba(9,20,110,0.45);
+    color: rgb(var(--brand-blue-rgb) / 0.45);
     line-height: 1.4;
 }
 .farmapaz-login-terms svg {
@@ -2576,12 +2711,12 @@
     margin-top: 1px;
 }
 .farmapaz-login-terms a {
-    color: #09146E;
+    color: var(--brand-blue);
     text-decoration: underline;
     font-weight: 500;
 }
 .farmapaz-login-terms a:hover {
-    color: #5A7D43;
+    color: var(--brand-green);
 }
 /* WooCommerce notices in login page */
 .farmapaz-login-wrap .woocommerce-notices-wrapper {
@@ -2598,16 +2733,16 @@
     border: none;
 }
 .farmapaz-login-wrap .woocommerce-message {
-    background: rgba(90,125,67,0.1);
-    color: #5A7D43;
+    background: rgb(var(--brand-green-rgb) / 0.1);
+    color: var(--brand-green);
 }
 .farmapaz-login-wrap .woocommerce-error {
-    background: rgba(255,26,39,0.08);
-    color: #dc2626;
+    background: rgb(var(--brand-red-rgb) / 0.08);
+    color: color-mix(in srgb, var(--brand-red) 85%, #000);
 }
 .farmapaz-login-wrap .woocommerce-info {
-    background: rgba(9,20,110,0.06);
-    color: #09146E;
+    background: rgb(var(--brand-blue-rgb) / 0.06);
+    color: var(--brand-blue);
 }
 .farmapaz-login-wrap .woocommerce-message::before,
 .farmapaz-login-wrap .woocommerce-info::before,
@@ -2633,12 +2768,12 @@
     display: block;
     font-size: 0.8125rem;
     font-weight: 600;
-    color: rgba(9,20,110,0.7);
+    color: rgb(var(--brand-blue-rgb) / 0.7);
     margin-bottom: 0.4rem;
 }
 .farmapaz-capture-wrap label .optional {
     font-weight: 400;
-    color: rgba(9,20,110,0.35);
+    color: rgb(var(--brand-blue-rgb) / 0.35);
     font-size: 0.75rem;
 }
 .farmapaz-capture-input {
@@ -2666,19 +2801,19 @@
     font-size: 0.8125rem;
     font-weight: 600;
     color: #fff;
-    background: linear-gradient(135deg, #09146E, #0a1a7a);
+    background: linear-gradient(135deg, var(--brand-blue), color-mix(in srgb, var(--brand-blue) 88%, #fff));
     cursor: pointer;
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     pointer-events: none;
 }
 .farmapaz-capture-input:hover .farmapaz-capture-btn {
-    background: linear-gradient(135deg, #5A7D43, #4a6a36);
-    box-shadow: 0 4px 12px rgba(90,125,67,0.2);
+    background: linear-gradient(135deg, var(--brand-green), color-mix(in srgb, var(--brand-green) 85%, #000));
+    box-shadow: 0 4px 12px rgb(var(--brand-green-rgb) / 0.2);
     transform: translateY(-1px);
 }
 .farmapaz-capture-name {
     font-size: 0.8125rem;
-    color: rgba(9,20,110,0.55);
+    color: rgb(var(--brand-blue-rgb) / 0.55);
     display: none;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -2691,10 +2826,10 @@
     height: 72px;
     border-radius: 0.625rem;
     overflow: hidden;
-    border: 1px solid rgba(9,20,110,0.08);
+    border: 1px solid rgb(var(--brand-blue-rgb) / 0.08);
     background: #fff;
     flex-shrink: 0;
-    box-shadow: 0 2px 8px rgba(9,20,110,0.06);
+    box-shadow: 0 2px 8px rgb(var(--brand-blue-rgb) / 0.06);
 }
 .farmapaz-capture-preview img {
     width: 100%;
@@ -2704,7 +2839,7 @@
 .farmapaz-capture-hint {
     display: block;
     font-size: 0.7rem;
-    color: rgba(9,20,110,0.3);
+    color: rgb(var(--brand-blue-rgb) / 0.3);
     margin-top: 0.3rem;
 }
 
@@ -2719,11 +2854,11 @@
     font-weight: 500;
 }
 .farmapaz-shipping-indicator.free {
-    background: rgba(90,125,67,0.08);
-    color: #5A7D43;
+    background: rgb(var(--brand-green-rgb) / 0.08);
+    color: var(--brand-green);
 }
 .farmapaz-shipping-indicator.paid {
-    background: rgba(249,115,22,0.08);
+    background: rgb(var(--brand-orange-rgb) / 0.08);
     color: #c2410c;
 }
 
@@ -2732,7 +2867,7 @@
     margin-bottom: 1.5rem;
     background: rgba(255,255,255,0.6);
     border-radius: 1rem;
-    border: 1px solid rgba(9,20,110,0.06);
+    border: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
     overflow: hidden;
 }
 .farmapaz-checkout-coupon-form {
@@ -2750,18 +2885,18 @@
 .farmapaz-checkout-coupon-input {
     flex: 1;
     padding: 0.6rem 0.75rem;
-    border: 1.5px solid rgba(9,20,110,0.1);
+    border: 1.5px solid rgb(var(--brand-blue-rgb) / 0.1);
     border-radius: 0.65rem;
     font-size: 0.875rem;
     background: #fff;
-    color: #09146E;
+    color: var(--brand-blue);
     outline: none;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     box-sizing: border-box;
 }
 .farmapaz-checkout-coupon-input:focus {
-    border-color: #09146E;
-    box-shadow: 0 0 0 3px rgba(9,20,110,0.06);
+    border-color: var(--brand-blue);
+    box-shadow: 0 0 0 3px rgb(var(--brand-blue-rgb) / 0.06);
 }
 
 /* ====== CHECKOUT LOGIN FORM ====== */
@@ -2769,7 +2904,7 @@
     margin-bottom: 1.5rem;
     background: rgba(255,255,255,0.6);
     border-radius: 1rem;
-    border: 1px solid rgba(9,20,110,0.06);
+    border: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
     overflow: hidden;
 }
 .farmapaz-checkout-login-toggle {
@@ -2779,15 +2914,15 @@
     padding: 0.85rem 1.1rem;
     cursor: pointer;
     font-size: 0.875rem;
-    color: rgba(9,20,110,0.6);
+    color: rgb(var(--brand-blue-rgb) / 0.6);
     user-select: none;
     transition: background 0.2s;
 }
 .farmapaz-checkout-login-toggle:hover {
-    background: rgba(9,20,110,0.03);
+    background: rgb(var(--brand-blue-rgb) / 0.03);
 }
 .farmapaz-checkout-login-toggle strong {
-    color: #09146E;
+    color: var(--brand-blue);
     font-weight: 600;
 }
 .farmapaz-chevron {
@@ -2808,7 +2943,7 @@
 .farmapaz-checkout-login-desc {
     margin: 0 0 0.85rem;
     font-size: 0.8125rem;
-    color: rgba(9,20,110,0.45);
+    color: rgb(var(--brand-blue-rgb) / 0.45);
     line-height: 1.5;
 }
 .farmapaz-checkout-login-row {
@@ -2823,27 +2958,27 @@
     display: block;
     font-size: 0.75rem;
     font-weight: 600;
-    color: rgba(9,20,110,0.6);
+    color: rgb(var(--brand-blue-rgb) / 0.6);
     margin-bottom: 0.3rem;
 }
 .farmapaz-checkout-login-field label .required {
-    color: #FF1A27;
+    color: var(--brand-red);
 }
 .farmapaz-checkout-login-field input {
     width: 100%;
     padding: 0.6rem 0.75rem;
-    border: 1.5px solid rgba(9,20,110,0.1);
+    border: 1.5px solid rgb(var(--brand-blue-rgb) / 0.1);
     border-radius: 0.65rem;
     font-size: 0.875rem;
     background: #fff;
-    color: #09146E;
+    color: var(--brand-blue);
     outline: none;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     box-sizing: border-box;
 }
 .farmapaz-checkout-login-field input:focus {
-    border-color: #09146E;
-    box-shadow: 0 0 0 3px rgba(9,20,110,0.06);
+    border-color: var(--brand-blue);
+    box-shadow: 0 0 0 3px rgb(var(--brand-blue-rgb) / 0.06);
 }
 .farmapaz-checkout-login-actions {
     display: flex;
@@ -2859,7 +2994,7 @@
     gap: 0.45rem;
     cursor: pointer;
     font-size: 0.8125rem;
-    color: rgba(9,20,110,0.5);
+    color: rgb(var(--brand-blue-rgb) / 0.5);
     user-select: none;
     position: relative;
 }
@@ -2872,7 +3007,7 @@
 .farmapaz-checkout-remember-check {
     width: 16px;
     height: 16px;
-    border: 1.5px solid rgba(9,20,110,0.18);
+    border: 1.5px solid rgb(var(--brand-blue-rgb) / 0.18);
     border-radius: 4px;
     display: flex;
     align-items: center;
@@ -2881,8 +3016,8 @@
     transition: all 0.2s;
 }
 .farmapaz-checkout-remember input:checked + .farmapaz-checkout-remember-check {
-    background: #09146E;
-    border-color: #09146E;
+    background: var(--brand-blue);
+    border-color: var(--brand-blue);
 }
 .farmapaz-checkout-remember input:checked + .farmapaz-checkout-remember-check::after {
     content: '';
@@ -2901,19 +3036,19 @@
     font-weight: 700;
     color: #fff;
     cursor: pointer;
-    background: linear-gradient(135deg, #09146E, #0a1a7a);
+    background: linear-gradient(135deg, var(--brand-blue), color-mix(in srgb, var(--brand-blue) 88%, #fff));
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     white-space: nowrap;
 }
 .farmapaz-checkout-login-submit:hover {
-    background: linear-gradient(135deg, #5A7D43, #4a6a36);
+    background: linear-gradient(135deg, var(--brand-green), color-mix(in srgb, var(--brand-green) 85%, #000));
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(90,125,67,0.25);
+    box-shadow: 0 4px 12px rgb(var(--brand-green-rgb) / 0.25);
 }
 .farmapaz-checkout-lostpw {
     display: inline-block;
     font-size: 0.75rem;
-    color: #5A7D43;
+    color: var(--brand-green);
     text-decoration: none;
     font-weight: 500;
 }
@@ -2946,7 +3081,7 @@
     padding: 1.5rem;
     box-shadow:
         0 0 0 1px rgba(255,255,255,0.9),
-        0 4px 24px rgba(9,20,110,0.06);
+        0 4px 24px rgb(var(--brand-blue-rgb) / 0.06);
     position: sticky;
     top: 100px;
 }
@@ -2954,7 +3089,7 @@
     text-align: center;
     padding-bottom: 1.25rem;
     margin-bottom: 1rem;
-    border-bottom: 1px solid rgba(9,20,110,0.06);
+    border-bottom: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
 }
 .farmapaz-account-logo-img {
     height: 36px;
@@ -2966,14 +3101,14 @@
     gap: 0.85rem;
     padding-bottom: 1.25rem;
     margin-bottom: 1rem;
-    border-bottom: 1px solid rgba(9,20,110,0.06);
+    border-bottom: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
 }
 .farmapaz-account-avatar img {
     width: 48px;
     height: 48px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid rgba(9,20,110,0.08);
+    border: 2px solid rgb(var(--brand-blue-rgb) / 0.08);
 }
 .farmapaz-account-greeting {
     display: flex;
@@ -2981,12 +3116,12 @@
 }
 .farmapaz-account-hello {
     font-size: 0.75rem;
-    color: rgba(9,20,110,0.4);
+    color: rgb(var(--brand-blue-rgb) / 0.4);
 }
 .farmapaz-account-name {
     font-size: 0.9375rem;
     font-weight: 700;
-    color: #09146E;
+    color: var(--brand-blue);
     line-height: 1.3;
 }
 .farmapaz-account-nav {
@@ -3002,17 +3137,17 @@
     border-radius: 0.75rem;
     font-size: 0.875rem;
     font-weight: 500;
-    color: rgba(9,20,110,0.55);
+    color: rgb(var(--brand-blue-rgb) / 0.55);
     text-decoration: none;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .farmapaz-account-nav-item:hover {
-    background: rgba(9,20,110,0.04);
-    color: #09146E;
+    background: rgb(var(--brand-blue-rgb) / 0.04);
+    color: var(--brand-blue);
 }
 .farmapaz-account-nav-item.active {
-    background: rgba(9,20,110,0.06);
-    color: #09146E;
+    background: rgb(var(--brand-blue-rgb) / 0.06);
+    color: var(--brand-blue);
     font-weight: 600;
 }
 .farmapaz-account-nav-item svg {
@@ -3028,7 +3163,7 @@
     padding: 2rem;
     box-shadow:
         0 0 0 1px rgba(255,255,255,0.9),
-        0 4px 24px rgba(9,20,110,0.06);
+        0 4px 24px rgb(var(--brand-blue-rgb) / 0.06);
 }
 @media (max-width: 768px) {
     .farmapaz-account-wrap {
@@ -3060,13 +3195,13 @@
 .farmapaz-dashboard-title {
     font-size: 1.5rem;
     font-weight: 800;
-    color: #09146E;
+    color: var(--brand-blue);
     margin: 0 0 0.25rem;
     line-height: 1.2;
 }
 .farmapaz-dashboard-subtitle {
     font-size: 0.875rem;
-    color: rgba(9,20,110,0.45);
+    color: rgb(var(--brand-blue-rgb) / 0.45);
     margin: 0;
 }
 .farmapaz-dashboard-cards {
@@ -3085,13 +3220,13 @@
     border-radius: 1rem;
     text-decoration: none;
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    box-shadow: 0 1px 4px rgba(9,20,110,0.04);
-    border: 1px solid rgba(9,20,110,0.06);
+    box-shadow: 0 1px 4px rgb(var(--brand-blue-rgb) / 0.04);
+    border: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
 }
 .farmapaz-dash-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 8px 24px rgba(9,20,110,0.08);
-    border-color: rgba(9,20,110,0.12);
+    box-shadow: 0 8px 24px rgb(var(--brand-blue-rgb) / 0.08);
+    border-color: rgb(var(--brand-blue-rgb) / 0.12);
 }
 .farmapaz-dash-card-icon {
     width: 48px;
@@ -3105,26 +3240,26 @@
 .farmapaz-dash-card-count {
     font-size: 1.5rem;
     font-weight: 800;
-    color: #09146E;
+    color: var(--brand-blue);
     line-height: 1;
     margin-bottom: 0.25rem;
 }
 .farmapaz-dash-card-label {
     font-size: 0.8125rem;
-    color: rgba(9,20,110,0.5);
+    color: rgb(var(--brand-blue-rgb) / 0.5);
     font-weight: 500;
 }
 .farmapaz-dashboard-info {
-    background: rgba(9,20,110,0.03);
+    background: rgb(var(--brand-blue-rgb) / 0.03);
     border-radius: 0.85rem;
     padding: 1rem 1.25rem;
     margin-bottom: 1.5rem;
     font-size: 0.875rem;
-    color: rgba(9,20,110,0.55);
+    color: rgb(var(--brand-blue-rgb) / 0.55);
     line-height: 1.6;
 }
 .farmapaz-dashboard-info a {
-    color: #5A7D43;
+    color: var(--brand-green);
     font-weight: 600;
     text-decoration: none;
 }
@@ -3134,13 +3269,13 @@
 .farmapaz-dashboard-section-title {
     font-size: 1.125rem;
     font-weight: 700;
-    color: #09146E;
+    color: var(--brand-blue);
     margin: 0 0 0.75rem;
 }
 .farmapaz-dashboard-table-wrap {
     overflow-x: auto;
     border-radius: 0.85rem;
-    border: 1px solid rgba(9,20,110,0.06);
+    border: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
 }
 .farmapaz-dashboard-table {
     width: 100%;
@@ -3148,29 +3283,29 @@
     font-size: 0.875rem;
 }
 .farmapaz-dashboard-table th {
-    background: rgba(9,20,110,0.03);
-    color: rgba(9,20,110,0.5);
+    background: rgb(var(--brand-blue-rgb) / 0.03);
+    color: rgb(var(--brand-blue-rgb) / 0.5);
     font-weight: 600;
     text-align: left;
     padding: 0.75rem 1rem;
-    border-bottom: 1px solid rgba(9,20,110,0.06);
+    border-bottom: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
     white-space: nowrap;
 }
 .farmapaz-dashboard-table td {
     padding: 0.75rem 1rem;
-    border-bottom: 1px solid rgba(9,20,110,0.04);
-    color: rgba(9,20,110,0.7);
+    border-bottom: 1px solid rgb(var(--brand-blue-rgb) / 0.04);
+    color: rgb(var(--brand-blue-rgb) / 0.7);
 }
 .farmapaz-dashboard-table tr:last-child td {
     border-bottom: none;
 }
 .farmapaz-dashboard-table a {
-    color: #09146E;
+    color: var(--brand-blue);
     font-weight: 600;
     text-decoration: none;
 }
 .farmapaz-dashboard-table a:hover {
-    color: #5A7D43;
+    color: var(--brand-green);
 }
 .farmapaz-order-status {
     display: inline-block;
@@ -3180,24 +3315,24 @@
     font-weight: 600;
 }
 .farmapaz-order-status.status-completed {
-    background: rgba(90,125,67,0.1);
-    color: #5A7D43;
+    background: rgb(var(--brand-green-rgb) / 0.1);
+    color: var(--brand-green);
 }
 .farmapaz-order-status.status-processing {
-    background: rgba(9,20,110,0.08);
-    color: #09146E;
+    background: rgb(var(--brand-blue-rgb) / 0.08);
+    color: var(--brand-blue);
 }
 .farmapaz-order-status.status-on-hold {
-    background: rgba(254,171,13,0.12);
+    background: rgb(var(--brand-yellow-rgb) / 0.12);
     color: #92400e;
 }
 .farmapaz-order-status.status-pending {
-    background: rgba(249,115,22,0.1);
+    background: rgb(var(--brand-orange-rgb) / 0.1);
     color: #c2410c;
 }
 .farmapaz-order-status.status-cancelled {
-    background: rgba(255,26,39,0.08);
-    color: #dc2626;
+    background: rgb(var(--brand-red-rgb) / 0.08);
+    color: color-mix(in srgb, var(--brand-red) 85%, #000);
 }
 
 /* WooCommerce default account pages compatibility */
@@ -3211,7 +3346,7 @@
 .farmapaz-account-content form h3 {
     font-size: 1.125rem;
     font-weight: 700;
-    color: #09146E;
+    color: var(--brand-blue);
     margin: 0 0 1rem;
 }
 .farmapaz-account-content form .form-row {
@@ -3220,7 +3355,7 @@
 .farmapaz-account-content form label {
     font-size: 0.8125rem;
     font-weight: 600;
-    color: rgba(9,20,110,0.7);
+    color: rgb(var(--brand-blue-rgb) / 0.7);
     margin-bottom: 0.3rem;
     display: block;
 }
@@ -3233,11 +3368,11 @@
 .farmapaz-account-content form textarea {
     width: 100%;
     padding: 0.65rem 0.85rem;
-    border: 1.5px solid rgba(9,20,110,0.1);
+    border: 1.5px solid rgb(var(--brand-blue-rgb) / 0.1);
     border-radius: 0.75rem;
     font-size: 0.9375rem;
     background: #fff;
-    color: #09146E;
+    color: var(--brand-blue);
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     outline: none;
     box-sizing: border-box;
@@ -3245,8 +3380,8 @@
 .farmapaz-account-content form input:focus,
 .farmapaz-account-content form select:focus,
 .farmapaz-account-content form textarea:focus {
-    border-color: #09146E;
-    box-shadow: 0 0 0 4px rgba(9,20,110,0.06);
+    border-color: var(--brand-blue);
+    box-shadow: 0 0 0 4px rgb(var(--brand-blue-rgb) / 0.06);
 }
 .farmapaz-account-content form button[type="submit"],
 .farmapaz-account-content .woocommerce-Button,
@@ -3258,7 +3393,7 @@
     font-weight: 700;
     color: #fff;
     cursor: pointer;
-    background: linear-gradient(135deg, #09146E, #0a1a7a);
+    background: linear-gradient(135deg, var(--brand-blue), color-mix(in srgb, var(--brand-blue) 88%, #fff));
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     text-decoration: none;
     display: inline-flex;
@@ -3268,9 +3403,9 @@
 .farmapaz-account-content form button[type="submit"]:hover,
 .farmapaz-account-content .woocommerce-Button:hover,
 .farmapaz-account-content .button:hover {
-    background: linear-gradient(135deg, #5A7D43, #4a6a36);
+    background: linear-gradient(135deg, var(--brand-green), color-mix(in srgb, var(--brand-green) 85%, #000));
     transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba(90,125,67,0.3);
+    box-shadow: 0 4px 16px rgb(var(--brand-green-rgb) / 0.3);
 }
 .farmapaz-account-content .woocommerce-Addresses {
     display: grid;
@@ -3281,7 +3416,7 @@
     background: rgba(255,255,255,0.6);
     border-radius: 1rem;
     padding: 1.25rem;
-    border: 1px solid rgba(9,20,110,0.06);
+    border: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
 }
 .farmapaz-account-content .woocommerce-Address-title {
     display: flex;
@@ -3295,7 +3430,7 @@
 }
 .farmapaz-account-content .woocommerce-Address-title a {
     font-size: 0.8125rem;
-    color: #5A7D43;
+    color: var(--brand-green);
     font-weight: 600;
     text-decoration: none;
 }
@@ -3341,9 +3476,9 @@
     z-index: 9999;
     border: none;
     cursor: pointer;
-    background: linear-gradient(135deg, #09146E 0%, #0c1fa0 50%, #1527b5 100%);
+    background: linear-gradient(135deg, var(--brand-blue) 0%, color-mix(in srgb, var(--brand-blue) 82%, #fff) 50%, color-mix(in srgb, var(--brand-blue) 80%, #fff) 100%);
     color: #fff;
-    box-shadow: 0 4px 24px rgba(9,20,110,0.25);
+    box-shadow: 0 4px 24px rgb(var(--brand-blue-rgb) / 0.25);
     transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
     display: flex;
     align-items: center;
@@ -3358,7 +3493,7 @@
     position: absolute;
     inset: -3px;
     border-radius: inherit;
-    border: 2px solid rgba(254,171,13,0.35);
+    border: 2px solid rgb(var(--brand-yellow-rgb) / 0.35);
     animation: pastillin-ping 4s ease-out infinite;
     pointer-events: none;
 }
@@ -3370,19 +3505,19 @@
     background: rgba(255,255,255,0.92);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    color: #09146E;
+    color: var(--brand-blue);
     padding: 5px 14px;
     border-radius: 10px;
     font-size: 0.78rem;
     font-weight: 600;
     white-space: nowrap;
-    box-shadow: 0 4px 20px rgba(9,20,110,0.10);
+    box-shadow: 0 4px 20px rgb(var(--brand-blue-rgb) / 0.1);
     pointer-events: none;
     animation: pastillin-greeting 6s ease-in-out infinite;
 }
 #pastillin-btn:hover {
     transform: scale(1.08);
-    box-shadow: 0 8px 40px rgba(9,20,110,0.35);
+    box-shadow: 0 8px 40px rgb(var(--brand-blue-rgb) / 0.35);
 }
 #pastillin-btn.active {
     transform: scale(0.9);
@@ -3423,8 +3558,8 @@
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-radius: 1.25rem;
-    border: 1px solid rgba(9,20,110,0.08);
-    box-shadow: 0 12px 60px rgba(9,20,110,0.12);
+    border: 1px solid rgb(var(--brand-blue-rgb) / 0.08);
+    box-shadow: 0 12px 60px rgb(var(--brand-blue-rgb) / 0.12);
     display: flex;
     flex-direction: column;
     opacity: 0;
@@ -3445,7 +3580,7 @@
     align-items: center;
     gap: 0.75rem;
     padding: 1rem 1.25rem;
-    background: linear-gradient(135deg, #09146E, #0c1fa0);
+    background: linear-gradient(135deg, var(--brand-blue), color-mix(in srgb, var(--brand-blue) 82%, #fff));
     color: #fff;
     flex-shrink: 0;
 }
@@ -3514,7 +3649,7 @@
     background: transparent;
 }
 .past-messages::-webkit-scrollbar-thumb {
-    background: rgba(9,20,110,0.1);
+    background: rgb(var(--brand-blue-rgb) / 0.1);
     border-radius: 4px;
 }
 
@@ -3537,12 +3672,12 @@
     width: 30px;
     height: 30px;
     border-radius: 50%;
-    background: linear-gradient(135deg, rgba(9,20,110,0.08), rgba(9,20,110,0.03));
+    background: linear-gradient(135deg, rgb(var(--brand-blue-rgb) / 0.08), rgb(var(--brand-blue-rgb) / 0.03));
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    color: #09146E;
+    color: var(--brand-blue);
     margin-top: 2px;
     overflow: hidden;
 }
@@ -3560,13 +3695,13 @@
 }
 
 .past-msg-content {
-    background: rgba(9,20,110,0.04);
+    background: rgb(var(--brand-blue-rgb) / 0.04);
     border-radius: 1rem 1rem 1rem 0.25rem;
     padding: 0.65rem 0.85rem;
-    border: 1px solid rgba(9,20,110,0.04);
+    border: 1px solid rgb(var(--brand-blue-rgb) / 0.04);
 }
 .past-msg-user-content {
-    background: linear-gradient(135deg, #09146E, #0c1fa0);
+    background: linear-gradient(135deg, var(--brand-blue), color-mix(in srgb, var(--brand-blue) 82%, #fff));
     color: #fff;
     border-radius: 1rem 1rem 0.25rem 1rem;
     border-color: transparent;
@@ -3580,12 +3715,12 @@
     font-weight: 700;
 }
 .past-link {
-    color: #09146E;
+    color: var(--brand-blue);
     text-decoration: underline;
     font-weight: 600;
 }
 .past-link:hover {
-    color: #FEAB0D;
+    color: var(--brand-yellow);
 }
 
 /* Quick replies */
@@ -3600,21 +3735,21 @@
     font-weight: 600;
     padding: 0.35rem 0.75rem;
     border-radius: 9999px;
-    border: 1px solid rgba(9,20,110,0.12);
+    border: 1px solid rgb(var(--brand-blue-rgb) / 0.12);
     background: rgba(255,255,255,0.6);
-    color: #09146E;
+    color: var(--brand-blue);
     cursor: pointer;
     transition: all 0.2s ease;
 }
 .past-quick-btn:hover {
-    background: rgba(9,20,110,0.06);
-    border-color: rgba(9,20,110,0.25);
+    background: rgb(var(--brand-blue-rgb) / 0.06);
+    border-color: rgb(var(--brand-blue-rgb) / 0.25);
     transform: translateY(-1px);
 }
 
 /* Typing */
 .past-typing .past-msg-content {
-    background: rgba(9,20,110,0.04);
+    background: rgb(var(--brand-blue-rgb) / 0.04);
     padding: 0.75rem 1rem;
 }
 .past-typing-dots {
@@ -3626,14 +3761,14 @@
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: rgba(9,20,110,0.25);
+    background: rgb(var(--brand-blue-rgb) / 0.25);
     animation: pastDotBounce 1.2s ease-in-out infinite;
 }
 .past-typing-dots span:nth-child(2) { animation-delay: 0.2s; }
 .past-typing-dots span:nth-child(3) { animation-delay: 0.4s; }
 @keyframes pastDotBounce {
     0%, 60%, 100% { transform: translateY(0); }
-    30% { transform: translateY(-6px); background: rgba(9,20,110,0.4); }
+    30% { transform: translateY(-6px); background: rgb(var(--brand-blue-rgb) / 0.4); }
 }
 
 /* Quick bar — Frutiger Aero */
@@ -3653,11 +3788,11 @@
     font-weight: 600;
     padding: 0.3rem 0.7rem;
     border-radius: 9999px;
-    border: 1px solid rgba(9,20,110,0.1);
+    border: 1px solid rgb(var(--brand-blue-rgb) / 0.1);
     background: rgba(255,255,255,0.5);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    color: #09146E;
+    color: var(--brand-blue);
     cursor: pointer;
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     position: relative;
@@ -3669,14 +3804,14 @@
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, rgba(254,171,13,0.08), rgba(90,125,67,0.06));
+    background: linear-gradient(135deg, rgb(var(--brand-yellow-rgb) / 0.08), rgb(var(--brand-green-rgb) / 0.06));
     opacity: 0;
     transition: opacity 0.3s ease;
     border-radius: inherit;
 }
 .past-quick-bar-btn:hover {
-    border-color: rgba(9,20,110,0.2);
-    box-shadow: 0 4px 16px rgba(9,20,110,0.08), 0 0 0 1px rgba(9,20,110,0.04);
+    border-color: rgb(var(--brand-blue-rgb) / 0.2);
+    box-shadow: 0 4px 16px rgb(var(--brand-blue-rgb) / 0.08), 0 0 0 1px rgb(var(--brand-blue-rgb) / 0.04);
     transform: translateY(-1px) scale(1.02);
     background: rgba(255,255,255,0.75);
 }
@@ -3692,12 +3827,12 @@
     align-items: flex-end;
     gap: 0.5rem;
     padding: 0.75rem 1.25rem;
-    border-top: 1px solid rgba(9,20,110,0.06);
+    border-top: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
     flex-shrink: 0;
 }
 #pastillin-input {
     flex: 1;
-    border: 1px solid rgba(9,20,110,0.08);
+    border: 1px solid rgb(var(--brand-blue-rgb) / 0.08);
     border-radius: 0.75rem;
     padding: 0.6rem 0.85rem;
     font-size: 0.85rem;
@@ -3710,15 +3845,15 @@
     line-height: 1.4;
 }
 #pastillin-input:focus {
-    border-color: rgba(9,20,110,0.2);
-    box-shadow: 0 0 0 3px rgba(9,20,110,0.04);
+    border-color: rgb(var(--brand-blue-rgb) / 0.2);
+    box-shadow: 0 0 0 3px rgb(var(--brand-blue-rgb) / 0.04);
 }
 #pastillin-send {
     width: 38px;
     height: 38px;
     border-radius: 0.75rem;
     border: none;
-    background: linear-gradient(135deg, #09146E, #0c1fa0);
+    background: linear-gradient(135deg, var(--brand-blue), color-mix(in srgb, var(--brand-blue) 82%, #fff));
     color: #fff;
     cursor: pointer;
     display: flex;
@@ -3729,7 +3864,7 @@
 }
 #pastillin-send:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba(9,20,110,0.2);
+    box-shadow: 0 4px 16px rgb(var(--brand-blue-rgb) / 0.2);
 }
 #pastillin-send svg {
     width: 16px;
@@ -3772,19 +3907,19 @@
 .farmapaz-orders-title {
     font-size: 1.5rem;
     font-weight: 800;
-    color: #09146E;
+    color: var(--brand-blue);
     margin: 0 0 0.25rem;
     line-height: 1.2;
 }
 .farmapaz-orders-subtitle {
     font-size: 0.875rem;
-    color: rgba(9,20,110,0.45);
+    color: rgb(var(--brand-blue-rgb) / 0.45);
     margin: 0;
 }
 .farmapaz-orders-table-wrap {
     overflow-x: auto;
     border-radius: 0.85rem;
-    border: 1px solid rgba(9,20,110,0.06);
+    border: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
     background: rgba(255,255,255,0.8);
 }
 .farmapaz-orders-table {
@@ -3793,28 +3928,28 @@
     font-size: 0.875rem;
 }
 .farmapaz-orders-table th {
-    background: rgba(9,20,110,0.03);
-    color: rgba(9,20,110,0.5);
+    background: rgb(var(--brand-blue-rgb) / 0.03);
+    color: rgb(var(--brand-blue-rgb) / 0.5);
     font-weight: 600;
     text-align: left;
     padding: 0.75rem 1rem;
-    border-bottom: 1px solid rgba(9,20,110,0.06);
+    border-bottom: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
     white-space: nowrap;
 }
 .farmapaz-orders-table td {
     padding: 0.75rem 1rem;
-    border-bottom: 1px solid rgba(9,20,110,0.04);
-    color: rgba(9,20,110,0.7);
+    border-bottom: 1px solid rgb(var(--brand-blue-rgb) / 0.04);
+    color: rgb(var(--brand-blue-rgb) / 0.7);
 }
 .farmapaz-orders-table tr:last-child td {
     border-bottom: none;
 }
 .farmapaz-orders-number {
     font-weight: 700;
-    color: #09146E;
+    color: var(--brand-blue);
 }
 .farmapaz-orders-date {
-    color: rgba(9,20,110,0.5);
+    color: rgb(var(--brand-blue-rgb) / 0.5);
 }
 .farmapaz-orders-total {
     font-weight: 600;
@@ -3828,12 +3963,12 @@
     font-size: 0.8125rem;
     font-weight: 600;
     color: #fff;
-    background: #5A7D43;
+    background: var(--brand-green);
     text-decoration: none;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .farmapaz-orders-view-btn:hover {
-    background: #4a6a36;
+    background: color-mix(in srgb, var(--brand-green) 85%, #000);
     transform: translateY(-1px);
 }
 .farmapaz-orders-empty {
@@ -3846,12 +3981,12 @@
 .farmapaz-orders-empty-title {
     font-size: 1.125rem;
     font-weight: 700;
-    color: #09146E;
+    color: var(--brand-blue);
     margin: 0 0 0.5rem;
 }
 .farmapaz-orders-empty-text {
     font-size: 0.875rem;
-    color: rgba(9,20,110,0.45);
+    color: rgb(var(--brand-blue-rgb) / 0.45);
     margin: 0 0 1.5rem;
 }
 .farmapaz-orders-shop-btn {
@@ -3863,14 +3998,14 @@
     font-size: 0.875rem;
     font-weight: 600;
     color: #fff;
-    background: #09146E;
+    background: var(--brand-blue);
     text-decoration: none;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .farmapaz-orders-shop-btn:hover {
-    background: #0c1fa0;
+    background: color-mix(in srgb, var(--brand-blue) 82%, #fff);
     transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(9,20,110,0.2);
+    box-shadow: 0 4px 16px rgb(var(--brand-blue-rgb) / 0.2);
 }
 
 /* ===== My Account - Downloads ===== */
@@ -3883,19 +4018,19 @@
 .farmapaz-downloads-title {
     font-size: 1.5rem;
     font-weight: 800;
-    color: #09146E;
+    color: var(--brand-blue);
     margin: 0 0 0.25rem;
     line-height: 1.2;
 }
 .farmapaz-downloads-subtitle {
     font-size: 0.875rem;
-    color: rgba(9,20,110,0.45);
+    color: rgb(var(--brand-blue-rgb) / 0.45);
     margin: 0;
 }
 .farmapaz-downloads-table-wrap {
     overflow-x: auto;
     border-radius: 0.85rem;
-    border: 1px solid rgba(9,20,110,0.06);
+    border: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
     background: rgba(255,255,255,0.8);
 }
 .farmapaz-downloads-table {
@@ -3904,18 +4039,18 @@
     font-size: 0.875rem;
 }
 .farmapaz-downloads-table th {
-    background: rgba(9,20,110,0.03);
-    color: rgba(9,20,110,0.5);
+    background: rgb(var(--brand-blue-rgb) / 0.03);
+    color: rgb(var(--brand-blue-rgb) / 0.5);
     font-weight: 600;
     text-align: left;
     padding: 0.75rem 1rem;
-    border-bottom: 1px solid rgba(9,20,110,0.06);
+    border-bottom: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
     white-space: nowrap;
 }
 .farmapaz-downloads-table td {
     padding: 0.75rem 1rem;
-    border-bottom: 1px solid rgba(9,20,110,0.04);
-    color: rgba(9,20,110,0.7);
+    border-bottom: 1px solid rgb(var(--brand-blue-rgb) / 0.04);
+    color: rgb(var(--brand-blue-rgb) / 0.7);
 }
 .farmapaz-downloads-table tr:last-child td {
     border-bottom: none;
@@ -3929,8 +4064,8 @@
     width: 36px;
     height: 36px;
     border-radius: 10px;
-    background: rgba(90,125,67,0.1);
-    color: #5A7D43;
+    background: rgb(var(--brand-green-rgb) / 0.1);
+    color: var(--brand-green);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -3938,10 +4073,10 @@
 }
 .farmapaz-downloads-product-name {
     font-weight: 600;
-    color: #09146E;
+    color: var(--brand-blue);
 }
 .farmapaz-downloads-count {
-    color: rgba(9,20,110,0.5);
+    color: rgb(var(--brand-blue-rgb) / 0.5);
 }
 .farmapaz-downloads-btn {
     display: inline-flex;
@@ -3951,13 +4086,13 @@
     border-radius: 0.6rem;
     font-size: 0.8125rem;
     font-weight: 600;
-    color: #5A7D43;
-    background: rgba(90,125,67,0.08);
+    color: var(--brand-green);
+    background: rgb(var(--brand-green-rgb) / 0.08);
     text-decoration: none;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .farmapaz-downloads-btn:hover {
-    background: #5A7D43;
+    background: var(--brand-green);
     color: #fff;
     transform: translateY(-1px);
 }
@@ -3971,12 +4106,12 @@
 .farmapaz-downloads-empty-title {
     font-size: 1.125rem;
     font-weight: 700;
-    color: #09146E;
+    color: var(--brand-blue);
     margin: 0 0 0.5rem;
 }
 .farmapaz-downloads-empty-text {
     font-size: 0.875rem;
-    color: rgba(9,20,110,0.45);
+    color: rgb(var(--brand-blue-rgb) / 0.45);
     margin: 0 0 1.5rem;
 }
 .farmapaz-downloads-shop-btn {
@@ -3988,14 +4123,14 @@
     font-size: 0.875rem;
     font-weight: 600;
     color: #fff;
-    background: #09146E;
+    background: var(--brand-blue);
     text-decoration: none;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .farmapaz-downloads-shop-btn:hover {
-    background: #0c1fa0;
+    background: color-mix(in srgb, var(--brand-blue) 82%, #fff);
     transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(9,20,110,0.2);
+    box-shadow: 0 4px 16px rgb(var(--brand-blue-rgb) / 0.2);
 }
 
 /* ===== My Account - View Order ===== */
@@ -4013,7 +4148,7 @@
 .farmapaz-view-order-title {
     font-size: 1.5rem;
     font-weight: 800;
-    color: #09146E;
+    color: var(--brand-blue);
     margin: 0;
     line-height: 1.2;
 }
@@ -4023,12 +4158,12 @@
     gap: 0.4rem;
     font-size: 0.8125rem;
     font-weight: 600;
-    color: #5A7D43;
+    color: var(--brand-green);
     text-decoration: none;
     transition: color 0.2s;
 }
 .farmapaz-view-order-back:hover {
-    color: #4a6a36;
+    color: color-mix(in srgb, var(--brand-green) 85%, #000);
 }
 .farmapaz-view-order-meta {
     display: grid;
@@ -4038,7 +4173,7 @@
     padding: 1rem 1.25rem;
     background: rgba(255,255,255,0.6);
     border-radius: 0.85rem;
-    border: 1px solid rgba(9,20,110,0.06);
+    border: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
 }
 .farmapaz-view-order-meta-item {
     display: flex;
@@ -4050,23 +4185,23 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: rgba(9,20,110,0.4);
+    color: rgb(var(--brand-blue-rgb) / 0.4);
 }
 .farmapaz-view-order-meta-value {
     font-size: 0.9375rem;
     font-weight: 700;
-    color: #09146E;
+    color: var(--brand-blue);
 }
 .farmapaz-view-order-section-title {
     font-size: 1.125rem;
     font-weight: 700;
-    color: #09146E;
+    color: var(--brand-blue);
     margin: 0 0 0.75rem;
 }
 .farmapaz-view-order-table-wrap {
     overflow-x: auto;
     border-radius: 0.85rem;
-    border: 1px solid rgba(9,20,110,0.06);
+    border: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
     background: rgba(255,255,255,0.8);
     margin-bottom: 1.5rem;
 }
@@ -4076,30 +4211,30 @@
     font-size: 0.875rem;
 }
 .farmapaz-view-order-table th {
-    background: rgba(9,20,110,0.03);
-    color: rgba(9,20,110,0.5);
+    background: rgb(var(--brand-blue-rgb) / 0.03);
+    color: rgb(var(--brand-blue-rgb) / 0.5);
     font-weight: 600;
     text-align: left;
     padding: 0.75rem 1rem;
-    border-bottom: 1px solid rgba(9,20,110,0.06);
+    border-bottom: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
     white-space: nowrap;
 }
 .farmapaz-view-order-table td {
     padding: 0.75rem 1rem;
-    border-bottom: 1px solid rgba(9,20,110,0.04);
-    color: rgba(9,20,110,0.7);
+    border-bottom: 1px solid rgb(var(--brand-blue-rgb) / 0.04);
+    color: rgb(var(--brand-blue-rgb) / 0.7);
     vertical-align: middle;
 }
 .farmapaz-view-order-table tfoot th {
     background: none;
-    border-bottom: 1px solid rgba(9,20,110,0.04);
+    border-bottom: 1px solid rgb(var(--brand-blue-rgb) / 0.04);
     font-weight: 600;
-    color: rgba(9,20,110,0.5);
+    color: rgb(var(--brand-blue-rgb) / 0.5);
     text-align: right;
 }
 .farmapaz-view-order-table tfoot td {
     font-weight: 700;
-    color: #09146E;
+    color: var(--brand-blue);
 }
 .farmapaz-view-order-table tr:last-child td,
 .farmapaz-view-order-table tfoot tr:last-child th,
@@ -4131,11 +4266,11 @@
 }
 .farmapaz-view-order-product-name {
     font-weight: 600;
-    color: #09146E;
+    color: var(--brand-blue);
 }
 .farmapaz-view-order-product-note {
     font-size: 0.8125rem;
-    color: rgba(9,20,110,0.45);
+    color: rgb(var(--brand-blue-rgb) / 0.45);
 }
 .farmapaz-view-order-addresses {
     display: grid;
@@ -4146,12 +4281,12 @@
     background: rgba(255,255,255,0.6);
     border-radius: 0.85rem;
     padding: 1rem 1.25rem;
-    border: 1px solid rgba(9,20,110,0.06);
+    border: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
 }
 .farmapaz-view-order-address address {
     font-style: normal;
     font-size: 0.875rem;
-    color: rgba(9,20,110,0.6);
+    color: rgb(var(--brand-blue-rgb) / 0.6);
     line-height: 1.6;
 }
 
@@ -4165,13 +4300,13 @@
 .farmapaz-edit-account-title {
     font-size: 1.5rem;
     font-weight: 800;
-    color: #09146E;
+    color: var(--brand-blue);
     margin: 0 0 0.25rem;
     line-height: 1.2;
 }
 .farmapaz-edit-account-subtitle {
     font-size: 0.875rem;
-    color: rgba(9,20,110,0.45);
+    color: rgb(var(--brand-blue-rgb) / 0.45);
     margin: 0;
 }
 .farmapaz-edit-account-form {
@@ -4200,7 +4335,7 @@
 .farmapaz-edit-account-label {
     font-size: 0.8125rem;
     font-weight: 600;
-    color: rgba(9,20,110,0.7);
+    color: rgb(var(--brand-blue-rgb) / 0.7);
 }
 .farmapaz-edit-account-input-wrap {
     position: relative;
@@ -4208,21 +4343,21 @@
 .farmapaz-edit-account-input {
     width: 100%;
     padding: 0.65rem 0.85rem;
-    border: 1.5px solid rgba(9,20,110,0.1);
+    border: 1.5px solid rgb(var(--brand-blue-rgb) / 0.1);
     border-radius: 0.75rem;
     font-size: 0.9375rem;
     background: #fff;
-    color: #09146E;
+    color: var(--brand-blue);
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     outline: none;
 }
 .farmapaz-edit-account-input:focus {
-    border-color: rgba(9,20,110,0.3);
-    box-shadow: 0 0 0 3px rgba(9,20,110,0.04);
+    border-color: rgb(var(--brand-blue-rgb) / 0.3);
+    box-shadow: 0 0 0 3px rgb(var(--brand-blue-rgb) / 0.04);
 }
 .farmapaz-edit-account-hint {
     font-size: 0.75rem;
-    color: rgba(9,20,110,0.4);
+    color: rgb(var(--brand-blue-rgb) / 0.4);
     margin: 0.25rem 0 0;
 }
 .farmapaz-edit-account-divider {
@@ -4236,12 +4371,12 @@
     content: '';
     flex: 1;
     height: 1px;
-    background: rgba(9,20,110,0.06);
+    background: rgb(var(--brand-blue-rgb) / 0.06);
 }
 .farmapaz-edit-account-divider span {
     font-size: 0.8125rem;
     font-weight: 600;
-    color: rgba(9,20,110,0.4);
+    color: rgb(var(--brand-blue-rgb) / 0.4);
     white-space: nowrap;
 }
 .farmapaz-edit-account-submit {
@@ -4257,14 +4392,14 @@
     font-size: 0.9375rem;
     font-weight: 600;
     color: #fff;
-    background: #09146E;
+    background: var(--brand-blue);
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .farmapaz-edit-account-btn:hover {
-    background: #0c1fa0;
+    background: color-mix(in srgb, var(--brand-blue) 82%, #fff);
     transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(9,20,110,0.2);
+    box-shadow: 0 4px 16px rgb(var(--brand-blue-rgb) / 0.2);
 }
 
 /* ===== My Account - Edit Address ===== */
@@ -4277,13 +4412,13 @@
 .farmapaz-edit-address-title {
     font-size: 1.5rem;
     font-weight: 800;
-    color: #09146E;
+    color: var(--brand-blue);
     margin: 0 0 0.25rem;
     line-height: 1.2;
 }
 .farmapaz-edit-address-subtitle {
     font-size: 0.875rem;
-    color: rgba(9,20,110,0.45);
+    color: rgb(var(--brand-blue-rgb) / 0.45);
     margin: 0;
 }
 .farmapaz-edit-address-back {
@@ -4292,13 +4427,13 @@
     gap: 0.4rem;
     font-size: 0.8125rem;
     font-weight: 600;
-    color: #5A7D43;
+    color: var(--brand-green);
     text-decoration: none;
     transition: color 0.2s;
     margin-bottom: 0.75rem;
 }
 .farmapaz-edit-address-back:hover {
-    color: #4a6a36;
+    color: color-mix(in srgb, var(--brand-green) 85%, #000);
 }
 .farmapaz-edit-address-grid {
     display: grid;
@@ -4308,25 +4443,25 @@
 .farmapaz-edit-address-card {
     background: rgba(255,255,255,0.6);
     border-radius: 1rem;
-    border: 1px solid rgba(9,20,110,0.06);
+    border: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
     overflow: hidden;
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .farmapaz-edit-address-card:hover {
-    border-color: rgba(9,20,110,0.12);
-    box-shadow: 0 4px 16px rgba(9,20,110,0.06);
+    border-color: rgb(var(--brand-blue-rgb) / 0.12);
+    box-shadow: 0 4px 16px rgb(var(--brand-blue-rgb) / 0.06);
 }
 .farmapaz-edit-address-card-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 1rem 1.25rem;
-    border-bottom: 1px solid rgba(9,20,110,0.04);
+    border-bottom: 1px solid rgb(var(--brand-blue-rgb) / 0.04);
 }
 .farmapaz-edit-address-card-title {
     font-size: 0.9375rem;
     font-weight: 700;
-    color: #09146E;
+    color: var(--brand-blue);
     margin: 0;
 }
 .farmapaz-edit-address-card-edit {
@@ -4335,12 +4470,12 @@
     gap: 0.35rem;
     font-size: 0.8125rem;
     font-weight: 600;
-    color: #5A7D43;
+    color: var(--brand-green);
     text-decoration: none;
     transition: color 0.2s;
 }
 .farmapaz-edit-address-card-edit:hover {
-    color: #4a6a36;
+    color: color-mix(in srgb, var(--brand-green) 85%, #000);
 }
 .farmapaz-edit-address-card-body {
     padding: 1rem 1.25rem;
@@ -4348,7 +4483,7 @@
 .farmapaz-edit-address-card-body address {
     font-style: normal;
     font-size: 0.875rem;
-    color: rgba(9,20,110,0.6);
+    color: rgb(var(--brand-blue-rgb) / 0.6);
     line-height: 1.6;
 }
 .farmapaz-edit-address-form {
@@ -4372,14 +4507,14 @@
     font-size: 0.9375rem;
     font-weight: 600;
     color: #fff;
-    background: #09146E;
+    background: var(--brand-blue);
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .farmapaz-edit-address-save-btn:hover {
-    background: #0c1fa0;
+    background: color-mix(in srgb, var(--brand-blue) 82%, #fff);
     transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(9,20,110,0.2);
+    box-shadow: 0 4px 16px rgb(var(--brand-blue-rgb) / 0.2);
 }
 
 /* ===== My Account - Payment Methods ===== */
@@ -4392,19 +4527,19 @@
 .farmapaz-payment-title {
     font-size: 1.5rem;
     font-weight: 800;
-    color: #09146E;
+    color: var(--brand-blue);
     margin: 0 0 0.25rem;
     line-height: 1.2;
 }
 .farmapaz-payment-subtitle {
     font-size: 0.875rem;
-    color: rgba(9,20,110,0.45);
+    color: rgb(var(--brand-blue-rgb) / 0.45);
     margin: 0;
 }
 .farmapaz-payment-table-wrap {
     overflow-x: auto;
     border-radius: 0.85rem;
-    border: 1px solid rgba(9,20,110,0.06);
+    border: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
     background: rgba(255,255,255,0.8);
 }
 .farmapaz-payment-table {
@@ -4413,30 +4548,30 @@
     font-size: 0.875rem;
 }
 .farmapaz-payment-table th {
-    background: rgba(9,20,110,0.03);
-    color: rgba(9,20,110,0.5);
+    background: rgb(var(--brand-blue-rgb) / 0.03);
+    color: rgb(var(--brand-blue-rgb) / 0.5);
     font-weight: 600;
     text-align: left;
     padding: 0.75rem 1rem;
-    border-bottom: 1px solid rgba(9,20,110,0.06);
+    border-bottom: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
     white-space: nowrap;
 }
 .farmapaz-payment-table td {
     padding: 0.75rem 1rem;
-    border-bottom: 1px solid rgba(9,20,110,0.04);
-    color: rgba(9,20,110,0.7);
+    border-bottom: 1px solid rgb(var(--brand-blue-rgb) / 0.04);
+    color: rgb(var(--brand-blue-rgb) / 0.7);
 }
 .farmapaz-payment-table tr:last-child td {
     border-bottom: none;
 }
 .farmapaz-payment-expiry {
-    color: rgba(9,20,110,0.4);
+    color: rgb(var(--brand-blue-rgb) / 0.4);
     font-size: 0.8125rem;
 }
 .farmapaz-payment-delete-btn {
     font-size: 0.8125rem;
     font-weight: 600;
-    color: #dc2626;
+    color: color-mix(in srgb, var(--brand-red) 85%, #000);
     text-decoration: none;
     transition: color 0.2s;
 }
@@ -4454,12 +4589,12 @@
 .farmapaz-payment-empty-title {
     font-size: 1.125rem;
     font-weight: 700;
-    color: #09146E;
+    color: var(--brand-blue);
     margin: 0 0 0.5rem;
 }
 .farmapaz-payment-empty-text {
     font-size: 0.875rem;
-    color: rgba(9,20,110,0.45);
+    color: rgb(var(--brand-blue-rgb) / 0.45);
     margin: 0;
 }
 
@@ -4476,17 +4611,17 @@
     padding: 0.75rem 1rem;
     background: rgba(255,255,255,0.6);
     border-radius: 0.75rem;
-    border: 1px solid rgba(9,20,110,0.06);
+    border: 1px solid rgb(var(--brand-blue-rgb) / 0.06);
     margin-bottom: 0.5rem;
 }
 .farmapaz-account-content .woocommerce-AddPaymentMethod .payment_methods li label {
     font-size: 0.875rem;
     font-weight: 600;
-    color: #09146E;
+    color: var(--brand-blue);
 }
 .farmapaz-account-content .woocommerce-AddPaymentMethod .payment_box {
     font-size: 0.8125rem;
-    color: rgba(9,20,110,0.55);
+    color: rgb(var(--brand-blue-rgb) / 0.55);
     margin-top: 0.5rem;
 }
 .farmapaz-account-content .woocommerce-AddPaymentMethod .button {
@@ -4499,12 +4634,186 @@
     font-size: 0.9375rem;
     font-weight: 600;
     color: #fff;
-    background: #09146E;
+    background: var(--brand-blue);
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .farmapaz-account-content .woocommerce-AddPaymentMethod .button:hover {
-    background: #0c1fa0;
+    background: color-mix(in srgb, var(--brand-blue) 82%, #fff);
     transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(9,20,110,0.2);
+    box-shadow: 0 4px 16px rgb(var(--brand-blue-rgb) / 0.2);
+}
+
+/* ---------- Mini Cart Drawer ---------- */
+.farmapaz-mini-cart {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    visibility: hidden;
+    pointer-events: none;
+}
+.farmapaz-mini-cart.open {
+    visibility: visible;
+    pointer-events: auto;
+}
+.farmapaz-mini-cart-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgb(var(--brand-blue-rgb) / 0.35);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.farmapaz-mini-cart.open .farmapaz-mini-cart-overlay {
+    opacity: 1;
+}
+.farmapaz-mini-cart-panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(420px, 92vw);
+    background: #fff;
+    box-shadow: -20px 0 60px rgb(var(--brand-blue-rgb) / 0.18);
+    transform: translateX(105%);
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+    border-radius: 1.25rem 0 0 1.25rem;
+    overflow: hidden;
+}
+.farmapaz-mini-cart.open .farmapaz-mini-cart-panel {
+    transform: translateX(0);
+}
+.farmapaz-mini-cart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.1rem 1.25rem;
+    border-bottom: 1px solid rgb(var(--brand-blue-rgb) / 0.08);
+    flex-shrink: 0;
+    background: #fff;
+}
+.farmapaz-mini-cart-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--brand-blue);
+    margin: 0;
+}
+.farmapaz-mini-cart-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: none;
+    border-radius: 9999px;
+    background: rgb(var(--brand-blue-rgb) / 0.06);
+    color: var(--brand-blue);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.farmapaz-mini-cart-close:hover {
+    background: rgb(var(--brand-red-rgb) / 0.1);
+    color: var(--brand-red);
+}
+.farmapaz-mini-cart-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem 1.25rem;
+    -webkit-overflow-scrolling: touch;
+}
+.farmapaz-mini-cart-body .cart-empty-msg {
+    color: rgb(var(--brand-blue-rgb) / 0.5);
+    font-size: 0.9375rem;
+    text-align: center;
+    padding: 2rem 0 1rem;
+}
+.farmapaz-mini-cart-body .cart-totals-rows {
+    margin-top: 1rem;
+    border-top: 1px solid rgb(var(--brand-blue-rgb) / 0.08);
+    padding-top: 0.75rem;
+}
+.farmapaz-mini-cart-body .cart-totals-total {
+    margin-top: 0.25rem;
+    padding-bottom: 0.75rem;
+}
+.farmapaz-mini-cart-checkout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 0.85rem 1rem;
+    margin-top: 0.75rem;
+    border: none;
+    border-radius: 0.9rem;
+    background: linear-gradient(135deg, var(--brand-blue) 0%, color-mix(in srgb, var(--brand-blue) 82%, #fff) 100%);
+    color: #fff;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.farmapaz-mini-cart-checkout:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgb(var(--brand-blue-rgb) / 0.28);
+}
+.farmapaz-mini-cart-fullcart {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    margin-top: 0.6rem;
+    border: 1.5px solid rgb(var(--brand-blue-rgb) / 0.14);
+    border-radius: 0.9rem;
+    background: #fff;
+    color: var(--brand-blue);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.farmapaz-mini-cart-fullcart:hover {
+    border-color: var(--brand-blue);
+    background: rgb(var(--brand-blue-rgb) / 0.03);
+}
+.farmapaz-mini-cart-shop {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    margin-top: 0.75rem;
+    border: 1.5px solid rgb(var(--brand-blue-rgb) / 0.12);
+    border-radius: 0.9rem;
+    background: #fff;
+    color: var(--brand-blue);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.farmapaz-mini-cart-shop:hover {
+    border-color: var(--brand-blue);
+}
+@media (max-width: 640px) {
+    .farmapaz-mini-cart-panel {
+        width: 100vw;
+        max-width: 100vw;
+        border-radius: 1.25rem 1.25rem 0 0;
+        top: auto;
+        bottom: 0;
+        height: 88vh;
+        height: 88dvh;
+        max-height: 100dvh;
+    }
+}
+
+body.farmapaz-mini-cart-open {
+    overflow: hidden;
 }
