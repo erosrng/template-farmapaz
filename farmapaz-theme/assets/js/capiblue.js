@@ -2,19 +2,19 @@
     'use strict';
 
     var chatData = typeof farmapazData !== 'undefined' ? farmapazData : { ajaxUrl: '/wp-admin/admin-ajax.php' };
-    var chatBtn = document.getElementById('pastillin-btn');
-    var chatBox = document.getElementById('pastillin-box');
-    var chatMessages = document.getElementById('pastillin-msgs');
-    var chatInput = document.getElementById('pastillin-input');
-    var chatSend = document.getElementById('pastillin-send');
-    var chatClose = document.getElementById('pastillin-close');
-    var chatQuickBar = document.getElementById('pastillin-quick-bar');
+    var chatBtn = document.getElementById('capiblue-btn');
+    var chatBox = document.getElementById('capiblue-box');
+    var chatMessages = document.getElementById('capiblue-msgs');
+    var chatInput = document.getElementById('capiblue-input');
+    var chatSend = document.getElementById('capiblue-send');
+    var chatClose = document.getElementById('capiblue-close');
+    var chatQuickBar = document.getElementById('capiblue-quick-bar');
     var isOpen = false;
 
     if (!chatBtn || !chatBox) return;
 
     var avatarSrc = '';
-    var headerAvatar = document.querySelector('.past-header-avatar img');
+    var headerAvatar = document.querySelector('.capiblue-header-avatar img');
     if (headerAvatar) avatarSrc = headerAvatar.src;
 
     var quickReplies = [
@@ -26,14 +26,14 @@
     ];
 
     // ====== CHAT PERSISTENCE (localStorage) ======
-    var STORAGE_KEY = 'pastillin_chat';
+    var STORAGE_KEY = 'capiblue_chat';
 
     function saveMessages() {
         var items = [];
-        var msgs = chatMessages.querySelectorAll('.past-msg:not(.past-typing)');
+        var msgs = chatMessages.querySelectorAll('.capiblue-msg:not(.capiblue-typing)');
         msgs.forEach(function (el) {
-            var isUser = el.classList.contains('past-msg-user');
-            var textEl = el.querySelector('.past-msg-text');
+            var isUser = el.classList.contains('capiblue-msg-user');
+            var textEl = el.querySelector('.capiblue-msg-text');
             if (textEl) {
                 items.push({ text: textEl.innerHTML, isUser: isUser });
             }
@@ -50,13 +50,13 @@
             chatMessages.innerHTML = '';
             items.forEach(function (item) {
                 var msg = document.createElement('div');
-                msg.className = item.isUser ? 'past-msg past-msg-user' : 'past-msg past-msg-bot';
+                msg.className = item.isUser ? 'capiblue-msg capiblue-msg-user' : 'capiblue-msg capiblue-msg-bot';
                 if (!item.isUser) {
                     msg.innerHTML =
                         avatarHTML() +
-                        '<div class="past-msg-content"><div class="past-msg-text">' + item.text + '</div></div>';
+                        '<div class="capiblue-msg-content"><div class="capiblue-msg-text">' + item.text + '</div></div>';
                 } else {
-                    msg.innerHTML = '<div class="past-msg-content past-msg-user-content"><div class="past-msg-text">' + item.text + '</div></div>';
+                    msg.innerHTML = '<div class="capiblue-msg-content capiblue-msg-user-content"><div class="capiblue-msg-text">' + item.text + '</div></div>';
                 }
                 chatMessages.appendChild(msg);
             });
@@ -89,23 +89,23 @@
 
     function avatarHTML() {
         return avatarSrc
-            ? '<div class="past-msg-avatar"><img src="' + avatarSrc + '" alt="Pastillín"></div>'
-            : '<div class="past-msg-avatar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-3-3v6m-7 4l2-2m14 2l-2-2M12 21a9 9 0 100-18 9 9 0 000 18z"/></svg></div>';
+            ? '<div class="capiblue-msg-avatar"><img src="' + avatarSrc + '" alt="CapiBlue"></div>'
+            : '<div class="capiblue-msg-avatar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-3-3v6m-7 4l2-2m14 2l-2-2M12 21a9 9 0 100-18 9 9 0 000 18z"/></svg></div>';
     }
 
     function showWelcome() {
         // Don't show welcome if chat has history
         if (chatMessages.children.length > 1) return;
         var msg = document.createElement('div');
-        msg.className = 'past-msg past-msg-bot';
+        msg.className = 'capiblue-msg capiblue-msg-bot';
         msg.innerHTML =
             avatarHTML() +
-            '<div class="past-msg-content"><div class="past-msg-text">Hola! Soy <strong>Pastillín</strong>, tu asistente de Farmapaz. En que puedo ayudarte?</div><div class="past-quick-replies"></div></div>';
+            '<div class="capiblue-msg-content"><div class="capiblue-msg-text">Hola! Soy <strong>CapiBlue</strong>, tu asistente de Farmapaz. En que puedo ayudarte?</div><div class="capiblue-quick-replies"></div></div>';
         chatMessages.appendChild(msg);
-        var qrContainer = msg.querySelector('.past-quick-replies');
+        var qrContainer = msg.querySelector('.capiblue-quick-replies');
         quickReplies.forEach(function (text) {
             var btn = document.createElement('button');
-            btn.className = 'past-quick-btn';
+            btn.className = 'capiblue-quick-btn';
             btn.textContent = text;
             btn.addEventListener('click', function () { sendMessage(text); });
             qrContainer.appendChild(btn);
@@ -115,13 +115,13 @@
 
     function addMessage(text, isUser) {
         var msg = document.createElement('div');
-        msg.className = isUser ? 'past-msg past-msg-user' : 'past-msg past-msg-bot';
+        msg.className = isUser ? 'capiblue-msg capiblue-msg-user' : 'capiblue-msg capiblue-msg-bot';
         if (!isUser) {
             msg.innerHTML =
                 avatarHTML() +
-                '<div class="past-msg-content"><div class="past-msg-text">' + formatText(text) + '</div></div>';
+                '<div class="capiblue-msg-content"><div class="capiblue-msg-text">' + formatText(text) + '</div></div>';
         } else {
-            msg.innerHTML = '<div class="past-msg-content past-msg-user-content"><div class="past-msg-text">' + escapeHtml(text) + '</div></div>';
+            msg.innerHTML = '<div class="capiblue-msg-content capiblue-msg-user-content"><div class="capiblue-msg-text">' + escapeHtml(text) + '</div></div>';
         }
         chatMessages.appendChild(msg);
         scrollDown();
@@ -130,26 +130,26 @@
 
     function addTyping() {
         var msg = document.createElement('div');
-        msg.className = 'past-msg past-msg-bot past-typing';
-        msg.id = 'past-typing';
+        msg.className = 'capiblue-msg capiblue-msg-bot capiblue-typing';
+        msg.id = 'capiblue-typing';
         msg.innerHTML =
             avatarHTML() +
-            '<div class="past-msg-content"><div class="past-typing-dots"><span></span><span></span><span></span></div></div>';
+            '<div class="capiblue-msg-content"><div class="capiblue-typing-dots"><span></span><span></span><span></span></div></div>';
         chatMessages.appendChild(msg);
         scrollDown();
     }
 
     function removeTyping() {
-        var el = document.getElementById('past-typing');
+        var el = document.getElementById('capiblue-typing');
         if (el) el.remove();
     }
 
     function getHistory() {
         var items = [];
-        var msgs = chatMessages.querySelectorAll('.past-msg:not(.past-typing)');
+        var msgs = chatMessages.querySelectorAll('.capiblue-msg:not(.capiblue-typing)');
         msgs.forEach(function (el) {
-            var isUser = el.classList.contains('past-msg-user');
-            var textEl = el.querySelector('.past-msg-text');
+            var isUser = el.classList.contains('capiblue-msg-user');
+            var textEl = el.querySelector('.capiblue-msg-text');
             if (textEl) {
                 items.push({ role: isUser ? 'user' : 'assistant', text: textEl.textContent.trim() });
             }
@@ -169,7 +169,7 @@
         addTyping();
 
         var fd = new FormData();
-        fd.append('action', 'farmapaz_pastillin');
+        fd.append('action', 'farmapaz_capiblue');
         fd.append('message', text);
         fd.append('history', JSON.stringify(history));
         fd.append('nonce', chatData.nonce || '');
@@ -191,18 +191,23 @@
     }
 
     // [†] Renderiza el texto del bot:
-    //     1. Markdown **bold** → <strong>
+    //     1. Markdown #encabezados, **bold**, _italic_, *italic*
     //     2. [texto](url) → <a> (productos, categorías, marcas)
-    //     3. URLs desnudas (WhatsApp, etc.) → <a> (regex con (^|[\s>]) evita duplicar href=)
+    //     3. Viñetas (- / •) y URLs desnudas (WhatsApp, etc.)
+    //     El escape (& < >) primero evita inyección de HTML y no rompe los <a> generados.
     function formatText(text) {
         return text
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
+            .replace(/^#{1,6}\s*(.+)$/gm, '<strong>$1</strong>')
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener" class="past-link">$1</a>')
+            .replace(/(^|\s)_([^_\n]+)_(?=$|\s)/g, '$1<em>$2</em>')
+            .replace(/(^|\s)\*([^*\n]+)\*(?=$|\s)/g, '$1<em>$2</em>')
+            .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener" class="capiblue-link">$1</a>')
+            .replace(/^\s*[-•]\s+/gm, '• ')
             .replace(/\n/g, '<br>')
-            .replace(/(^|[\s>])(https?:\/\/[^\s<]+)/g, '$1<a href="$2" target="_blank" rel="noopener" class="past-link">$2</a>');
+            .replace(/(^|[\s>])(https?:\/\/[^\s<]+)/g, '$1<a href="$2" target="_blank" rel="noopener" class="capiblue-link">$2</a>');
     }
 
     function escapeHtml(text) {
@@ -220,7 +225,7 @@
             if (shown[key]) return;
             shown[key] = true;
             var btn = document.createElement('button');
-            btn.className = 'past-quick-bar-btn';
+            btn.className = 'capiblue-quick-bar-btn';
             btn.textContent = text;
             btn.addEventListener('click', function () { sendMessage(text); });
             chatQuickBar.appendChild(btn);
@@ -229,6 +234,24 @@
 
     function scrollDown() {
         chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // [†] Mobile: keep the box pinned to the visual viewport so the keyboard
+    // never covers the input and the chat doesn't jump when it opens.
+    // top = vv.offsetTop + height = vv.height hace que la caja "sube" junto
+    // con el teclado en vez de saltar. (fallback: CSS 100dvh)
+    if (window.visualViewport) {
+        var capiblueVv = window.visualViewport;
+        function capiblueSizeBox() {
+            if (window.innerWidth > 480) return;
+            chatBox.style.top = (capiblueVv.offsetTop || 0) + 'px';
+            chatBox.style.height = capiblueVv.height + 'px';
+            chatBox.style.maxHeight = capiblueVv.height + 'px';
+            chatBox.style.bottom = 'auto';
+        }
+        capiblueVv.addEventListener('resize', capiblueSizeBox);
+        capiblueVv.addEventListener('scroll', capiblueSizeBox);
+        capiblueSizeBox();
     }
 
     // Events

@@ -9,14 +9,17 @@ npm run watch:tailwind   # same, with --watch
 ```
 No test/lint/typecheck commands exist.
 
+## Deployment Workflow
+- The user deploys by uploading individual files (no full-zip installs). After **every** prompt where files are modified, the final message must list exactly which files were touched, so the user only uploads those.
+
 ## Local Dev
 - Docker: `farmapaz-local/docker-compose.yml` — WP at `localhost:8080`, DB at `3307`, phpMyAdmin at `8081`.
 - Theme mounted as volume at `/var/www/html/wp-content/themes/farmapaz-theme`.
 - DB table prefix: `Q0i1dfcrc_`. WP debug enabled. Initial DB from gzipped SQL backup.
 
 ## Architecture
-- **Entrypoint**: `functions.php` (~2000 lines) — enqueues all assets, cart fragments, shipping fee, Spanish `gettext`, Pastillín AI chat, card steppers.
-- **Assets**: CSS via `assets/src/tailwind.css` → `assets/css/app.css` (+ `shop.css` for cart/checkout/account). JS: `app.js` (add-to-cart, toast, steppers), `cart.js` (remove/qty AJAX, fragment replacement), `shop.js` (re-bind on dynamic products), `pastillin.js` (chat), `product.js`.
+- **Entrypoint**: `functions.php` (~2000 lines) — enqueues all assets, cart fragments, shipping fee, Spanish `gettext`, Farmito AI chat, card steppers.
+- **Assets**: CSS via `assets/src/tailwind.css` → `assets/css/app.css` (+ `shop.css` for cart/checkout/account). JS: `app.js` (add-to-cart, toast, steppers), `cart.js` (remove/qty AJAX, fragment replacement), `shop.js` (re-bind on dynamic products), `farmito.js` (chat), `product.js`.
 - **WooCommerce overrides**: `woocommerce/content-product.php`, `cart/cart.php`, `checkout/`, `single-product.php`.
 - **Image proxy**: `proxy-image.php?url=...` caches to `cache-images/` (24h TTL). Proxy domain: `farmapazvenezuela.com`. Fallback: `assets/images/producto.png`.
 - **Nav walker**: `inc/nav-walker.php`.
@@ -40,7 +43,7 @@ No test/lint/typecheck commands exist.
 ## Key Details
 - **Page IDs**: Cart = 9 (`carrito`), Checkout = 10 (`checkout`). Content stored as WPBakery base64 in `[vc_raw_html]` blocks → decoded in `page.php`.
 - **Shipping**: Dynamic fee via `woocommerce_cart_calculate_fees` — free (`$0`) if subtotal ≥ configurable minimum (default `$20`, option `farmapaz_free_shipping_min`), otherwise flat fee (default `$2`, option `farmapaz_shipping_fee`). Both editable in `Ajustes de Tienda` admin menu (`dashicons-store`, top-level).
-- **Pastillín AI chatbot**: `wp_ajax_farmapaz_pastillin` / `nopriv`. Supports Gemini, OpenRouter, Groq — configured in `Ajustes > Pastillín AI`. Tries providers in order: Gemini → OpenRouter → Groq. Local replies for competitors, greetings, business info. Searches products for context.
+- **Farmito AI chatbot**: `wp_ajax_farmapaz_farmito` / `nopriv`. Supports Gemini, OpenRouter, Groq — configured in `Ajustes > Farmito AI`. Tries providers in order: Gemini → OpenRouter → Groq. Local replies for competitors, greetings, business info. Searches products for context.
 - **`shop.css`** loads only on cart, checkout, and account pages.
 - **JS data object**: `window.farmapazData` exposes `homeUrl`, `cartUrl`.
 - Cart badge (`#cart-count`) shows total units via `WC()->cart->get_cart_contents_count()`.

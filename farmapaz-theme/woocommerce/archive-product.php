@@ -62,11 +62,9 @@ get_header(); ?>
                            placeholder="Buscar en esta categoría..."
                            value="<?= esc_attr($current_s); ?>"
                            autocomplete="off">
-                    <?php if ($current_s): ?>
-                    <button class="filter-clear-btn shop-hero-search-clear" data-clear="s" aria-label="Limpiar búsqueda">
+                    <button class="filter-clear-btn shop-hero-search-clear hidden" data-clear="s" aria-label="Limpiar búsqueda">
                         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
-                    <?php endif; ?>
                 </div>
                 <p class="shop-hero-sub">
                     <?php printf('%d productos encontrados', $wp_query->found_posts); ?>

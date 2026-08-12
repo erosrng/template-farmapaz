@@ -232,6 +232,26 @@
             if (shippingSection) {
                 shippingSection.classList.toggle('is-hidden', value === 'pickup');
             }
+            // Retiro en tienda: no se pide dirección ni se permite el pago web,
+            // la confirmación es solo por WhatsApp.
+            var billingSection = document.querySelector('.checkout-billing-section');
+            if (billingSection) {
+                billingSection.classList.toggle('is-hidden', value === 'pickup');
+            }
+            var paymentActions = document.querySelector('.checkout-payment-actions');
+            if (paymentActions) {
+                paymentActions.classList.toggle('is-hidden', value === 'pickup');
+            }
+            var deliveryNote = document.querySelector('.farmapaz-delivery-note');
+            if (deliveryNote) {
+                deliveryNote.style.display = (value === 'delivery') ? '' : 'none';
+            }
+            // Solo el botón del checkout (no el del carrito ni mini carrito)
+            var checkoutWrap = document.querySelector('.checkout-payment-wrap');
+            var waPickupBtn = checkoutWrap ? checkoutWrap.querySelector('.farmapaz-wa-btn-pickup') : null;
+            if (waPickupBtn) {
+                waPickupBtn.style.display = (value === 'pickup') ? '' : 'none';
+            }
         }
 
         function refreshReviewTotals() {
@@ -261,7 +281,152 @@
             });
         });
 
+        // WooCommerce re-renderiza payment.php por AJAX (updated_checkout):
+        // vuelve a display:none, así que reaplicamos el estado del método.
+        document.addEventListener('updated_checkout', function() {
+            applyDeliveryMethod();
+        });
+
         applyDeliveryMethod();
     }
+
+    // ====== PAYMENT METHOD TOGGLE (show the info box of the selected gateway) ======
+    var paymentRadios = document.querySelectorAll('input[name="payment_method"]');
+    if (paymentRadios.length > 1) {
+        function applyPaymentMethod() {
+            var checked = document.querySelector('input[name="payment_method"]:checked');
+            document.querySelectorAll('.checkout-payment-box').forEach(function(box) {
+                box.style.display = (checked && box.classList.contains('payment_box_' + checked.value)) ? '' : 'none';
+            });
+        }
+        paymentRadios.forEach(function(r) {
+            r.addEventListener('change', applyPaymentMethod);
+        });
+        applyPaymentMethod();
+    }
+
+    // ====== CHECKOUT: complete the submission when WOOCCM intercepts the click ======
+    // WOOCCM defers the capture (comprobante) upload to the "Confirmar pedido" click:
+    // it preventDefaults, uploads the file via sync XHR, sets the hidden billing_wooccm11
+    // value, then re-triggers the button click with jQuery. On jQuery 3.7.1 that
+    // re-trigger never performs the native submit (jQuery's special "click" default),
+    // so the form stays stuck on "Subiendo, por favor, espera…" and the capture value
+    // never reaches the order ("Capture del pago es requerido").
+    //
+    // Fix: give immediate loading feedback on click, wait for the capture value to be
+    // set (or confirm there is none), then submit the form natively with the
+    // woocommerce_checkout_place_order submitter that WooCommerce's process_checkout()
+    // expects.
+    var checkoutForm = document.querySelector('form[name="checkout"]');
+    if (checkoutForm) {
+        var placeOrderBtn = document.getElementById('place_order');
+
+        if (placeOrderBtn) {
+            var loadingStarted = 0;
+            var sawProcessing = false;
+
+            placeOrderBtn.addEventListener('click', function(e) {
+                if (checkoutForm.dataset.farmapazWooSubmit) return;
+
+                // Immediate loading state (only when the form passes native validation,
+                // so invalid forms still show the browser's field messages).
+                if (checkoutForm.checkValidity() && !this.classList.contains('farmapaz-checkout-loading')) {
+                    loadingStarted = Date.now();
+                    sawProcessing = false;
+                    this.classList.add('farmapaz-checkout-loading');
+                }
+
+                checkoutForm.dataset.farmapazWooSubmit = '1';
+                var self = this;
+                setTimeout(function() {
+                    if (!e.defaultPrevented) {
+                        // WOOCCM did not intercept: the normal WooCommerce AJAX flow
+                        // (or a native submit) is running, so release the guard.
+                        delete checkoutForm.dataset.farmapazWooSubmit;
+                        return;
+                    }
+                    // WOOCCM intercepted: wait for the capture upload to finish, then submit.
+                    var attempts = 0;
+                    var timer = setInterval(function() {
+                        attempts++;
+                        var capture = checkoutForm.querySelector('input[name="billing_wooccm11"]');
+                        var captureDone = !capture || (capture.value || '').trim() !== '';
+                        if (captureDone) {
+                            clearInterval(timer);
+                            // Native form.submit() bypasses HTML5 validation, so honor
+                            // the required capture file field before sending.
+                            if (!checkoutForm.checkValidity()) {
+                                delete checkoutForm.dataset.farmapazWooSubmit;
+                                self.classList.remove('farmapaz-checkout-loading');
+                                return;
+                            }
+                            var submitter = checkoutForm.querySelector('input[name="woocommerce_checkout_place_order"]');
+                            if (!submitter) {
+                                submitter = document.createElement('input');
+                                submitter.type = 'hidden';
+                                submitter.name = 'woocommerce_checkout_place_order';
+                                checkoutForm.appendChild(submitter);
+                            }
+                            checkoutForm.submit();
+                        } else if (attempts > 60) { // ~12s upload timeout
+                            clearInterval(timer);
+                            delete checkoutForm.dataset.farmapazWooSubmit;
+                            self.classList.remove('farmapaz-checkout-loading');
+                        }
+                    }, 200);
+                }, 0);
+            });
+
+            // Remove the loading state once WooCommerce's own AJAX finishes (e.g. an
+            // invalid billing form) or if nothing happened after a few seconds.
+            setInterval(function() {
+                if (!placeOrderBtn.classList.contains('farmapaz-checkout-loading')) return;
+                if (checkoutForm.classList.contains('processing')) {
+                    sawProcessing = true;
+                    return;
+                }
+                if (sawProcessing || (Date.now() - loadingStarted > 4000)) {
+                    placeOrderBtn.classList.remove('farmapaz-checkout-loading');
+                }
+            }, 200);
+        }
+    }
+
+    // ====== PEDIDO POR WHATSAPP (abre el chat con los productos del carrito) ======
+    // Mensaje por producto: nombre, SKU, cantidad y link al producto.
+    var farmapazWaNumber = (typeof farmapazData !== 'undefined' && farmapazData.pickupWhatsapp) ? farmapazData.pickupWhatsapp : '584249139434';
+
+    function farmapazBuildWhatsappOrder(isPickup) {
+        var lines = isPickup
+            ? ['Hola, quiero hacer este pedido y retirar en tienda']
+            : ['Hola, quiero hacer un pedido por WhatsApp con estos productos:'];
+        var index = 0;
+        document.querySelectorAll('.cart-item, .checkout-review-item').forEach(function(item) {
+            var name = item.dataset.name || '';
+            if (!name) return;
+            index++;
+            var sku = item.dataset.sku || '';
+            var link = item.dataset.link || '';
+            var qty = parseInt(item.dataset.qty, 10);
+            var qtyInput = item.querySelector('input[name*="[qty]"]');
+            if (qtyInput && qtyInput.value !== '') qty = parseInt(qtyInput.value, 10);
+            if (!qty || qty < 1) qty = 1;
+            lines.push('');
+            lines.push(index + ') ' + name);
+            lines.push('SKU: ' + sku);
+            lines.push('Cantidad: ' + qty);
+            if (link) lines.push('Link: ' + link);
+        });
+        return lines.join('\n');
+    }
+
+    document.addEventListener('click', function(e) {
+        var btn = e.target.closest('[data-wa-order]');
+        if (!btn) return;
+        e.preventDefault();
+        var isPickup = btn.classList.contains('farmapaz-wa-btn-pickup');
+        var url = 'https://wa.me/' + farmapazWaNumber + '?text=' + encodeURIComponent(farmapazBuildWhatsappOrder(isPickup));
+        window.open(url, '_blank');
+    });
 
 })();

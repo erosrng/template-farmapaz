@@ -661,20 +661,27 @@
         const container = input.closest('[data-search-container]');
         const dropdown = container && container.querySelector('.farmapaz-suggestions');
         const spinner = container && container.querySelector('.farmapaz-spinner');
+        const clearBtn = container && container.querySelector('.farmapaz-search-clear');
         if (!dropdown || !spinner) {
             console.warn('Farmapaz search: container, dropdown or spinner not found');
             return;
         }
         let debounceTimer;
 
+        function updateClear() {
+            if (clearBtn) clearBtn.classList.toggle('hidden', input.value.trim().length === 0);
+        }
+
         input.addEventListener('input', () => {
             clearTimeout(debounceTimer);
             const q = input.value.trim();
+            updateClear();
             if (q.length < 2) { dropdown.classList.add('hidden'); return; }
             debounceTimer = setTimeout(() => fetchSuggestions(q), 350);
         });
 
         input.addEventListener('focus', () => {
+            updateClear();
             if (input.value.trim().length >= 2) dropdown.classList.remove('hidden');
         });
 
@@ -683,8 +690,22 @@
         });
 
         input.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') dropdown.classList.add('hidden');
+            if (e.key === 'Escape') {
+                dropdown.classList.add('hidden');
+                updateClear();
+            }
         });
+
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                input.value = '';
+                updateClear();
+                dropdown.classList.add('hidden');
+                input.focus();
+            });
+        }
+
+        updateClear();
 
         function fetchSuggestions(q) {
             spinner.classList.remove('hidden');

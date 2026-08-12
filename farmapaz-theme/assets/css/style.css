@@ -530,6 +530,7 @@ select:focus-visible {
 /* Full-width carousel track overflow */
 .product-carousel-track {
     -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
 }
 
 /* Floating orb decorations */
@@ -708,4 +709,13 @@ select:focus-visible {
 }
 @keyframes farmapazSpin {
     to { transform: rotate(360deg); }
+}
+
+#mobile-menu .farmapaz-spinner {
+    margin-top: 0;
+}
+
+.farmapaz-search-clear {
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
 }

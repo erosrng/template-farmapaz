@@ -13,7 +13,7 @@ defined('ABSPATH') || exit;
             $product_permalink = apply_filters('woocommerce_cart_item_permalink', $_product->is_visible() ? $_product->get_permalink($cart_item) : '', $cart_item, $cart_item_key);
             $img_url = farmapaz_product_img_fallback(get_the_post_thumbnail_url($product_id, 'thumbnail'));
     ?>
-    <div class="checkout-review-item">
+    <div class="checkout-review-item" data-sku="<?= esc_attr($_product->get_sku() ?: $product_id); ?>" data-name="<?= esc_attr($_product->get_name()); ?>" data-link="<?= esc_url($product_permalink); ?>" data-qty="<?= (int) $cart_item['quantity']; ?>">
         <div class="checkout-review-item-img">
             <?php if ($product_permalink): ?><a href="<?= esc_url($product_permalink); ?>"><?php endif; ?>
                 <?php farmapaz_picture($img_url, $_product->get_name(), '', 'lazy'); ?>

@@ -104,6 +104,9 @@
                                     <span class="farmapaz-spinner hidden"></span>
                                     <svg class="w-4 h-4 lg:w-[18px] lg:h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                                 </span>
+                                <button type="button" class="farmapaz-search-clear hidden absolute right-9 lg:right-10 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-blue transition-colors p-1" aria-label="Limpiar búsqueda">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                </button>
                             </div>
                             <input type="hidden" name="post_type" value="product">
                         </form>
@@ -343,14 +346,21 @@
             </button>
         </div>
         <div class="p-4 overflow-y-auto" style="height: calc(100% - 65px);">
-            <form role="search" method="get" action="<?= esc_url(home_url('/')); ?>" class="relative mb-5">
-                <input type="text" name="s" placeholder="Buscar productos..."
-                       class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue">
-                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                </span>
-                <input type="hidden" name="post_type" value="product">
-            </form>
+            <div class="relative mb-5" data-search-container>
+                <form role="search" method="get" action="<?= esc_url(home_url('/')); ?>" class="relative">
+                    <input type="text" name="s" placeholder="Buscar productos..." autocomplete="off"
+                           class="farmapaz-search-input w-full pl-10 pr-10 py-3 bg-gray-50 border border-gray-200 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </span>
+                    <span class="farmapaz-spinner hidden absolute right-12 top-1/2 -translate-y-1/2"></span>
+                    <button type="button" class="farmapaz-search-clear hidden absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-blue transition-colors p-1.5" aria-label="Limpiar búsqueda">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                    <input type="hidden" name="post_type" value="product">
+                </form>
+                <div class="farmapaz-suggestions absolute top-full left-0 right-0 z-50 mt-2 rounded-2xl shadow-xl border hidden" style="background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); border-color: rgba(9,20,110,0.08); box-shadow: 0 20px 60px rgba(9,20,110,0.1);"></div>
+            </div>
 
             <!-- Mobile Categories -->
             <div class="mb-6">

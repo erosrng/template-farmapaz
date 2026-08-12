@@ -43,7 +43,7 @@ if (!WC()->cart->is_empty() && !WC()->checkout()->is_registration_enabled() && W
                         </span>
                         <span class="farmapaz-delivery-option-body">
                             <span class="farmapaz-delivery-option-title">Envío a domicilio</span>
-                            <span class="farmapaz-delivery-option-desc">Te lo llevamos a la puerta de tu casa.</span>
+                            <span class="farmapaz-delivery-option-desc">Te lo llevamos a la puerta de tu casa. Delivery de <?= esc_html(farmapaz_delivery_schedule()); ?>.</span>
                         </span>
                         <span class="farmapaz-delivery-option-fee"><?php
                             $farmapaz_fee = farmapaz_shipping_fee_amount();
@@ -66,7 +66,14 @@ if (!WC()->cart->is_empty() && !WC()->checkout()->is_registration_enabled() && W
                 </div>
             </div>
 
-            <div class="checkout-section">
+            <?php if (!farmapaz_delivery_is_open()): ?>
+            <div class="farmapaz-delivery-note" data-delivery-note<?= $delivery_method === 'pickup' ? ' style="display:none;"' : ''; ?>">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l2.5 2.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <p class="farmapaz-delivery-note-text">Estamos fuera del horario de delivery (<strong><?= esc_html(farmapaz_delivery_schedule()); ?></strong>). Los pedidos que hagas ahora se procesarán <strong>mañana</strong>, cuando el delivery vuelva a estar activo.</p>
+            </div>
+            <?php endif; ?>
+
+            <div class="checkout-section checkout-billing-section">
                 <h2 class="checkout-section-title">Detalles de facturación</h2>
                 <?php do_action('woocommerce_checkout_billing'); ?>
             </div>

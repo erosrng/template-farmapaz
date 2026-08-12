@@ -31,7 +31,7 @@
             <div class="col-span-2 md:col-span-1 fade-in-up">
                 <div class="mb-4">
                     <?php
-                        $logo_url = get_template_directory_uri() . '/assets/images/logo.png';
+                        $logo_url = get_template_directory_uri() . '/assets/images/logoblanco.png';
                     ?>
                         <img src="<?= $logo_url ?>" alt="Farmapaz" class="h-10 sm:h-12">
                 </div>
@@ -122,33 +122,33 @@
 <!-- WhatsApp Float -->
 <?= do_shortcode('[farmapaz_whatsapp]'); ?>
 
-<!-- Pastillín — Chatbot -->
-<?php $past_icon = get_template_directory_uri() . '/assets/images/21.png'; ?>
-<?php $past_avatar = get_template_directory_uri() . '/assets/images/31.png'; ?>
+<!-- CapiBlue — Chatbot -->
+<?php $capiblue_icon = get_template_directory_uri() . '/assets/images/21.png'; ?>
+<?php $capiblue_avatar = get_template_directory_uri() . '/assets/images/31.png'; ?>
 
-<button id="pastillin-btn" aria-label="Abrir Pastillín">
-    <img src="<?= $past_icon; ?>" alt="Pastillín" class="past-btn-img">
-    <span class="past-btn-label">Consúltale a Pastillín</span>
+<button id="capiblue-btn" aria-label="Abrir CapiBlue">
+    <img src="<?= $capiblue_icon; ?>" alt="CapiBlue" class="capiblue-btn-img">
+    <span class="capiblue-btn-label">Consúltale a CapiBlue</span>
 </button>
 
-<div id="pastillin-box">
-    <div class="past-header">
-        <div class="past-header-avatar">
-            <img src="<?= $past_avatar; ?>" alt="Pastillín">
+<div id="capiblue-box">
+    <div class="capiblue-header">
+        <div class="capiblue-header-avatar">
+            <img src="<?= $capiblue_avatar; ?>" alt="CapiBlue">
         </div>
-        <div class="past-header-info">
-            <strong>Pastillín</strong>
+        <div class="capiblue-header-info">
+            <strong>CapiBlue</strong>
             <span>Asistente Farmapaz</span>
         </div>
-        <button id="pastillin-close" aria-label="Cerrar">
+        <button id="capiblue-close" aria-label="Cerrar">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>
     </div>
-    <div class="past-messages" id="pastillin-msgs"></div>
-    <div class="past-quick-bar" id="pastillin-quick-bar"></div>
-    <div class="past-input-wrap">
-        <textarea id="pastillin-input" placeholder="Escribe tu mensaje..." rows="1"></textarea>
-        <button id="pastillin-send" aria-label="Enviar">
+    <div class="capiblue-messages" id="capiblue-msgs"></div>
+    <div class="capiblue-quick-bar" id="capiblue-quick-bar"></div>
+    <div class="capiblue-input-wrap">
+        <textarea id="capiblue-input" placeholder="Escribe tu mensaje..." rows="1"></textarea>
+        <button id="capiblue-send" aria-label="Enviar">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
         </button>
     </div>

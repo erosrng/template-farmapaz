@@ -111,6 +111,7 @@
             bindImageFallback();
             if (typeof window.farmapazBindAddToCart === 'function') window.farmapazBindAddToCart(grid);
             updateCheckboxes();
+            updateSearchClear();
             var activeFiltersEl = document.querySelector('.active-filters');
             if (activeFiltersEl) {
                 activeFiltersEl.outerHTML = data.active_filters || '<div class="active-filters" style="display:none"></div>';
@@ -193,16 +194,15 @@
 
         var searchInputs = document.querySelectorAll('.filter-search');
         var searchTimer;
-        function syncSearchInputs(value) {
-            searchInputs.forEach(function(el) { el.value = value; });
-        }
         if (searchInputs.length) {
             searchInputs.forEach(function(searchInput) {
                 searchInput.addEventListener('input', function() {
+                    updateSearchClear();
                     clearTimeout(searchTimer);
                     searchTimer = setTimeout(function() {
                         state.s = searchInput.value;
                         syncSearchInputs(searchInput.value);
+                        updateSearchClear();
                         state.page = 1;
                         hasMore = true;
                         if (sentinel) sentinel.style.display = '';
@@ -263,6 +263,7 @@
                 if (field === 's') {
                     state.s = '';
                     syncSearchInputs('');
+                    updateSearchClear();
                     state.page = 1;
                     hasMore = true;
                     if (sentinel) sentinel.style.display = '';
@@ -278,6 +279,19 @@
             vals.push(cb.value);
         });
         return vals;
+    }
+
+    function syncSearchInputs(value) {
+        document.querySelectorAll('.filter-search').forEach(function(el) { el.value = value; });
+    }
+
+    function updateSearchClear() {
+        document.querySelectorAll('.filter-search').forEach(function(el) {
+            var wrap = el.closest('.shop-hero-search');
+            if (!wrap) return;
+            var btn = wrap.querySelector('.shop-hero-search-clear');
+            if (btn) btn.classList.toggle('hidden', el.value.trim().length === 0);
+        });
     }
 
     function updateCheckboxes() {
@@ -384,6 +398,7 @@
     bindImageFallback();
     bindBrandSearch();
     updateCheckboxes();
+    updateSearchClear();
 
     if (state.cat.length) {
         var catList = document.getElementById('cat-list');
