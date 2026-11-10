@@ -28,6 +28,14 @@
         'Delivery gratis',
     ];
 
+    // Cashea se promociona en Óptica; en Farmacia no se ofrece como acceso rápido.
+    var isOpticaContext = document.body.classList.contains('optica-context') || window.location.pathname.indexOf('/optica') === 0;
+    if (!isOpticaContext) {
+        quickReplies = quickReplies.filter(function (reply) {
+            return reply.toLowerCase().indexOf('cashea') === -1;
+        });
+    }
+
     // ====== CHAT PERSISTENCE (localStorage) ======
     var STORAGE_KEY = 'capiblue_chat';
 
@@ -175,6 +183,7 @@
         fd.append('action', 'farmapaz_capiblue');
         fd.append('message', text);
         fd.append('history', JSON.stringify(history));
+        fd.append('context', isOpticaContext ? 'optica' : 'farmacia');
         fd.append('nonce', chatData.nonce || '');
 
         fetch(chatData.ajaxUrl, { method: 'POST', body: fd })

@@ -34,34 +34,5 @@
             </div>
 
         </div>
-
-        <!-- Cashea — farmacia + óptica -->
-        <div class="group relative overflow-hidden rounded-2xl mt-4 sm:mt-6 lg:mt-8 p-6 sm:p-8 lg:p-10 stagger-item banner-hover"
-             style="background: linear-gradient(120deg, #ffe28a 0%, #FEAB0D 55%, #f3a000 100%); box-shadow: 0 18px 44px rgba(254,171,13,0.22);">
-            <div class="absolute top-0 right-0 w-56 h-56 sm:w-72 sm:h-72 rounded-full -translate-y-1/2 translate-x-1/3 group-hover:scale-125 transition-transform duration-1000" style="background: rgba(255,255,255,0.18);"></div>
-            <div class="absolute bottom-0 left-1/3 w-40 h-40 rounded-full translate-y-1/2 group-hover:scale-125 transition-transform duration-1000" style="background: rgba(9,20,110,0.06);"></div>
-            <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-                <div class="max-w-2xl">
-                    <span class="text-xs font-bold uppercase tracking-widest" style="color: rgba(9,20,110,0.62);">Facilidades de pago</span>
-                    <h3 class="text-2xl sm:text-3xl lg:text-4xl font-bold mt-1" style="color: #09146E;">Compra con Cashea</h3>
-                    <p class="text-sm sm:text-base mt-2 sm:mt-3 leading-relaxed" style="color: rgba(9,20,110,0.74);">
-                        Paga en cuotas sin intereses. En Óptica Farmapaz incluye montura + cristales + examen optométrico.
-                    </p>
-                    <a href="<?= esc_url(home_url('/optica/#cashea')); ?>"
-                       class="inline-flex items-center gap-2 mt-4 sm:mt-5 px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl font-semibold text-sm transition-all duration-300 hover:shadow-lg"
-                       style="background: #09146E; color: #fff;">
-                        Conocer la promoción
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-                    </a>
-                </div>
-                <div class="flex-shrink-0 flex items-center justify-center rounded-2xl px-5 py-4" style="background: rgba(255,255,255,0.3); border: 1px solid rgba(255,255,255,0.55);">
-                    <img src="<?= esc_url(get_template_directory_uri() . '/assets/images/cashea-logo-transparent.webp'); ?>"
-                         alt="Cashea"
-                         class="h-11 sm:h-12 w-auto"
-                         loading="lazy"
-                         decoding="async">
-                </div>
-            </div>
-        </div>
     </div>
 </section>

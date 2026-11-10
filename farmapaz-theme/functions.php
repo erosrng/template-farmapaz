@@ -48,6 +48,16 @@ add_filter('document_title_parts', function ($parts) {
     return $parts;
 }, 20);
 
+// [†] Óptica: clase de contexto para el chatbot y estilos.
+add_filter('body_class', function ($classes) {
+    $is_optica = is_page('optica') || is_page_template('page-optica.php');
+    if (!$is_optica && is_singular('product') && function_exists('farmapaz_optica_es_catalogo')) {
+        $is_optica = farmapaz_optica_es_catalogo(get_queried_object_id());
+    }
+    if ($is_optica) $classes[] = 'optica-context';
+    return $classes;
+});
+
 // [†] Performance: desactivar emoji (el tema usa iconos SVG, no emojis)
 remove_action('wp_head', 'print_emoji_detection_script', 7);
 remove_action('wp_print_styles', 'print_emoji_styles');
@@ -4355,7 +4365,7 @@ function farmapaz_capiblue_optics_products($message, $limit = 5) {
     return $items;
 }
 
-function farmapaz_capiblue_local_reply($message) {
+function farmapaz_capiblue_local_reply($message, $context = '') {
     $msg = mb_strtolower(trim($message));
     $msg = remove_accents($msg);
 
@@ -4448,7 +4458,9 @@ function farmapaz_capiblue_local_reply($message) {
         'sucursal' => "Nuestras sucursales estan en **Maturin, Caripito y Punta de Mata, Estado Monagas**. Para la direccion exacta contactanos por WhatsApp: " . farmapaz_whatsapp_url(),
         'optica' => "En **Optica Farmapaz** tenemos monturas y lentes de sol de marcas como Ray-Ban, Oakley, Prada, Versace, Tom Ford, Guess, Carolina Herrera, Michael Kors y mas. Mira el catalogo aqui: " . farmapaz_optica_catalogo_url() . "\n\nLos productos de optica son solo catalogo: para precio y disponibilidad escribenos por WhatsApp: " . farmapaz_whatsapp_url('Hola, quiero informacion de Optica Farmapaz.'),
         'examen_vista' => "El **examen de la vista es gratis** en nuestras sucursales de Optica Farmapaz. Agenda tu cita por WhatsApp y estrena montura el mismo dia: " . farmapaz_whatsapp_url('Hola, quiero agendar un examen de la vista gratis en Optica Farmapaz.'),
-        'cashea' => "Con **Cashea** puedes pagar en cuotas sin intereses. En Optica Farmapaz tenemos la promo **Montura + cristales + examen optometrico**. Disponible en tiendas fisicas; consulta condiciones y disponibilidad por WhatsApp: " . farmapaz_whatsapp_url('Hola, quiero informacion de la promo Cashea en Optica Farmapaz.') . "\n\nTambien puedes pagar con Cashea tus compras de farmacia en tiendas fisicas.",
+        'cashea' => ($context !== 'optica')
+            ? "Cashea esta disponible en tiendas fisicas para compras de farmacia. Consulta directamente en caja al momento de tu compra; no se gestiona desde la tienda en linea."
+            : "Con **Cashea** puedes pagar en cuotas sin intereses. En Optica Farmapaz tenemos la promo **Montura + cristales + examen optometrico**. Disponible en tiendas fisicas; consulta condiciones y disponibilidad por WhatsApp: " . farmapaz_whatsapp_url('Hola, quiero informacion de la promo Cashea en Optica Farmapaz.'),
         'pago' => "Aceptamos **transferencia bancaria, pago movil y efectivo** en tienda. Para transferencias necesitamos: numero de cedula, banco, telefono y referencia. Contactanos por nuestro linktree para detalles: " . farmapaz_contact_link(),
         'delivery' => "El delivery en Maturin, Caripito y Punta de Mata es **GRATIS en compras desde $" . farmapaz_free_shipping_min() . "**. En compras menores el costo es de **$" . farmapaz_shipping_fee_amount() . "**. El horario de delivery es de **" . farmapaz_delivery_schedule() . "**. Para envios nacionales consulta por WhatsApp: " . farmapaz_whatsapp_url(),
         'whatsapp' => "Nuestro WhatsApp: **" . farmapaz_whatsapp_number() . "**. Escribenos directamente: " . farmapaz_whatsapp_url(),
@@ -4480,6 +4492,7 @@ function farmapaz_capiblue_ajax() {
     if (!$message) {
         wp_send_json(['reply' => 'Hola! Soy CapiBlue, tu asistente de Farmapaz. En que puedo ayudarte?']);
     }
+    $context = isset($_POST['context']) ? sanitize_text_field($_POST['context']) : '';
 
     // Build conversation history from client
     $history = [];
@@ -4493,7 +4506,7 @@ function farmapaz_capiblue_ajax() {
 
     // If CapiBlue is disabled from "Ajustes de Tienda": predetermined replies only.
     if (!farmapaz_capiblue_enabled()) {
-        $local = farmapaz_capiblue_local_reply($message);
+        $local = farmapaz_capiblue_local_reply($message, $context);
         if ($local) {
             wp_send_json(['reply' => $local]);
         }
@@ -4501,7 +4514,7 @@ function farmapaz_capiblue_ajax() {
     }
 
     // 1. Local reply (only competitors, greetings, business info — not products)
-    $local = farmapaz_capiblue_local_reply($message);
+    $local = farmapaz_capiblue_local_reply($message, $context);
     if ($local) {
         wp_send_json(['reply' => $local]);
     }

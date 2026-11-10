@@ -68,7 +68,7 @@ get_header(); ?>
         <div class="search-cross search-cross--optica">
             <div>
                 <strong>¿Buscas lentes o monturas?</strong>
-                <span>Estás en Farmacia. En Óptica Farmapaz tenemos monturas, lentes de sol, examen de la vista gratis y pago con Cashea.</span>
+                <span>Estás en Farmacia. En Óptica Farmapaz tenemos monturas, lentes de sol y examen de la vista gratis.</span>
             </div>
             <a href="<?= esc_url(add_query_arg('optica_s', $current_s, farmapaz_optica_catalogo_url())); ?>">
                 Buscar en Óptica
