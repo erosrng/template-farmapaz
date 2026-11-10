@@ -1,0 +1,37 @@
+.optica-transition{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:#09146E;overflow:hidden;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .6s cubic-bezier(.16,1,.3,1),visibility .6s cubic-bezier(.16,1,.3,1)}
+.optica-transition.is-active{opacity:1;visibility:visible;pointer-events:auto}
+.optica-transition.is-done{display:none}
+.optica-transition__grain{position:absolute;inset:-20%;background:radial-gradient(45% 45% at 20% 25%,rgba(90,125,67,.55),transparent 70%),radial-gradient(40% 40% at 82% 72%,rgba(254,171,13,.35),transparent 70%),radial-gradient(55% 55% at 60% 10%,rgba(255,255,255,.12),transparent 70%);filter:blur(10px);animation:optGlow 3.4s cubic-bezier(.16,1,.3,1) infinite alternate}
+@keyframes optGlow{from{transform:translate3d(-3%,-2%,0) scale(1)}to{transform:translate3d(3%,2%,0) scale(1.12)}}
+.optica-transition__stage{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:26px;padding:0 24px;text-align:center}
+.optica-chip{display:inline-flex;align-items:center;gap:9px;padding:8px 16px;border-radius:999px;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.08);color:#fff;font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;opacity:0;transform:translateY(14px)}
+.optica-chip__dot{width:7px;height:7px;border-radius:999px;background:#FEAB0D;box-shadow:0 0 0 4px rgba(254,171,13,.25)}
+.optica-logos{position:relative;width:min(420px,86vw);aspect-ratio:2000/755;display:grid;place-items:center}
+.optica-logos__layer{position:absolute;inset:0;display:grid;place-items:center;border-radius:22px;padding:22px 26px;background:#fff;transition:opacity .7s cubic-bezier(.16,1,.3,1),transform .9s cubic-bezier(.16,1,.3,1),filter .7s cubic-bezier(.16,1,.3,1)}
+.optica-logos__layer img{width:100%;height:100%;object-fit:contain}
+.optica-logos__from{opacity:1;transform:scale(1)}
+.optica-logos__to{opacity:0;transform:scale(.92);filter:blur(6px)}
+.optica-transition.swap .optica-logos__from{opacity:0;transform:scale(1.04);filter:blur(8px)}
+.optica-transition.swap .optica-logos__to{opacity:1;transform:scale(1);filter:blur(0)}
+.optica-transition.is-reverse .optica-logos__from{opacity:0;transform:scale(1.04);filter:blur(8px)}
+.optica-transition.is-reverse .optica-logos__to{opacity:1;transform:scale(1);filter:blur(0)}
+.optica-transition.is-reverse.swap .optica-logos__from{opacity:1;transform:scale(1);filter:blur(0)}
+.optica-transition.is-reverse.swap .optica-logos__to{opacity:0;transform:scale(1.04);filter:blur(8px)}
+.optica-wipe{position:absolute;top:-10%;left:-40%;width:22%;height:120%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.9),transparent);transform:skewX(-14deg);opacity:0}
+.optica-transition.swap .optica-wipe{animation:optWipe 1.15s cubic-bezier(.16,1,.3,1) .12s forwards}
+@keyframes optWipe{0%{opacity:0;left:-40%}18%{opacity:.85}100%{opacity:0;left:118%}}
+.optica-transition.is-reverse .optica-wipe{left:auto;right:-40%}
+.optica-transition.is-reverse.swap .optica-wipe{animation:optWipeRev 1.15s cubic-bezier(.16,1,.3,1) .12s forwards}
+@keyframes optWipeRev{0%{opacity:0;right:-40%}18%{opacity:.85}100%{opacity:0;right:118%}}
+.optica-title{color:#fff;font-size:clamp(24px,4.4vw,44px);font-weight:800;letter-spacing:-.03em;line-height:1.08;opacity:0;transform:translateY(18px)}
+.optica-title span{color:#FEAB0D}
+.optica-sub{color:rgba(255,255,255,.72);font-size:14px;max-width:460px;opacity:0;transform:translateY(14px)}
+.optica-transition.swap .optica-chip,.optica-transition.swap .optica-title,.optica-transition.swap .optica-sub{animation:optRise .9s cubic-bezier(.16,1,.3,1) forwards}
+.optica-transition.swap .optica-title{animation-delay:.18s}
+.optica-transition.swap .optica-sub{animation-delay:.3s}
+@keyframes optRise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.optica-skip{position:absolute;bottom:26px;right:26px;z-index:3;display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:999px;border:1px solid rgba(255,255,255,.3);color:#fff;background:transparent;font-size:12px;font-weight:600;cursor:pointer}
+.optica-skip:hover{background:rgba(255,255,255,.14)}
+.optica-transition.out{animation:optOut .85s cubic-bezier(.16,1,.3,1) forwards}
+@keyframes optOut{to{opacity:0;transform:scale(1.06);visibility:hidden}}
+body.optica-lock{overflow:hidden}

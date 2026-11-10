@@ -20,6 +20,9 @@
     var quickReplies = [
         'Que productos venden',
         'Buscar medicamento',
+        'Óptica y monturas',
+        'Examen de la vista',
+        'Cashea y cuotas',
         'Horarios y sucursales',
         'Formas de pago',
         'Delivery gratis',
@@ -175,18 +178,37 @@
         fd.append('nonce', chatData.nonce || '');
 
         fetch(chatData.ajaxUrl, { method: 'POST', body: fd })
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
+            .then(function (r) {
+                return r.text().then(function (t) { return { ok: r.ok, status: r.status, text: t }; });
+            })
+            .then(function (res) {
+                var data = null;
+                try { data = JSON.parse(res.text); } catch (e) {}
                 var elapsed = Date.now() - t0;
                 var delay = Math.max(0, 600 - elapsed);
                 setTimeout(function () {
                     removeTyping();
-                    addMessage(data.reply || 'Ups! Algo salio mal. Intenta de nuevo.', false);
+                    if (data && typeof data.reply === 'string' && data.reply) {
+                        addMessage(data.reply, false);
+                        return;
+                    }
+                    // Error real: solo para el desarrollador (consola + log del servidor)
+                    var clean = res.text ? res.text.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim() : '(sin respuesta)';
+                    console.error('[Farmito AJAX] HTTP ' + res.status + ':', clean.slice(0, 500));
+                    if (chatData.ajaxUrl) {
+                        var lf = new FormData();
+                        lf.append('action', 'farmapaz_capiblue_log');
+                        lf.append('status', res.status || '0');
+                        lf.append('error', clean.slice(0, 500));
+                        try { fetch(chatData.ajaxUrl, { method: 'POST', body: lf }); } catch (e2) {}
+                    }
+                    addMessage('Ups! Problema de conexión. ¿Quieres hablar por WhatsApp?', false);
                 }, delay);
             })
-            .catch(function () {
+            .catch(function (err) {
                 removeTyping();
-                addMessage('Ups! Problema de conexion. Quieres hablar por WhatsApp?', false);
+                console.error('[Farmito AJAX] fallo de red:', err);
+                addMessage('Ups! Problema de conexión. ¿Quieres hablar por WhatsApp?', false);
             });
     }
 

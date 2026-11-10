@@ -7,11 +7,46 @@
  *   Busca "[†]" para encontrar rápido todos los cambios custom.
  */
 
-define('FARMA_VERSION', '1.1.0');
+define('FARMA_VERSION', '1.1.2');
 define('FARMA_PER_PAGE', 48);
 
 // Include custom nav walker
 require_once get_template_directory() . '/inc/nav-walker.php';
+
+// [†] Óptica: sincronización del catálogo desde ProteoERP hacia WooCommerce
+require_once get_template_directory() . '/inc/optica-sync.php';
+
+// [†] Óptica: URL limpia /optica/catalogo/ para el catálogo independiente.
+add_action('init', function () {
+    add_rewrite_rule('^optica/catalogo/?$', 'index.php?pagename=optica&optica_view=catalogo', 'top');
+
+    // Refrescar reglas una sola vez por versión del tema (el usuario sube archivos,
+    // no reactiva el tema, así que no depende de after_switch_theme).
+    if (get_option('farmapaz_rewrite_version') !== FARMA_VERSION) {
+        flush_rewrite_rules(false);
+        update_option('farmapaz_rewrite_version', FARMA_VERSION, false);
+    }
+}, 5);
+
+add_filter('query_vars', function ($vars) {
+    $vars[] = 'optica_view';
+    return $vars;
+});
+
+add_filter('template_include', function ($template) {
+    if (get_query_var('optica_view') === 'catalogo') {
+        $catalog = locate_template('page-optica-catalogo.php');
+        if ($catalog) return $catalog;
+    }
+    return $template;
+}, 20);
+
+add_filter('document_title_parts', function ($parts) {
+    if (get_query_var('optica_view') === 'catalogo') {
+        $parts['title'] = 'Catálogo de monturas';
+    }
+    return $parts;
+}, 20);
 
 // [†] Performance: desactivar emoji (el tema usa iconos SVG, no emojis)
 remove_action('wp_head', 'print_emoji_detection_script', 7);
@@ -299,6 +334,20 @@ function farmapaz_enqueue() {
     }
 
     // CapiBlue chatbot — always available
+    wp_enqueue_style('farmapaz-optica-transition', get_template_directory_uri() . '/assets/css/optica-transition.css', [], FARMA_VERSION);
+    wp_enqueue_script('farmapaz-optica-transition', get_template_directory_uri() . '/assets/js/optica-transition.js', [], FARMA_VERSION, true);
+
+    // Óptica — estilos y animaciones exclusivos de la página de catálogo
+    if (is_page('optica') || is_page_template('page-optica.php')) {
+        $optica_css_path = get_template_directory() . '/assets/css/optica-page.css';
+        $optica_js_path  = get_template_directory() . '/assets/js/optica-page.js';
+        $optica_css_ver  = file_exists($optica_css_path) ? (string) filemtime($optica_css_path) : FARMA_VERSION;
+        $optica_js_ver   = file_exists($optica_js_path) ? (string) filemtime($optica_js_path) : FARMA_VERSION;
+
+        wp_enqueue_style('farmapaz-optica-page', get_template_directory_uri() . '/assets/css/optica-page.css', ['farmapaz-style'], $optica_css_ver);
+        wp_enqueue_script('farmapaz-optica-page', get_template_directory_uri() . '/assets/js/optica-page.js', [], $optica_js_ver, true);
+    }
+
     wp_enqueue_script('farmapaz-capiblue', get_template_directory_uri() . '/assets/js/capiblue.js', ['farmapaz-app'], FARMA_VERSION, true);
     // CapiBlue needs shop.css styles everywhere
     if (!is_shop() && !is_product_category() && !is_product_tag() && !is_product_taxonomy() && !is_front_page() && !is_home() && !is_cart() && !is_checkout() && !is_account_page()) {
@@ -1068,6 +1117,11 @@ function farmapaz_product_carousel($args = []) {
 
     $meta_query[] = ['key' => '_stock_status', 'value' => 'instock'];
 
+    // [†] Excluir el catálogo de óptica de los carruseles de farmacia
+    if (function_exists('farmapaz_optica_meta_exclude')) {
+        $meta_query[] = farmapaz_optica_meta_exclude();
+    }
+
     $query_args = [
         'post_type'      => 'product',
         'post_status'    => 'publish',
@@ -1630,7 +1684,10 @@ add_action('rest_api_init', function () {
     register_rest_route('farmapaz/v1', '/suggest', [
         'methods'  => 'GET',
         'callback' => 'farmapaz_search_suggest',
-        'args'     => ['s' => ['required' => true]],
+        'args'     => [
+            's'     => ['required' => true],
+            'scope' => ['required' => false],
+        ],
         'permission_callback' => '__return_true',
     ]);
 });
@@ -1650,7 +1707,13 @@ function farmapaz_term_instock_count($term) {
             AND p.post_type = 'product'
             AND p.post_status = 'publish'
             AND stock.meta_value = 'instock'
-            AND CAST(price.meta_value AS DECIMAL(10,2)) > 0",
+            AND CAST(price.meta_value AS DECIMAL(10,2)) > 0
+            AND NOT EXISTS (
+                SELECT 1 FROM {$wpdb->postmeta} co
+                 WHERE co.post_id = p.ID
+                   AND co.meta_key = '_farmapaz_catalog_only'
+                   AND co.meta_value = '1'
+            )",
         (int) $term->term_taxonomy_id
     ));
 }
@@ -1658,6 +1721,40 @@ function farmapaz_term_instock_count($term) {
 function farmapaz_search_suggest(WP_REST_Request $request) {
     $s = trim(sanitize_text_field($request->get_param('s')));
     if (strlen($s) < 2) return ['results' => []];
+
+    $scope = sanitize_text_field($request->get_param('scope'));
+
+    // Buscador dentro de Óptica: solo monturas, marcas y enlaces de óptica.
+    if ($scope === 'optica') {
+        $results = farmapaz_optica_suggest_results($s, 5);
+
+        if (farmapaz_optica_query_is_pharmacy($s)) {
+            array_unshift($results, [
+                'name'  => 'Buscar “' . $s . '” en Farmacia',
+                'url'   => add_query_arg(['s' => $s, 'post_type' => 'product'], home_url('/')),
+                'img'   => '',
+                'price' => 'Medicamentos y cuidado personal',
+                'type'  => 'farmacia_search',
+            ]);
+        }
+
+        $results[] = [
+            'name'  => 'Ver todo el catálogo de Óptica',
+            'url'   => farmapaz_optica_catalogo_url(),
+            'img'   => '',
+            'price' => 'Monturas, lentes de sol y examen de la vista',
+            'type'  => 'optica_catalog',
+        ];
+        $results[] = [
+            'name'  => 'Farmacia Farmapaz',
+            'url'   => home_url('/'),
+            'img'   => '',
+            'price' => 'Medicamentos y cuidado personal — Ir a Farmacia',
+            'type'  => 'farmacia',
+        ];
+
+        return ['results' => $results];
+    }
 
     $results = [];
 
@@ -1670,6 +1767,7 @@ function farmapaz_search_suggest(WP_REST_Request $request) {
         'meta_query'     => [
             ['key' => '_price', 'value' => 0, 'compare' => '>', 'type' => 'DECIMAL'], // [†] $0 excluded
             ['key' => '_stock_status', 'value' => 'instock'],
+            farmapaz_optica_meta_exclude(), // [†] óptica solo en /optica/
         ],
         'tax_query'      => [[
             'taxonomy' => 'product_visibility',
@@ -1706,6 +1804,7 @@ function farmapaz_search_suggest(WP_REST_Request $request) {
     ]);
     if (!is_wp_error($categories)) {
         foreach ($categories as $cat) {
+            if ($cat->slug === 'optica-tienda') continue;
             $results[] = [
                 'name'  => $cat->name,
                 'url'   => get_term_link($cat),
@@ -1735,6 +1834,26 @@ function farmapaz_search_suggest(WP_REST_Request $request) {
         }
     }
 
+    // [†] Si la búsqueda de farmacia hace referencia a óptica, ofrecer el salto.
+    if (farmapaz_optica_query_is_optics($s)) {
+        array_unshift($results, [
+            'name'  => 'Buscar “' . $s . '” en Óptica',
+            'url'   => add_query_arg('optica_s', $s, farmapaz_optica_catalogo_url()),
+            'img'   => '',
+            'price' => 'Monturas, lentes de sol y examen de la vista',
+            'type'  => 'optica_search',
+        ]);
+    }
+
+    // [†] Referencia fija a la sección de Óptica
+    $results[] = [
+        'name'  => 'Óptica Farmapaz',
+        'url'   => home_url('/optica/'),
+        'img'   => '',
+        'price' => 'Monturas, lentes de sol y examen de la vista — Visitar sección',
+        'type'  => 'optica',
+    ];
+
     return ['results' => $results];
 }
 
@@ -1754,6 +1873,7 @@ function farmapaz_pre_get_products($q) {
         if (!is_array($meta_q)) $meta_q = [];
         $meta_q[] = ['key' => '_price', 'value' => 0, 'compare' => '>', 'type' => 'DECIMAL'];
         $meta_q[] = ['key' => '_stock_status', 'value' => 'instock'];
+        if (function_exists('farmapaz_optica_meta_exclude')) $meta_q[] = farmapaz_optica_meta_exclude(); // [†] óptica solo en /optica/
         $q->set('meta_query', $meta_q);
         return;
     }
@@ -1764,6 +1884,7 @@ function farmapaz_pre_get_products($q) {
         if (!is_array($meta_q)) $meta_q = [];
         $meta_q[] = ['key' => '_price', 'value' => 0, 'compare' => '>', 'type' => 'DECIMAL']; // [†] $0 excluded
         $meta_q[] = ['key' => '_stock_status', 'value' => 'instock'];
+        if (function_exists('farmapaz_optica_meta_exclude')) $meta_q[] = farmapaz_optica_meta_exclude(); // [†] óptica solo en /optica/
         $q->set('meta_query', $meta_q);
 
         // Category filter from URL
@@ -1887,6 +2008,7 @@ function farmapaz_shop_filter_ajax() {
         'meta_query'     => [
             ['key' => '_price', 'value' => 0, 'compare' => '>', 'type' => 'DECIMAL'], // [†] $0 excluded
             ['key' => '_stock_status', 'value' => 'instock'],
+            farmapaz_optica_meta_exclude(), // [†] óptica solo en /optica/
         ],
     ];
 
@@ -2033,7 +2155,22 @@ function farmapaz_empty_state_html($search = '', $orderby = 'date') {
         <p class="shop-empty-text"><?= $message; ?></p>
         <a href="<?= esc_url($shop_url); ?>" class="shop-empty-link">Ver toda la tienda</a>
     </div>
-    <?php
+    <?php if (farmapaz_optica_enabled()): ?>
+    <div class="shop-optica-banner">
+        <a href="<?= esc_url(home_url('/optica/')); ?>" class="shop-optica-banner-link">
+            <span class="shop-optica-banner-icon">
+                <svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="6.5" cy="14" r="3.5"></circle><circle cx="17.5" cy="14" r="3.5"></circle><path d="M10 14h4M3 9l2-3h3M21 9l-2-3h-3"></path></svg>
+            </span>
+            <span class="shop-optica-banner-text">
+                <strong>¿Buscas monturas o lentes de sol?</strong>
+                Visita nuestra sección de Óptica Farmapaz: marcas originales, examen de la vista gratis y asesoría en tiendas.
+            </span>
+            <span class="shop-optica-banner-cta">Visitar Óptica
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </span>
+        </a>
+    </div>
+    <?php endif;
 }
 
 // Shared pagination HTML renderer
@@ -3439,6 +3576,16 @@ function farmapaz_capiblue_system_prompt() {    $prompt = "Eres CapiBlue, el asi
     $prompt .= "- Para pagos por transferencia se requiere: número de cédula, banco, teléfono y referencia.\n";
     $prompt .= "- Las sucursales están en Maturín, Caripito y Punta de Mata. Para dirección exacta y horario, remite a la página de Sucursales: " . get_permalink(357) . "\n\n";
 
+    $prompt .= "ÓPTICA FARMAPAZ:\n";
+    $prompt .= "- Página y catálogo: " . home_url('/optica/') . "\n";
+    $prompt .= "- Catálogo directo: " . farmapaz_optica_catalogo_url() . "\n";
+    $prompt .= "- Examen de la vista GRATIS en las sucursales de Óptica Farmapaz.\n";
+    $prompt .= "- Se venden monturas y lentes de sol de marcas como Ray-Ban, Oakley, Prada, Versace, Tom Ford, Guess, Carolina Herrera, Michael Kors, Palazzo y más.\n";
+    $prompt .= "- Los productos de óptica son SOLO CATÁLOGO: no se compran en línea. El precio se consulta y la disponibilidad se confirma por WhatsApp: " . farmapaz_whatsapp_url('Hola, quiero información de Óptica Farmapaz.') . "\n";
+    $prompt .= "- Promoción Cashea: Montura + cristales + examen optométrico, con pago en cuotas sin intereses en tiendas físicas. Enlace de la promo: " . home_url('/optica/#cashea') . "\n";
+    $prompt .= "- También hay Cashea para compras de farmacia en tiendas físicas.\n";
+    $prompt .= "- Si preguntan por una marca o modelo de óptica, usa el catálogo y ofrece consultar disponibilidad por WhatsApp.\n\n";
+
     // [†] Categorías jerárquicas: padres → hijas (el AI conoce toda la estructura)
     $parent_cats = get_terms(['taxonomy' => 'product_cat', 'hide_empty' => true, 'parent' => 0, 'orderby' => 'count', 'order' => 'DESC']);
     if (!empty($parent_cats) && !is_wp_error($parent_cats)) {
@@ -3604,6 +3751,14 @@ function farmapaz_capiblue_search_products($query) {
         'tienda'        => 'tienda online catalogo',
         'productos'     => 'productos catalogo',
         'catalogo'      => 'catalogo productos',
+        // Óptica
+        'optica'        => 'optica lentes monturas gafas anteojos',
+        'montura'       => 'montura lentes gafas anteojos',
+        'monturas'      => 'montura lentes gafas anteojos',
+        'gafas'         => 'gafas lentes montura anteojos',
+        'anteojos'      => 'anteojos lentes montura gafas',
+        'lentes de sol' => 'lentes de sol gafas anteojos',
+        'lentes'        => 'lentes gafas montura anteojos',
         // [†] Sintomas, partes del cuerpo y usos creativos
         'duele'         => 'dolor analgesico ibuprofeno acetaminofen',
         'dolor de cabeza' => 'dolor cabeza migraña acetaminofen',
@@ -3882,6 +4037,13 @@ function farmapaz_capiblue_search_products($query) {
         'medicamento' => ['medicamentos'],
         'medicina'    => ['medicamentos'],
         'farmacia'    => ['medicamentos'],
+        // Óptica
+        'optica'      => ['optica-tienda'],
+        'montura'     => ['optica-tienda'],
+        'monturas'    => ['optica-tienda'],
+        'gafas'       => ['optica-tienda'],
+        'anteojos'    => ['optica-tienda'],
+        'lentes'      => ['optica-tienda'],
         // [†] Bebidas
         'jugo'     => ['bebidas'],
         'cafe'     => ['bebidas'],
@@ -4077,6 +4239,7 @@ function farmapaz_capiblue_fallback_products($count = 8) {
         'stock_status' => 'instock',
         'meta_query'   => [
             ['key' => '_price', 'value' => 0, 'compare' => '>', 'type' => 'DECIMAL'],
+            farmapaz_optica_meta_exclude(), // [†] óptica solo en /optica/
         ],
         'orderby'      => 'total_sales',
         'order'        => 'DESC',
@@ -4115,9 +4278,109 @@ function farmapaz_capiblue_matches($msg, $keyword) {
     return preg_match('/\b' . preg_quote($keyword, '/') . '\b/', $msg) === 1;
 }
 
+/**
+ * Busca monturas de óptica por marca para CapiBlue.
+ * Devuelve una lista corta con nombre, URL y precio.
+ */
+function farmapaz_capiblue_optics_products($message, $limit = 5) {
+    if (!function_exists('farmapaz_optica_map') || !function_exists('wc_get_product')) return [];
+
+    $msg = remove_accents(mb_strtolower(trim((string) $message)));
+    $map = farmapaz_optica_map();
+    if (empty($map)) return [];
+
+    $matched_brand = '';
+    $brands = [];
+    foreach ($map as $info) {
+        $brand = trim((string) ($info['marca'] ?? ''));
+        if ($brand !== '') $brands[$brand] = true;
+    }
+
+    foreach (array_keys($brands) as $brand) {
+        $norm = remove_accents(mb_strtolower($brand));
+        $variants = [$norm];
+        if (strpos($norm, '-') !== false) {
+            $variants[] = str_replace('-', ' ', $norm);
+        }
+        foreach ($variants as $variant) {
+            if (farmapaz_capiblue_matches($msg, $variant)) {
+                $matched_brand = $brand;
+                break 2;
+            }
+        }
+    }
+
+    if ($matched_brand === '') return [];
+
+    $codes = [];
+    foreach ($map as $code => $info) {
+        if (trim((string) ($info['marca'] ?? '')) === $matched_brand) {
+            $codes[] = $code;
+        }
+    }
+    if (empty($codes)) return [];
+
+    $query = new WP_Query([
+        'post_type'      => 'product',
+        'post_status'    => 'publish',
+        'posts_per_page' => $limit,
+        'orderby'        => 'title',
+        'order'          => 'ASC',
+        'meta_query'     => [
+            ['key' => '_farmapaz_catalog_only', 'value' => '1'],
+            ['key' => '_optica_sinv', 'value' => $codes, 'compare' => 'IN'],
+        ],
+    ]);
+
+    $items = [];
+    foreach ($query->posts as $post) {
+        $product = wc_get_product($post->ID);
+        if (!$product) continue;
+
+        $sinv = (string) get_post_meta($post->ID, '_optica_sinv', true);
+        $brand = isset($map[$sinv]['marca']) ? trim((string) $map[$sinv]['marca']) : $matched_brand;
+        $name = function_exists('farmapaz_optica_clean_title')
+            ? farmapaz_optica_clean_title($post->post_title)
+            : $post->post_title;
+
+        $items[] = [
+            'name'  => $name,
+            'url'   => get_permalink($post->ID),
+            'price' => html_entity_decode(strip_tags(wc_price($product->get_price()))),
+            'brand' => $brand,
+        ];
+    }
+
+    wp_reset_postdata();
+    return $items;
+}
+
 function farmapaz_capiblue_local_reply($message) {
     $msg = mb_strtolower(trim($message));
     $msg = remove_accents($msg);
+
+    // Marcas de óptica: si el usuario menciona una, respondemos con modelos concretos.
+    $mentions_optics_brand = false;
+    if (function_exists('farmapaz_optica_map')) {
+        $optics_brand_names = [];
+        foreach (farmapaz_optica_map() as $info) {
+            $brand = trim((string) ($info['marca'] ?? ''));
+            if ($brand !== '') $optics_brand_names[$brand] = true;
+        }
+        foreach (array_keys($optics_brand_names) as $ob) {
+            $norm = remove_accents(mb_strtolower($ob));
+            $variants = [$norm];
+            if (strpos($norm, '-') !== false) {
+                $variants[] = str_replace('-', ' ', $norm);
+            }
+            foreach ($variants as $variant) {
+                if (farmapaz_capiblue_matches($msg, $variant)) {
+                    $mentions_optics_brand = true;
+                    break 2;
+                }
+            }
+        }
+    }
 
     // ========== 1. COMPETITOR DETECTION ==========
     $competitors = ['farmatodo', 'farmadon', 'farmatina', 'megafarma', 'locatel', 'farmashop'];
@@ -4127,7 +4390,22 @@ function farmapaz_capiblue_local_reply($message) {
         }
     }
 
-    // ========== 2. GREETINGS ==========
+    // ========== 2. ÓPTICA POR MARCA ==========
+    if ($mentions_optics_brand) {
+        $optics_items = farmapaz_capiblue_optics_products($message, 5);
+        if (!empty($optics_items)) {
+            $lines = ["En Optica Farmapaz encontre estos modelos:"];
+            foreach ($optics_items as $item) {
+                $lines[] = "- [" . $item['name'] . "](" . $item['url'] . ") — " . $item['price'];
+            }
+            $lines[] = "Para disponibilidad y compra escribenos por WhatsApp: " . farmapaz_whatsapp_url('Hola, quiero consultar por una montura de Optica Farmapaz.');
+            $lines[] = "Catalogo completo: " . farmapaz_optica_catalogo_url();
+            return implode("\n", $lines);
+        }
+        $mentions_optics_brand = false;
+    }
+
+    // ========== 3. GREETINGS ==========
     $greetings = ['hola', 'buenas', 'buenos dias', 'buenas tardes', 'buenas noches', 'que tal', 'hello', 'hi', 'buen dia'];
     foreach ($greetings as $g) {
         if (farmapaz_capiblue_matches($msg, $g)) {
@@ -4135,7 +4413,7 @@ function farmapaz_capiblue_local_reply($message) {
         }
     }
 
-    // ========== 3. THANKS / FAREWELL ==========
+    // ========== 4. THANKS / FAREWELL ==========
     $farewells = ['gracias', 'adios', 'bye', 'chao', 'hasta luego', 'nos vemos', 'muchas gracias', 'graciass'];
     foreach ($farewells as $f) {
         if (farmapaz_capiblue_matches($msg, $f)) {
@@ -4143,11 +4421,11 @@ function farmapaz_capiblue_local_reply($message) {
         }
     }
 
-    // ========== 4. HELP ==========
+    // ========== 5. HELP ==========
     $help = ['que puedes hacer', 'ayuda', 'funciones', 'comandos', 'menu', 'opciones', 'que haces', 'como funciona'];
     foreach ($help as $h) {
         if (farmapaz_capiblue_matches($msg, $h)) {
-            return "Puedo ayudarte con:\n- Buscar productos y medicamentos\n- Horarios de atencion (7am - 9:30pm)\n- Formas de pago (transferencia, pago movil, binance, efectivo)\n- Delivery gratis desde $" . farmapaz_free_shipping_min() . "\n- Sucursales en Maturin, Caripito y Punta de Mata\n- Contacto por WhatsApp\n\nQue deseas saber?";
+            return "Puedo ayudarte con:\n- Buscar productos y medicamentos\n- Optica: monturas, lentes de sol y examen de la vista gratis\n- Cashea: pago en cuotas sin intereses\n- Horarios de atencion (7am - 9:30pm)\n- Formas de pago (transferencia, pago movil, binance, efectivo)\n- Delivery gratis desde $" . farmapaz_free_shipping_min() . "\n- Sucursales en Maturin, Caripito y Punta de Mata\n- Contacto por WhatsApp\n\nQue deseas saber?";
         }
     }
 
@@ -4155,6 +4433,9 @@ function farmapaz_capiblue_local_reply($message) {
     $intents = [
         'horario' => ['horario', 'horarios', 'hora', 'horas', 'abierto', 'abren', 'cierran', 'atencion', 'atienden', 'cuando abren', 'cuando cierran'],
         'sucursal' => ['sucursal', 'sucursales', 'direccion', 'direcciones', 'ubicacion', 'ubicaciones', 'donde quedan', 'maturin', 'tienda fisica'],
+        'optica' => ['optica', 'montura', 'monturas', 'gafas', 'anteojos', 'lentes de sol', 'lentes', 'catalogo de optica'],
+        'examen_vista' => ['examen de la vista', 'examen optometrico', 'optometrista', 'consulta optometrica', 'graduacion', 'graduacion visual'],
+        'cashea' => ['cashea', 'cuota', 'cuotas', 'financiamiento', 'pagar en cuotas', 'pago en cuotas', 'comprar en cuotas'],
         'pago' => ['pago', 'pagos', 'pagar', 'forma de pago', 'formas de pago', 'transferencia', 'pago movil', 'efectivo', 'binance', 'banco', 'cedula', 'tarjeta', 'divisas', 'dolares'],
         'delivery' => ['delivery', 'envio', 'envian', 'domicilio', 'llevan', 'despacho', 'gratis', 'costo envio', 'cuanto cobran por envio', 'envio nacional'],
         'whatsapp' => ['whatsapp', 'whats', 'wp', 'contacto', 'telefono', 'llamar', 'asesor', 'hablar con', 'contactar', 'atencion al cliente'],
@@ -4165,6 +4446,9 @@ function farmapaz_capiblue_local_reply($message) {
     $responses = [
         'horario' => "En Farmapaz hay sucursales con distintos horarios: algunas son **24 horas** y otras no. Para ver el horario de la sucursal que te interesa (Maturin, Caripito o Punta de Mata), visita nuestra pagina de Sucursales: " . get_permalink(357),
         'sucursal' => "Nuestras sucursales estan en **Maturin, Caripito y Punta de Mata, Estado Monagas**. Para la direccion exacta contactanos por WhatsApp: " . farmapaz_whatsapp_url(),
+        'optica' => "En **Optica Farmapaz** tenemos monturas y lentes de sol de marcas como Ray-Ban, Oakley, Prada, Versace, Tom Ford, Guess, Carolina Herrera, Michael Kors y mas. Mira el catalogo aqui: " . farmapaz_optica_catalogo_url() . "\n\nLos productos de optica son solo catalogo: para precio y disponibilidad escribenos por WhatsApp: " . farmapaz_whatsapp_url('Hola, quiero informacion de Optica Farmapaz.'),
+        'examen_vista' => "El **examen de la vista es gratis** en nuestras sucursales de Optica Farmapaz. Agenda tu cita por WhatsApp y estrena montura el mismo dia: " . farmapaz_whatsapp_url('Hola, quiero agendar un examen de la vista gratis en Optica Farmapaz.'),
+        'cashea' => "Con **Cashea** puedes pagar en cuotas sin intereses. En Optica Farmapaz tenemos la promo **Montura + cristales + examen optometrico**. Disponible en tiendas fisicas; consulta condiciones y disponibilidad por WhatsApp: " . farmapaz_whatsapp_url('Hola, quiero informacion de la promo Cashea en Optica Farmapaz.') . "\n\nTambien puedes pagar con Cashea tus compras de farmacia en tiendas fisicas.",
         'pago' => "Aceptamos **transferencia bancaria, pago movil y efectivo** en tienda. Para transferencias necesitamos: numero de cedula, banco, telefono y referencia. Contactanos por nuestro linktree para detalles: " . farmapaz_contact_link(),
         'delivery' => "El delivery en Maturin, Caripito y Punta de Mata es **GRATIS en compras desde $" . farmapaz_free_shipping_min() . "**. En compras menores el costo es de **$" . farmapaz_shipping_fee_amount() . "**. El horario de delivery es de **" . farmapaz_delivery_schedule() . "**. Para envios nacionales consulta por WhatsApp: " . farmapaz_whatsapp_url(),
         'whatsapp' => "Nuestro WhatsApp: **" . farmapaz_whatsapp_number() . "**. Escribenos directamente: " . farmapaz_whatsapp_url(),
@@ -4173,6 +4457,9 @@ function farmapaz_capiblue_local_reply($message) {
     ];
 
     foreach ($intents as $key => $keywords) {
+        if ($key === 'optica' && $mentions_optics_brand) {
+            continue;
+        }
         foreach ($keywords as $kw) {
             if (farmapaz_capiblue_matches($msg, $kw)) {
                 return $responses[$key];
@@ -4467,4 +4754,387 @@ function farmapaz_capiblue_extract_terms($message) {
     $reply = preg_replace('/[^a-z0-9áéíóúüñ ]+/i', ' ', $reply);
     $reply = preg_replace('/\s+/', ' ', trim($reply));
     return $reply;
+}
+
+/* ============================================================
+   [†] SEO — Farmacia + Óptica Farmapaz
+   - Títulos con keywords locales
+   - Descripciones limpias (compatibles con Yoast SEO)
+   - JSON-LD: Pharmacy + sucursales + FAQ + WebSite (+ Optician en /optica/)
+   - og:image por defecto 1200x630
+   - robots.txt: permite explícitamente a los rastreadores de IA
+   - llms.txt enriquecido para asistentes de IA (gana a la versión de Yoast)
+   ============================================================ */
+
+// Coordenadas aproximadas por ciudad (para el geo del schema)
+function farmapaz_seo_geo($texto) {
+    $t = mb_strtolower($texto);
+    if (strpos($t, 'caripito') !== false) return ['10.1207', '-63.0868'];
+    if (strpos($t, 'punta de mata') !== false) return ['9.6628', '-63.6000'];
+    if (strpos($t, 'jusepín') !== false || strpos($t, 'jusepin') !== false) return ['9.7527', '-63.3699'];
+    return ['10.0654', '-63.1474']; // Maturín
+}
+
+// Convierte el horario de una sucursal a formato de apertura/cierre para el schema
+function farmapaz_seo_hours($horario) {
+    $t = mb_strtolower(trim((string) $horario));
+    if (strpos($t, '24') !== false) {
+        return ['opens' => '00:00', 'closes' => '23:59'];
+    }
+    if (preg_match('/(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s*[-–—]\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/', $t, $m)) {
+        $h1 = (int) $m[1]; $min1 = (int) ($m[2] !== '' ? $m[2] : 0); $ap1 = isset($m[3]) ? $m[3] : '';
+        $h2 = (int) $m[4]; $min2 = (int) ($m[5] !== '' ? $m[5] : 0); $ap2 = isset($m[6]) ? $m[6] : '';
+        if ($ap1 === 'pm' && $h1 < 12) $h1 += 12;
+        if ($ap1 === 'am' && $h1 === 12) $h1 = 0;
+        if ($ap2 === 'pm' && $h2 < 12) $h2 += 12;
+        if ($ap2 === 'am' && $h2 === 12) $h2 = 0;
+        return ['opens' => sprintf('%02d:%02d', $h1, $min1), 'closes' => sprintf('%02d:%02d', $h2, $min2)];
+    }
+    return ['opens' => '08:00', 'closes' => '20:00'];
+}
+
+/**
+ * Limpia texto de shortcodes, etiquetas y entidades HTML.
+ * (WPBakery/WooCommerce inyectan [vc_row]... en las descripciones de Yoast).
+ */
+function farmapaz_seo_clean_text($texto) {
+    $texto = strip_shortcodes((string) $texto);
+    $texto = wp_strip_all_tags($texto);
+    $texto = html_entity_decode($texto, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $texto = preg_replace('/\s+/u', ' ', $texto);
+    return trim($texto);
+}
+
+/**
+ * Descripción útil según el contexto de la página.
+ */
+function farmapaz_seo_context_desc() {
+    if (is_page('optica') || is_page_template('page-optica.php')) {
+        return 'Óptica Farmapaz en Maturín: examen de la vista gratis, lentes de contacto y monturas originales (Ray-Ban, Oakley, Gucci, Prada y más). Agenda por WhatsApp y estrena montura el mismo día.';
+    }
+    if (is_front_page()) {
+        return 'Farmapaz, la cadena de farmacias líder del Estado Monagas: 20 sucursales 24 horas en Maturín, Punta de Mata y Caripito. Medicamentos, dermocosmética y delivery por WhatsApp.';
+    }
+    if (is_page('sucursales')) {
+        return 'Sucursales Farmapaz: farmacias 24 horas en Maturín, Punta de Mata y Caripito, Estado Monagas. Direcciones, teléfonos y delivery por WhatsApp al 0412-8798885.';
+    }
+    if (is_shop()) {
+        return 'Tienda online de Farmapaz: medicamentos, dermocosmética, vitaminas y cuidado personal con delivery en Maturín, Punta de Mata y Caripito, Estado Monagas.';
+    }
+    if (is_product_category()) {
+        $term = get_queried_object();
+        if (!empty($term->description)) {
+            return farmapaz_seo_clean_text($term->description);
+        }
+        $nombre = is_object($term) && !empty($term->name) ? $term->name : 'salud';
+        return 'Productos de ' . $nombre . ' en Farmapaz, farmacia 24 horas en Maturín, Punta de Mata y Caripito, Estado Monagas, con delivery por WhatsApp.';
+    }
+    if (is_singular()) {
+        $post = get_queried_object();
+        if (!empty($post->post_excerpt)) {
+            return farmapaz_seo_clean_text($post->post_excerpt);
+        }
+        $texto = farmapaz_seo_clean_text(!empty($post->post_content) ? $post->post_content : '');
+        if (mb_strlen($texto) > 40) {
+            return mb_substr($texto, 0, 300);
+        }
+    }
+    return 'Farmapaz: farmacia 24 horas en Maturín, Punta de Mata y Caripito, Estado Monagas, Venezuela. Medicamentos, dermocosmética y delivery por WhatsApp.';
+}
+
+/**
+ * Imagen por defecto 1200x630 para compartir en redes y asistentes de IA.
+ */
+function farmapaz_seo_og_image() {
+    return get_template_directory_uri() . '/assets/images/og-default.webp';
+}
+
+// Schema JSON-LD: Pharmacy + sucursales + FAQ (+ Optician en /optica/) + WebSite
+add_action('wp_head', 'farmapaz_seo_jsonld', 1);
+function farmapaz_seo_jsonld() {
+    if (is_admin() || (function_exists('is_checkout') && is_checkout())) return;
+    $home = home_url('/');
+    $brand = 'Farmapaz';
+    $es_optica = is_page('optica') || is_page_template('page-optica.php');
+
+    $sucursales = function_exists('farmapaz_sucursales_activas') ? farmapaz_sucursales_activas() : [];
+    $departments = [];
+    foreach ($sucursales as $s) {
+        $nombre = !empty($s['nombre']) ? (stripos($s['nombre'], 'farmapaz') === 0 ? $s['nombre'] : $brand . ' ' . $s['nombre']) : $brand;
+        $dir    = !empty($s['direccion']) ? $s['direccion'] : 'Maturín, Monagas, Venezuela';
+        $tel    = !empty($s['telefono']) ? preg_replace('/[^0-9]/', '', $s['telefono']) : '';
+        $horas  = farmapaz_seo_hours(!empty($s['horario']) ? $s['horario'] : '24 horas');
+        $geo    = farmapaz_seo_geo($nombre . ' ' . $dir);
+        $departments[] = [
+            '@type'    => 'Pharmacy',
+            'name'     => $nombre,
+            'image'    => !empty($s['imagen']) ? $s['imagen'] : get_template_directory_uri() . '/assets/images/logo.webp',
+            'telephone'=> $tel ? '+58 ' . substr($tel, 0, 3) . ' ' . substr($tel, 3, 3) . ' ' . substr($tel, 6) : '',
+            'address'  => ['@type' => 'PostalAddress', 'streetAddress' => $dir, 'addressLocality' => 'Maturín', 'addressRegion' => 'Monagas', 'addressCountry' => 'VE'],
+            'geo'      => ['@type' => 'GeoCoordinates', 'latitude' => $geo[0], 'longitude' => $geo[1]],
+            'openingHoursSpecification' => [[
+                '@type' => 'OpeningHoursSpecification',
+                'dayOfWeek' => ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],
+                'opens' => $horas['opens'],
+                'closes' => $horas['closes'],
+            ]],
+        ];
+    }
+
+    $graph = [[
+        '@type' => ['Pharmacy', 'DrugStore'],
+        '@id'   => $home . '#farmacia',
+        'name'  => $brand,
+        'url'   => $home,
+        'logo'  => get_template_directory_uri() . '/assets/images/logorif.webp',
+        'image' => get_template_directory_uri() . '/assets/images/logorif.webp',
+        'telephone' => '+58 412 879 8885',
+        'priceRange' => '$$',
+        'currenciesAccepted' => 'USD, VES',
+        'address' => ['@type' => 'PostalAddress', 'addressLocality' => 'Maturín', 'addressRegion' => 'Monagas', 'addressCountry' => 'VE'],
+        'geo' => ['@type' => 'GeoCoordinates', 'latitude' => '10.0654', 'longitude' => '-63.1474'],
+        'areaServed' => ['Maturín', 'Punta de Mata', 'Caripito', 'Monagas', 'Venezuela'],
+        'sameAs' => [
+            'https://www.instagram.com/Farmapazofficial',
+            'https://www.tiktok.com/@farmaciafarmapaz',
+            'https://www.facebook.com/farmapaz.lapaz',
+            'https://t.me/Farmapazcallcenter',
+            'https://linktr.ee/farmaciafarmapaz',
+        ],
+        'department' => $departments,
+    ]];
+
+    // Nodo Optician para la página de óptica (entidad propia en Google/AI)
+    if ($es_optica) {
+        $graph[] = [
+            '@type' => 'Optician',
+            '@id' => $home . '/optica/#optica',
+            'name' => 'Óptica Farmapaz',
+            'url' => $home . '/optica/',
+            'image' => get_template_directory_uri() . '/assets/images/optica/optica-logo.png',
+            'logo' => get_template_directory_uri() . '/assets/images/optica/optica-logo.png',
+            'telephone' => '+58 424 913 9434',
+            'priceRange' => '$$',
+            'address' => ['@type' => 'PostalAddress', 'addressLocality' => 'Maturín', 'addressRegion' => 'Monagas', 'addressCountry' => 'VE'],
+            'geo' => ['@type' => 'GeoCoordinates', 'latitude' => '10.0654', 'longitude' => '-63.1474'],
+            'areaServed' => ['Maturín', 'Monagas', 'Venezuela'],
+            'parentOrganization' => ['@id' => $home . '#farmacia'],
+            'openingHoursSpecification' => [[
+                '@type' => 'OpeningHoursSpecification',
+                'dayOfWeek' => ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],
+                'opens' => '00:00',
+                'closes' => '23:59',
+            ]],
+        ];
+    }
+
+    // FAQ local (preguntas reales de búsquedas)
+    $whatsapp = function_exists('farmapaz_whatsapp_url') ? farmapaz_whatsapp_url() : '#';
+    if ($es_optica) {
+        $faqs = [
+            ['¿Dónde hacerse un examen de la vista en Maturín?', 'En Óptica Farmapaz el examen de la vista es gratis y se agenda por WhatsApp en cualquiera de las sucursales de Maturín, Estado Monagas.'],
+            ['¿Cuánto cuesta un examen de la vista en Maturín?', 'En Óptica Farmapaz el examen optométrico no tiene costo. Solo agenda tu cita por WhatsApp y el mismo día puedes estrenar montura.'],
+            ['¿Dónde comprar lentes de contacto en Maturín?', 'Óptica Farmapaz tiene lentes de contacto y monturas graduadas en Maturín, Monagas, con atención de optometristas certificados.'],
+            ['¿Qué marcas de lentes vende Óptica Farmapaz?', 'Ray-Ban, Oakley, Gucci, Prada, Carolina Herrera, Police, Guess, Alpi, Zeiss y más, originales y con garantía.'],
+            ['¿Venden lentes de sol originales en Maturín?', 'Sí. Óptica Farmapaz vende lentes de sol originales Ray-Ban, Oakley, Prada y otras marcas en sus sucursales de Maturín.'],
+            ['¿La óptica de Farmapaz atiende 24 horas?', 'Sí, Óptica Farmapaz está disponible en sucursales con atención extendida. Agenda tu examen por WhatsApp al 0424-9139434.'],
+        ];
+    } else {
+        $faqs = [
+            ['¿Dónde hay una farmacia en Maturín?', 'Farmapaz tiene múltiples sucursales en Maturín, Monagas, incluidas las de Av. La Paz, Juncal, Luis del Valle, Los Guaritos y Tipuro, muchas con atención 24 horas.'],
+            ['¿Hay farmacia 24 horas en Caripito?', 'Sí. Farmapaz Caripito Mercado, en el Mercado Municipal de Caripito, Monagas, atiende las 24 horas.'],
+            ['¿Hay farmacia en Punta de Mata?', 'Sí. Farmapaz Punta de Mata está en Av. Bolívar, diagonal al Seniat, Municipio Ezequiel Zamora, Monagas, con atención 24 horas.'],
+            ['¿Farmapaz vende medicamentos en línea en Monagas?', 'Sí. Puedes pedir por WhatsApp con delivery gratis desde $' . (function_exists('farmapaz_free_shipping_min') ? farmapaz_free_shipping_min() : 20) . ' en Maturín, Caripito y Punta de Mata: ' . $whatsapp],
+            ['¿Cuál es el teléfono del call center de Farmapaz?', 'El call center de Farmapaz está disponible en el 0412-8798885 por WhatsApp y Telegram.'],
+            ['¿Dónde comprar cremas vaginales en Venezuela?', 'Farmapaz vende cremas y óvulos vaginales (clotrimazol, miconazol, nistatina, imazol y más) en sus sucursales de Maturín, Caripito y Punta de Mata, con delivery por WhatsApp. Consulta disponibilidad en el 0412-8798885.'],
+            ['¿Qué crema sirve para los hongos vaginales?', 'Las cremas vaginales con clotrimazol (Imazol, CanderM, Kimiceg) y miconazol son las más usadas para la candidiasis. En Farmapaz las encuentras en varias presentaciones y concentraciones.'],
+            ['¿Hay farmacia 24 horas cerca de mí en Monagas?', 'Farmapaz tiene más de 20 sucursales 24 horas en Maturín, Punta de Mata y Caripito, Estado Monagas. Revisa nuestra página de sucursales para ver la más cercana.'],
+        ];
+    }
+    $graph[] = [
+        '@type' => 'FAQPage',
+        '@id' => $home . ($es_optica ? '/optica/' : '') . '#faq',
+        'mainEntity' => array_map(function ($f) {
+            return ['@type' => 'Question', 'name' => $f[0], 'acceptedAnswer' => ['@type' => 'Answer', 'text' => $f[1]]];
+        }, $faqs),
+    ];
+
+    // WebSite + SearchAction: refuerza la entidad de marca en Google y asistentes de IA
+    $graph[] = [
+        '@type' => 'WebSite',
+        '@id' => $home . '#website',
+        'url' => $home,
+        'name' => $brand,
+        'inLanguage' => 'es-VE',
+        'publisher' => ['@id' => $home . '#farmacia'],
+        'potentialAction' => [
+            '@type' => 'SearchAction',
+            'target' => [
+                '@type' => 'EntryPoint',
+                'urlTemplate' => $home . '?s={search_term_string}&post_type=product',
+            ],
+            'query-input' => 'required name=search_term_string',
+        ],
+    ];
+
+    echo '<script type="application/ld+json">' . wp_json_encode(['@context' => 'https://schema.org', '@graph' => $graph], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . '</script>' . "\n";
+}
+
+// Títulos con keywords de ubicación
+add_filter('pre_get_document_title', function ($title) {
+    if (get_query_var('optica_view') === 'catalogo') {
+        return 'Catálogo de monturas — Óptica Farmapaz';
+    }
+    if (is_page('optica') || is_page_template('page-optica.php')) {
+        return 'Óptica Farmapaz en Maturín | Examen de la vista gratis, lentes y monturas';
+    }
+    if (is_front_page()) {
+        return 'Farmapaz | Farmacia 24 horas en Maturín, Punta de Mata, Caripito y Monagas';
+    }
+    if (is_page('sucursales')) {
+        return 'Sucursales Farmapaz — Farmacias en Maturín, Punta de Mata y Caripito, Monagas';
+    }
+    return $title;
+}, 20);
+
+// Geo tags + descripción propia (solo si Yoast NO está activo; con Yoast la genera wpseo_metadesc)
+add_action('wp_head', function () {
+    if (is_front_page() || is_page('sucursales') || is_page('optica') || is_page_template('page-optica.php') || is_shop() || is_product_category()) {
+        echo '<meta name="geo.region" content="VE-M">' . "\n";
+        echo '<meta name="geo.placename" content="Maturín, Monagas, Venezuela">' . "\n";
+    }
+    if (!defined('WPSEO_VERSION')) {
+        echo '<meta name="description" content="' . esc_attr(farmapaz_seo_context_desc()) . '">' . "\n";
+        echo '<meta property="og:title" content="' . esc_attr(wp_get_document_title()) . '">' . "\n";
+        echo '<meta property="og:description" content="' . esc_attr(farmapaz_seo_context_desc()) . '">' . "\n";
+        echo '<meta property="og:image" content="' . esc_url(farmapaz_seo_og_image()) . '">' . "\n";
+        echo '<meta property="og:image:width" content="1200">' . "\n";
+        echo '<meta property="og:image:height" content="630">' . "\n";
+        echo '<meta property="og:site_name" content="Farmapaz">' . "\n";
+        echo '<meta property="og:locale" content="es_VE">' . "\n";
+        echo '<meta name="twitter:card" content="summary_large_image">' . "\n";
+        echo '<meta name="twitter:title" content="' . esc_attr(wp_get_document_title()) . '">' . "\n";
+        echo '<meta name="twitter:description" content="' . esc_attr(farmapaz_seo_context_desc()) . '">' . "\n";
+        echo '<meta name="twitter:image" content="' . esc_url(farmapaz_seo_og_image()) . '">' . "\n";
+    }
+}, 2);
+
+// ====== Yoast SEO: repara las descripciones sucias ======
+// Cuando la página está construida con WPBakery, Yoast toma el contenido crudo
+// ([vc_row]...) como descripción. Aquí lo limpiamos y damos texto útil.
+
+add_filter('wpseo_metadesc', function ($metadesc, $presentation = null) {
+    $limpio = farmapaz_seo_clean_text($metadesc);
+    return $limpio !== '' ? $limpio : farmapaz_seo_context_desc();
+}, 20, 2);
+
+add_filter('wpseo_opengraph_desc', function ($desc, $presentation = null) {
+    $limpio = farmapaz_seo_clean_text($desc);
+    return $limpio !== '' ? $limpio : farmapaz_seo_context_desc();
+}, 20, 2);
+
+add_filter('wpseo_twitter_description', function ($desc, $presentation = null) {
+    $limpio = farmapaz_seo_clean_text($desc);
+    return $limpio !== '' ? $limpio : farmapaz_seo_context_desc();
+}, 20, 2);
+
+add_filter('wpseo_opengraph_image', function ($image, $presentation = null) {
+    return $image ? $image : farmapaz_seo_og_image();
+}, 20, 2);
+
+add_filter('wpseo_twitter_image', function ($image, $presentation = null) {
+    return $image ? $image : farmapaz_seo_og_image();
+}, 20, 2);
+
+add_filter('wpseo_opengraph_site_name', function ($name) {
+    return 'Farmapaz';
+}, 20);
+
+add_filter('wpseo_og_locale', function ($locale) {
+    return 'es_VE';
+}, 20);
+
+// ====== robots.txt: permite explícitamente a los rastreadores de IA ======
+// Se envuelve do_robots para conservar lo que Yoast genera y solo anexar.
+add_action('do_robots', function () {
+    ob_start();
+}, 1);
+
+add_action('do_robots', function () {
+    $out = ob_get_clean();
+    $ai = "\n# Asistentes y buscadores de IA (permitidos)\n";
+    foreach ([
+        'GPTBot', 'ChatGPT-User', 'OAI-SearchBot',
+        'ClaudeBot', 'Claude-Web', 'anthropic-ai',
+        'PerplexityBot', 'Perplexity-User',
+        'Google-Extended', 'Applebot-Extended',
+        'CCBot', 'meta-externalagent', 'meta-externalfetcher',
+        'cohere-ai', 'Amazonbot', 'Bytespider',
+    ] as $bot) {
+        $ai .= "User-agent: {$bot}\nAllow: /\n\n";
+    }
+    echo rtrim($out, "\n") . "\n" . rtrim($ai, "\n");
+}, 99999);
+
+// llms.txt — estándar para asistentes de IA (ChatGPT, Gemini, Claude, DeepSeek...)
+// Se registra en init para ganarle a la versión genérica de Yoast SEO.
+add_action('init', function () {
+    if (isset($_SERVER['REQUEST_URI']) && rtrim((string) parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/') === '/llms.txt') {
+        nocache_headers();
+        header('Content-Type: text/plain; charset=utf-8');
+        echo farmapaz_llms_txt();
+        exit;
+    }
+}, 1);
+
+function farmapaz_llms_txt() {
+    $home = home_url('/');
+    $sucursales = function_exists('farmapaz_sucursales_activas') ? farmapaz_sucursales_activas() : [];
+    $out = [];
+    $out[] = '# Farmapaz';
+    $out[] = '';
+    $out[] = '> Farmapaz es la cadena de farmacias líder del Estado Monagas (Venezuela), con ' . count($sucursales) . ' sucursales 24 horas en Maturín, Punta de Mata y Caripito. Vende medicamentos, dermocosmética, vitaminas y productos de cuidado personal, con delivery por WhatsApp y pedidos en línea. También opera Óptica Farmapaz: examen de la vista gratis, lentes de contacto y monturas originales.';
+    $out[] = '';
+    $out[] = '## Datos clave';
+    $out[] = '- Nombre legal/marca: Farmapaz';
+    $out[] = '- Tipo: cadena de farmacias (retail farmacéutico)';
+    $out[] = '- Área de servicio: Maturín, Punta de Mata, Caripito y el Estado Monagas (Venezuela)';
+    $out[] = '- Teléfono / WhatsApp / Telegram (call center): 0412-8798885';
+    $out[] = '- Horario: la mayoría de las sucursales atienden las 24 horas';
+    $out[] = '- Delivery: gratis desde $' . (function_exists('farmapaz_free_shipping_min') ? farmapaz_free_shipping_min() : 20) . ' de compra en Maturín, Caripito y Punta de Mata';
+    $out[] = '- Monedas aceptadas: USD y VES';
+    $out[] = '- Medicamentos controlados: se despachan en tienda con récipe médico (no se venden en línea)';
+    $out[] = '- Redes: Instagram @Farmapazofficial, TikTok @farmaciafarmapaz, Facebook farmapaz.lapaz, Telegram t.me/Farmapazcallcenter';
+    $out[] = '';
+    $out[] = '## Óptica Farmapaz';
+    $out[] = '- Página: ' . home_url('/optica/');
+    $out[] = '- Servicios: examen de la vista gratis, fórmula de lentes, lentes de contacto, monturas graduadas y de sol';
+    $out[] = '- Marcas: Ray-Ban, Oakley, Gucci, Prada, Carolina Herrera, Police, Guess, Alpi, Zeiss y más';
+    $out[] = '- WhatsApp: 0424-9139434';
+    $out[] = '';
+    $out[] = '## Sucursales';
+    foreach ($sucursales as $s) {
+        $out[] = '- ' . trim($s['nombre'] ?: 'Farmapaz') . ': ' . ($s['direccion'] ?: 'Maturín, Monagas') . ' — ' . ($s['horario'] ?: '24 horas') . ' — Tel. ' . $s['telefono'];
+    }
+    $out[] = '';
+    $out[] = '## Páginas';
+    $out[] = '- Inicio: ' . $home . ' (información general y ofertas)';
+    $out[] = '- Tienda: ' . home_url('/tienda/') . ' (catálogo de productos con precios)';
+    $out[] = '- Sucursales: ' . home_url('/sucursales/') . ' (direcciones y horarios de todas las farmacias)';
+    $out[] = '- Óptica: ' . home_url('/optica/') . ' (examen de la vista gratis y monturas)';
+    if (function_exists('farmapaz_contact_link')) {
+        $out[] = '- Contacto: ' . farmapaz_contact_link();
+    }
+    $out[] = '';
+    $out[] = '## Preguntas frecuentes';
+    $out[] = 'P: ¿Dónde hay farmacia en Maturín? R: Farmapaz tiene sucursales 24 horas en Av. La Paz, Juncal, Luis del Valle, Los Guaritos, Tipuro y más.';
+    $out[] = 'P: ¿Hay farmacia 24 horas en Caripito? R: Sí, Farmapaz Caripito Mercado, en el Mercado Municipal de Caripito.';
+    $out[] = 'P: ¿Hay farmacia en Punta de Mata? R: Sí, Farmapaz Punta de Mata en Av. Bolívar, diagonal al Seniat.';
+    $out[] = 'P: ¿Hacen delivery? R: Sí, por WhatsApp al 0412-8798885, gratis desde $' . (function_exists('farmapaz_free_shipping_min') ? farmapaz_free_shipping_min() : 20) . ' en Maturín, Caripito y Punta de Mata.';
+    $out[] = 'P: ¿Venden medicamentos controlados? R: Solo en tienda con récipe médico vigente.';
+    $out[] = 'P: ¿Dónde hacerse un examen de la vista en Maturín? R: En Óptica Farmapaz el examen es gratis; se agenda por WhatsApp al 0424-9139434.';
+    $out[] = 'P: ¿Qué marcas de lentes vende Óptica Farmapaz? R: Ray-Ban, Oakley, Gucci, Prada, Carolina Herrera, Police, Guess, Alpi, Zeiss y más.';
+    $out[] = '';
+    $out[] = 'Sitio: ' . $home;
+    return implode("\n", $out);
 }

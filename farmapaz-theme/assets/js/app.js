@@ -667,31 +667,114 @@
             return;
         }
         let debounceTimer;
+        let overlayActive = false;
+
+        // [†] Cerrar el dropdown (también al consumir el marcador del historial
+        // cuando el usuario presiona "atrás" con el overlay de búsqueda abierto).
+        function hideDropdown() {
+            overlayActive = false;
+            dropdown.classList.add('hidden');
+        }
+
+        // [†] El overlay móvil empuja un marcador al historial: si el usuario
+        // presiona "atrás" con la búsqueda abierta, se cierra el overlay en lugar
+        // de navegar a la home.
+        window.addEventListener('popstate', function () {
+            if (overlayActive) {
+                hideDropdown();
+                updateClear();
+            }
+        });
+
+        // [†] UX: recordar la última búsqueda para que el botón "atrás" del
+        // navegador no deje el buscador vacío (volver a tipear).
+        function saveLastSearch(q) {
+            try { sessionStorage.setItem('farmapaz_last_search', q); } catch (e) {}
+        }
+        function restoreInput() {
+            try {
+                const params = new URLSearchParams(window.location.search);
+                const urlQ = params.get('s') || params.get('optica_s');
+                if (urlQ) {
+                    input.value = urlQ;
+                } else {
+                    const saved = sessionStorage.getItem('farmapaz_last_search');
+                    if (saved) input.value = saved;
+                }
+                updateClear();
+            } catch (e) {}
+        }
 
         function updateClear() {
             if (clearBtn) clearBtn.classList.toggle('hidden', input.value.trim().length === 0);
         }
 
+        function positionDropdown() {
+            // Móvil + buscador del header: vista de búsqueda a pantalla completa
+            // (overlay sobre la interfaz, desde el header hasta abajo).
+            const isHeader = container.classList.contains('farmapaz-header-search');
+            const isMobile = window.innerWidth < 768;
+            if (isMobile && isHeader) {
+                const header = document.querySelector('header');
+                const top = header ? Math.round(header.getBoundingClientRect().bottom) : 0;
+                dropdown.classList.add('farmapaz-suggestions-overlay');
+                dropdown.style.position = 'fixed';
+                dropdown.style.top = top + 'px';
+                dropdown.style.left = '0';
+                dropdown.style.right = '0';
+                dropdown.style.width = '100vw';
+                dropdown.style.height = 'calc(100vh - ' + top + 'px)';
+                dropdown.style.maxHeight = 'none';
+                dropdown.style.maxWidth = 'none';
+                dropdown.style.margin = '0';
+                dropdown.style.borderRadius = '0';
+                // Marcador en el historial para que "atrás" cierre el overlay
+                if (!overlayActive) {
+                    overlayActive = true;
+                    try { history.pushState({ farmapazOverlay: true }, ''); } catch (e) {}
+                }
+            } else {
+                overlayActive = false;
+                dropdown.classList.remove('farmapaz-suggestions-overlay');
+                dropdown.style.position = '';
+                dropdown.style.top = '';
+                dropdown.style.left = '';
+                dropdown.style.right = '';
+                dropdown.style.width = '';
+                dropdown.style.height = '';
+                dropdown.style.maxHeight = '';
+                dropdown.style.maxWidth = '';
+                dropdown.style.margin = '';
+                dropdown.style.borderRadius = '';
+            }
+        }
+
+        window.addEventListener('resize', positionDropdown);
+
         input.addEventListener('input', () => {
             clearTimeout(debounceTimer);
             const q = input.value.trim();
             updateClear();
-            if (q.length < 2) { dropdown.classList.add('hidden'); return; }
+            saveLastSearch(q);
+            if (q.length < 2) { hideDropdown(); return; }
             debounceTimer = setTimeout(() => fetchSuggestions(q), 350);
         });
 
         input.addEventListener('focus', () => {
             updateClear();
-            if (input.value.trim().length >= 2) dropdown.classList.remove('hidden');
+            if (input.value.trim().length >= 2) {
+                positionDropdown();
+                dropdown.classList.remove('hidden');
+            }
         });
 
         input.addEventListener('blur', () => {
-            setTimeout(() => dropdown.classList.add('hidden'), 200);
+            setTimeout(() => hideDropdown(), 200);
         });
 
         input.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
-                dropdown.classList.add('hidden');
+                hideDropdown();
                 updateClear();
             }
         });
@@ -700,37 +783,68 @@
             clearBtn.addEventListener('click', () => {
                 input.value = '';
                 updateClear();
-                dropdown.classList.add('hidden');
+                try { sessionStorage.removeItem('farmapaz_last_search'); } catch (e) {}
+                hideDropdown();
                 input.focus();
             });
         }
 
+        // [†] Al hacer clic en una sugerencia, dejamos la URL de resultados en el
+        // historial: el botón "atrás" del navegador vuelve a los resultados con
+        // la búsqueda intacta en lugar de caer a la home.
+        dropdown.addEventListener('click', function (e) {
+            const link = e.target.closest('a');
+            if (!link) return;
+            const q = input.value.trim();
+            if (!q) return;
+            try {
+                const base = (typeof farmapazData !== 'undefined' && farmapazData.homeUrl) ? farmapazData.homeUrl : window.location.origin;
+                history.pushState({}, '', base + '/?s=' + encodeURIComponent(q) + '&post_type=product');
+            } catch (err) {}
+        });
+
         updateClear();
+        restoreInput();
 
         function fetchSuggestions(q) {
             spinner.classList.remove('hidden');
-            dropdown.classList.add('hidden');
-            const apiUrl = (typeof farmapazData !== 'undefined' ? farmapazData.homeUrl : '') + '/wp-json/farmapaz/v1/suggest?s=' + encodeURIComponent(q);
+            hideDropdown();
+            const scope = container.getAttribute('data-search-scope') || '';
+            const apiUrl = (typeof farmapazData !== 'undefined' ? farmapazData.homeUrl : '') + '/wp-json/farmapaz/v1/suggest?s=' + encodeURIComponent(q) + (scope ? '&scope=' + encodeURIComponent(scope) : '');
             fetch(apiUrl)
                 .then(r => r.json())
                 .then(data => {
                     spinner.classList.add('hidden');
                     if (!data.results || !data.results.length) {
-                        dropdown.classList.add('hidden');
+                        hideDropdown();
                         return;
                     }
-                    dropdown.innerHTML = data.results.map(r => `
-                        <a href="${r.url}" class="flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0">
-                            ${r.type === 'category'
-                                ? '<span class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style="background: rgba(9,20,110,0.06); color: #09146E;"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg></span>'
-                                : '<img src="' + r.img + '" alt="" class="w-10 h-10 rounded-lg object-cover flex-shrink-0 bg-gray-50">'
-                            }
+                    dropdown.innerHTML = data.results.map(r => {
+                        const isCategory = r.type === 'category' || r.type === 'brand';
+                        const isOptica = r.type === 'optica' || r.type === 'optica_search' || r.type === 'optica_catalog';
+                        const isFarmacia = r.type === 'farmacia' || r.type === 'farmacia_search';
+                        let icon;
+                        if (isCategory) {
+                            icon = '<span class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style="background: rgba(9,20,110,0.06); color: #09146E;"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg></span>';
+                        } else if (isOptica) {
+                            icon = '<span class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style="background: linear-gradient(135deg, #FFD45A, #FEAB0D); color: #09146E;"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="6.5" cy="14" r="3.5"></circle><circle cx="17.5" cy="14" r="3.5"></circle><path d="M10 14h4M3 9l2-3h3M21 9l-2-3h-3"></path></svg></span>';
+                        } else if (isFarmacia) {
+                            icon = '<span class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style="background: linear-gradient(135deg, #0b1780, #09146E); color: #fff;"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/></svg></span>';
+                        } else {
+                            icon = '<img src="' + r.img + '" alt="" class="w-11 h-11 rounded-xl object-cover flex-shrink-0 bg-gray-50">';
+                        }
+                        const priceColor = isCategory ? 'rgba(9,20,110,0.5)' : (isOptica ? '#B77900' : '#09146E');
+                        const rowClass = isOptica ? ' suggest-optica' : (isFarmacia ? ' suggest-farmacia' : '');
+                        return `
+                        <a href="${r.url}" class="flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0${rowClass}">
+                            ${icon}
                             <div class="min-w-0 flex-1">
-                                <span class="text-sm font-medium text-gray-800 line-clamp-1">${escapeHtml(r.name)}</span>
-                                <span class="text-xs font-semibold" style="color: ${r.type === 'category' ? 'rgba(9,20,110,0.5)' : '#09146E'};">${r.price}</span>
+                                <span class="suggest-name text-sm font-semibold text-gray-900 line-clamp-1">${escapeHtml(r.name)}</span>
+                                <span class="suggest-price text-xs font-semibold mt-0.5 inline-block" style="color: ${priceColor};">${r.price}</span>
                             </div>
-                        </a>
-                    `).join('');
+                        </a>`;
+                    }).join('');
+                    positionDropdown();
                     dropdown.classList.remove('hidden');
                 })
                 .catch(() => { spinner.classList.add('hidden'); });

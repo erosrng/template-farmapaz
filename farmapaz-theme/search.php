@@ -34,6 +34,21 @@ get_header(); ?>
         </div>
     </div>
 
+    <?php if (farmapaz_optica_query_is_optics($query)): ?>
+    <div class="container-farmapaz" style="padding-top:18px;">
+        <div class="search-cross search-cross--optica">
+            <div>
+                <strong>¿Buscas lentes o monturas?</strong>
+                <span>Estás en Farmacia. En Óptica Farmapaz tenemos monturas, lentes de sol, examen de la vista gratis y pago con Cashea.</span>
+            </div>
+            <a href="<?= esc_url(add_query_arg('optica_s', $query, farmapaz_optica_catalogo_url())); ?>">
+                Buscar en Óptica
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </a>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <div class="container-farmapaz shop-body">
         <div class="shop-layout shop-layout-search">
             <div class="shop-products-col">

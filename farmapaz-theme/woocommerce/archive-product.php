@@ -11,7 +11,7 @@ $current_brands  = isset($_GET['brand']) ? array_map('sanitize_title', (array)$_
 $current_min     = isset($_GET['min_price']) ? floatval($_GET['min_price']) : '';
 $current_max     = isset($_GET['max_price']) ? floatval($_GET['max_price']) : '';
 $current_s       = isset($_GET['s']) ? sanitize_text_field($_GET['s']) : '';
-$current_orderby = isset($_GET['orderby']) ? sanitize_text_field($_GET['orderby']) : 'date';
+$current_orderby = isset($_GET['orderby']) ? sanitize_text_field($_GET['orderby']) : 'title';
 
 get_header(); ?>
 
@@ -41,7 +41,7 @@ get_header(); ?>
                 ?>
                 <?php if ($current_cat_obj): ?>
                 <div class="shop-hero-indicator">
-                    <span class="shop-hero-indicator-icon" style="color: #5A7D43;">
+                    <span class="shop-hero-indicator-icon" style="color: var(--brand-green);">
                         <?= farmapaz_cat_icon($current_cat_obj->slug); ?>
                     </span>
                     <span class="shop-hero-indicator-label">Categoría:</span>
@@ -56,22 +56,27 @@ get_header(); ?>
                 </div>
                 <?php endif; ?>
                 </div>
-                <div class="shop-hero-search" id="shopHeroSearch">
-                    <svg class="shop-hero-search-icon" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                    <input type="text" class="filter-input filter-search shop-hero-search-input"
-                           placeholder="Buscar en esta categoría..."
-                           value="<?= esc_attr($current_s); ?>"
-                           autocomplete="off">
-                    <button class="filter-clear-btn shop-hero-search-clear hidden" data-clear="s" aria-label="Limpiar búsqueda">
-                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                    </button>
-                </div>
                 <p class="shop-hero-sub">
                     <?php printf('%d productos encontrados', $wp_query->found_posts); ?>
                 </p>
             </div>
         </div>
     </div>
+
+    <?php if ($current_s !== '' && farmapaz_optica_query_is_optics($current_s)): ?>
+    <div class="container-farmapaz" style="padding-top:18px;">
+        <div class="search-cross search-cross--optica">
+            <div>
+                <strong>¿Buscas lentes o monturas?</strong>
+                <span>Estás en Farmacia. En Óptica Farmapaz tenemos monturas, lentes de sol, examen de la vista gratis y pago con Cashea.</span>
+            </div>
+            <a href="<?= esc_url(add_query_arg('optica_s', $current_s, farmapaz_optica_catalogo_url())); ?>">
+                Buscar en Óptica
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </a>
+        </div>
+    </div>
+    <?php endif; ?>
 
     <div class="container-farmapaz shop-body">
         <!-- Active Filters -->
@@ -103,6 +108,7 @@ get_header(); ?>
                     <div class="shop-sorting">
                         <label for="shopOrderby" class="shop-sorting-label">Ordenar</label>
                         <select id="shopOrderby" class="shop-sorting-select">
+                            <option value="title" <?= $current_orderby === 'title' ? 'selected' : ''; ?>>Alfabético (A-Z)</option>
                             <option value="date" <?= $current_orderby === 'date' ? 'selected' : ''; ?>>Nuevos primero</option>
                             <option value="price" <?= $current_orderby === 'price' ? 'selected' : ''; ?>>Menor precio</option>
                             <option value="price-desc" <?= $current_orderby === 'price-desc' ? 'selected' : ''; ?>>Mayor precio</option>
@@ -110,6 +116,23 @@ get_header(); ?>
                         </select>
                     </div>
                 </div>
+
+                <?php if (farmapaz_optica_enabled()): ?>
+                <!-- [†] Referencia a la sección de Óptica -->
+                <a href="<?= esc_url(home_url('/optica/')); ?>" class="shop-optica-strip">
+                    <span class="shop-optica-strip-icon">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="6.5" cy="14" r="3.5"></circle><circle cx="17.5" cy="14" r="3.5"></circle><path d="M10 14h4M3 9l2-3h3M21 9l-2-3h-3"></path></svg>
+                    </span>
+                    <span class="shop-optica-strip-text">
+                        <strong>Óptica Farmapaz</strong>
+                        Monturas originales, lentes de sol y examen de la vista gratis.
+                    </span>
+                    <span class="shop-optica-strip-cta">
+                        Visitar Óptica
+                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M5 12h14M13 6l6 6-6 6"/></svg>
+                    </span>
+                </a>
+                <?php endif; ?>
 
                 <!-- Loading Overlay -->
                 <div class="shop-loading" id="shopLoading">
